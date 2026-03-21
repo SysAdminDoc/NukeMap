@@ -1,0 +1,66 @@
+"""
+NukeMap Build Script - Bundles all files into a single offline HTML.
+Usage: python build.py
+Output: NukeMap-offline.html (fully self-contained)
+"""
+import os, re, urllib.request, sys
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
+def read(path):
+    with open(os.path.join(ROOT, path), 'r', encoding='utf-8') as f:
+        return f.read()
+
+def download(url):
+    print(f'  Downloading {url}...')
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'NukeMap-Builder/1.0'})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return r.read().decode('utf-8')
+    except Exception as e:
+        print(f'  Warning: Could not download {url}: {e}')
+        return None
+
+def build():
+    print('NukeMap Offline Builder v3.0.0')
+    print('=' * 40)
+
+    # Read HTML template
+    html = read('index.html')
+
+    # Download CDN resources
+    leaflet_css = download('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css') or '/* Leaflet CSS unavailable */'
+    leaflet_js = download('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js') or '/* Leaflet JS unavailable */'
+    three_js = download('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') or '/* Three.js unavailable */'
+
+    # Read local files
+    css = read('css/styles.css')
+    js_files = ['data.js','physics.js','search.js','effects.js','animation.js','sound.js',
+                'mushroom3d.js','mirv.js','shelter.js','compare.js','heatmap.js','app.js']
+    js_all = '\n'.join(read(f'js/{f}') for f in js_files)
+
+    # Replace CDN links with inline
+    html = re.sub(r'<link rel="stylesheet" href="https://unpkg\.com/leaflet[^"]*"[^/]*/>', f'<style>{leaflet_css}</style>', html)
+    html = re.sub(r'<link rel="stylesheet" href="css/styles\.css"\s*/>', f'<style>{css}</style>', html)
+    html = re.sub(r'<script src="https://unpkg\.com/leaflet[^"]*"[^>]*></script>', f'<script>{leaflet_js}</script>', html)
+    html = re.sub(r'<script src="https://cdnjs\.cloudflare[^"]*"[^>]*></script>', f'<script>{three_js}</script>', html)
+
+    # Replace local JS includes with inline
+    for f in js_files:
+        html = re.sub(rf'<script src="js/{re.escape(f)}"></script>', '', html)
+
+    # Add all JS before </body>
+    html = html.replace('</body>', f'<script>\n{js_all}\n</script>\n</body>')
+
+    # Write output
+    out_path = os.path.join(ROOT, 'NukeMap-offline.html')
+    with open(out_path, 'w', encoding='utf-8') as f:
+        f.write(html)
+
+    size_kb = os.path.getsize(out_path) / 1024
+    print(f'\nBuilt: {out_path}')
+    print(f'Size: {size_kb:.0f} KB')
+    print('Done!')
+
+if __name__ == '__main__':
+    build()

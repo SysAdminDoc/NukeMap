@@ -3,313 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NukeMap v2.0.0</title>
+<title>NukeMap v3.0.0</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
-<style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --base:#1e1e2e;--mantle:#181825;--crust:#11111b;--surface0:#313244;--surface1:#45475a;--surface2:#585b70;
-  --overlay0:#6c7086;--overlay1:#7f849c;--text:#cdd6f4;--subtext0:#a6adc8;--subtext1:#bac2de;
-  --red:#f38ba8;--maroon:#eba0ac;--peach:#fab387;--yellow:#f9e2af;--green:#a6e3a1;--teal:#94e2d5;
-  --blue:#89b4fa;--lavender:#b4befe;--mauve:#cba6f7;--pink:#f5c2e7;--flamingo:#f2cdcd;--rosewater:#f5e0dc;
-  --sky:#89dceb;
-  --glass:rgba(30,30,46,0.88);--glass-border:rgba(69,71,90,0.5);--glass-hover:rgba(49,50,68,0.95);
-  --panel-w:390px;--radius:12px;--radius-sm:8px;
-  --shadow-lg:0 8px 32px rgba(0,0,0,0.4);--shadow-glow:0 0 20px rgba(243,139,168,0.15);
-}
-html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--crust);color:var(--text)}
-#map{position:absolute;inset:0;z-index:1}
-
-/* Leaflet dark overrides */
-.leaflet-container{background:var(--crust)!important}
-.leaflet-control-zoom{border:none!important;box-shadow:var(--shadow-lg)!important}
-.leaflet-control-zoom a{background:var(--surface0)!important;color:var(--text)!important;border-color:var(--surface1)!important;width:34px!important;height:34px!important;line-height:34px!important;font-size:16px!important}
-.leaflet-control-zoom a:hover{background:var(--surface1)!important}
-.leaflet-control-attribution{background:var(--glass)!important;color:var(--overlay0)!important;font-size:10px!important;backdrop-filter:blur(10px);border-radius:4px 0 0 0}
-.leaflet-control-attribution a{color:var(--blue)!important}
-.leaflet-popup-content-wrapper{background:var(--surface0);color:var(--text);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);border:1px solid var(--surface1)}
-.leaflet-popup-tip{background:var(--surface0)}
-.leaflet-popup-content{margin:12px 16px;font-size:13px;line-height:1.6}
-.leaflet-popup-close-button{color:var(--overlay0)!important;font-size:18px!important}
-.leaflet-popup-close-button:hover{color:var(--text)!important}
-
-/* Side Panel */
-#panel{
-  position:absolute;top:0;left:0;bottom:0;width:var(--panel-w);z-index:1000;
-  background:var(--glass);backdrop-filter:blur(24px) saturate(1.5);
-  border-right:1px solid var(--glass-border);
-  display:flex;flex-direction:column;overflow:hidden;
-  transition:transform .35s cubic-bezier(.4,0,.2,1);
-}
-#panel.collapsed{transform:translateX(calc(-1 * var(--panel-w) + 48px))}
-#panel.collapsed .panel-content{opacity:0;pointer-events:none}
-#panel-toggle{
-  position:absolute;top:12px;right:-40px;z-index:10;
-  width:36px;height:36px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;
-  background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);border-left:none;
-  color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;
-}
-#panel-toggle:hover{background:var(--glass-hover)}
-.panel-content{display:flex;flex-direction:column;height:100%;overflow:hidden;transition:opacity .25s}
-
-/* Header */
-.panel-header{padding:16px 20px 14px;border-bottom:1px solid var(--glass-border);flex-shrink:0}
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.brand-icon{
-  width:38px;height:38px;border-radius:10px;
-  background:linear-gradient(135deg,var(--red),var(--peach));
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 12px rgba(243,139,168,0.3);position:relative;overflow:hidden;
-}
-.brand-icon::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,0.15))}
-.brand-icon svg{width:20px;height:20px;fill:var(--crust)}
-.brand-text{font-size:21px;font-weight:700;letter-spacing:-0.5px}
-.brand-text span{color:var(--red)}
-.brand-ver{font-size:10px;color:var(--overlay0);margin-left:auto;font-weight:600;padding:2px 8px;background:var(--surface0);border-radius:10px}
-
-/* Search */
-.search-wrap{position:relative}
-#search{
-  width:100%;padding:9px 14px 9px 36px;border-radius:var(--radius-sm);
-  background:var(--surface0);border:1px solid var(--surface1);color:var(--text);
-  font-size:13px;outline:none;transition:all .2s;
-}
-#search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(137,180,250,0.12)}
-#search::placeholder{color:var(--overlay0)}
-.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--overlay0);pointer-events:none}
-.search-icon svg{width:14px;height:14px;fill:currentColor}
-#search-results{
-  position:absolute;top:calc(100% + 2px);left:0;right:0;max-height:300px;overflow-y:auto;
-  background:var(--surface0);border:1px solid var(--surface1);border-radius:var(--radius-sm);
-  display:none;z-index:100;box-shadow:var(--shadow-lg);
-  scrollbar-width:thin;scrollbar-color:var(--surface1) transparent;
-}
-#search-results.active{display:block}
-.sr-item{padding:9px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(69,71,90,0.3);font-size:13px;transition:background .12s}
-.sr-item:last-child{border-bottom:none}
-.sr-item:hover,.sr-item.selected{background:var(--surface1)}
-.sr-name{font-weight:600}.sr-detail{color:var(--overlay1);font-size:11px;margin-top:1px}.sr-pop{color:var(--overlay0);font-size:11px;font-variant-numeric:tabular-nums}
-
-/* Scrollable Body */
-.panel-body{flex:1;overflow-y:auto;padding:14px 18px 20px;scrollbar-width:thin;scrollbar-color:var(--surface1) transparent}
-.panel-body::-webkit-scrollbar{width:5px}
-.panel-body::-webkit-scrollbar-track{background:transparent}
-.panel-body::-webkit-scrollbar-thumb{background:var(--surface1);border-radius:3px}
-
-/* Sections */
-.section{margin-bottom:18px}
-.section-title{
-  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
-  color:var(--overlay0);margin-bottom:8px;display:flex;align-items:center;gap:8px;
-}
-.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--surface1),transparent)}
-
-/* Tabs */
-.tabs{display:flex;gap:2px;background:var(--surface0);border-radius:var(--radius-sm);padding:2px;margin-bottom:14px}
-.tab{flex:1;padding:7px 6px;border-radius:6px;background:transparent;border:none;color:var(--overlay1);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center}
-.tab.active{background:var(--surface1);color:var(--text);box-shadow:0 2px 4px rgba(0,0,0,0.15)}
-.tab:hover:not(.active){color:var(--subtext0)}
-.tab-content{display:none}.tab-content.active{display:block}
-
-/* Weapon Select */
-.select-wrap{position:relative;margin-bottom:10px}
-.custom-select{
-  width:100%;padding:9px 36px 9px 12px;border-radius:var(--radius-sm);
-  background:var(--surface0);border:1px solid var(--surface1);color:var(--text);
-  font-size:12px;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;
-}
-.custom-select:focus{border-color:var(--blue)}
-.select-arrow{position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--overlay0);pointer-events:none}
-.select-arrow svg{width:10px;height:10px;fill:currentColor}
-
-/* Yield */
-.yield-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-.yield-display{min-width:85px;text-align:right;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--peach);line-height:1}
-.yield-unit{font-size:11px;font-weight:600;color:var(--overlay1)}
-#yield-slider{flex:1;-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;background:linear-gradient(90deg,var(--green) 0%,var(--yellow) 40%,var(--peach) 70%,var(--red) 100%);outline:none;cursor:pointer}
-#yield-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--text);border:2px solid var(--surface0);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4);transition:transform .15s}
-#yield-slider::-webkit-slider-thumb:hover{transform:scale(1.2)}
-#yield-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--text);border:2px solid var(--surface0);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.4)}
-.yield-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--overlay0);margin-bottom:10px;padding:0 2px}
-.yield-input-row{display:flex;gap:6px;margin-bottom:10px}
-#yield-input{width:80px;padding:5px 8px;border-radius:6px;background:var(--surface0);border:1px solid var(--surface1);color:var(--peach);font-size:12px;font-weight:600;outline:none;text-align:right}
-#yield-input:focus{border-color:var(--blue)}
-#yield-unit-select{padding:5px 8px;border-radius:6px;background:var(--surface0);border:1px solid var(--surface1);color:var(--text);font-size:12px;outline:none;cursor:pointer}
-
-/* Burst Options */
-.burst-options{display:flex;gap:6px;margin-bottom:10px}
-.burst-btn{flex:1;padding:7px 4px;border-radius:6px;background:var(--surface0);border:1px solid var(--surface1);color:var(--subtext0);font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s}
-.burst-btn.active{background:var(--surface1);color:var(--text);border-color:var(--blue);box-shadow:0 0 0 1px rgba(137,180,250,0.2)}
-.burst-btn:hover:not(.active){background:rgba(69,71,90,0.5);color:var(--text)}
-
-/* Height & Fission */
-.compact-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.compact-row label{font-size:11px;color:var(--subtext0);white-space:nowrap;min-width:55px}
-.compact-input{flex:1;max-width:90px;padding:5px 8px;border-radius:6px;background:var(--surface0);border:1px solid var(--surface1);color:var(--text);font-size:12px;outline:none;text-align:right}
-.compact-input:focus{border-color:var(--blue)}
-.compact-row .unit{font-size:10px;color:var(--overlay0);min-width:20px}
-
-/* Detonate */
-#detonate-btn{
-  width:100%;padding:12px;border-radius:var(--radius-sm);border:none;
-  background:linear-gradient(135deg,var(--red),#e64553);color:var(--crust);
-  font-size:14px;font-weight:800;cursor:pointer;letter-spacing:1px;
-  transition:all .2s;box-shadow:0 4px 16px rgba(243,139,168,0.25);
-  text-transform:uppercase;position:relative;overflow:hidden;
-}
-#detonate-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,0.1));pointer-events:none}
-#detonate-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(243,139,168,0.35)}
-#detonate-btn:active{transform:translateY(0);box-shadow:0 2px 8px rgba(243,139,168,0.2)}
-.btn-row{display:flex;gap:6px;margin-top:6px}
-.btn-secondary{flex:1;padding:8px;border-radius:6px;border:1px solid var(--surface1);background:transparent;color:var(--subtext0);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
-.btn-secondary:hover{background:var(--surface0);color:var(--text)}
-
-/* Wind */
-.wind-wrap{display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:10px;background:var(--surface0);border-radius:var(--radius-sm);border:1px solid var(--surface1)}
-.wind-compass{width:52px;height:52px;border-radius:50%;background:var(--mantle);border:2px solid var(--surface1);position:relative;cursor:pointer;flex-shrink:0}
-.wind-compass::before{content:'N';position:absolute;top:2px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;color:var(--overlay0)}
-.wind-arrow{position:absolute;top:50%;left:50%;width:2px;height:18px;background:var(--blue);transform-origin:bottom center;border-radius:2px;margin-left:-1px;margin-top:-18px;transition:transform .15s}
-.wind-arrow::after{content:'';position:absolute;top:-3px;left:50%;transform:translateX(-50%);border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:6px solid var(--blue)}
-.wind-info{flex:1;font-size:11px}
-.wind-info label{color:var(--subtext0);display:block;margin-bottom:4px;font-weight:600}
-.wind-speed-row{display:flex;gap:6px;align-items:center}
-#wind-speed{width:60px;padding:4px 6px;border-radius:5px;background:var(--mantle);border:1px solid var(--surface1);color:var(--text);font-size:11px;outline:none;text-align:right}
-.wind-dir-label{color:var(--overlay0);font-size:10px;margin-top:3px}
-
-/* Effects Legend */
-.legend-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(69,71,90,0.2);font-size:11px;cursor:pointer;transition:opacity .2s}
-.legend-item:last-child{border-bottom:none}
-.legend-item.dimmed{opacity:0.35}
-.legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;box-shadow:0 0 6px rgba(0,0,0,0.3)}
-.legend-label{flex:1;color:var(--subtext1);font-weight:600;line-height:1.2}
-.legend-desc{font-size:9px;color:var(--overlay0);font-weight:400;display:block;margin-top:1px}
-.legend-value{color:var(--overlay1);font-variant-numeric:tabular-nums;font-size:10px;text-align:right;line-height:1.3}
-.legend-area{font-size:9px;color:var(--overlay0);display:block}
-.legend-eye{width:18px;height:18px;border-radius:4px;border:1px solid var(--surface1);background:transparent;color:var(--overlay1);cursor:pointer;font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
-.legend-eye.on{background:var(--surface1);color:var(--text)}
-
-/* Stats */
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.stat-card{padding:10px 12px;border-radius:var(--radius-sm);background:var(--surface0);border:1px solid var(--surface1)}
-.stat-label{font-size:9px;text-transform:uppercase;letter-spacing:0.8px;color:var(--overlay0);margin-bottom:3px;font-weight:600}
-.stat-value{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
-.stat-value.deaths{color:var(--red)}.stat-value.injuries{color:var(--peach)}.stat-value.total{color:var(--yellow)}
-.stat-sub{font-size:9px;color:var(--overlay0);margin-top:3px;line-height:1.3}
-.stat-card.wide{grid-column:1/-1}
-
-/* Mushroom Cloud Panel */
-.cloud-panel{padding:10px 12px;border-radius:var(--radius-sm);background:var(--surface0);border:1px solid var(--surface1);margin-bottom:10px}
-.cloud-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px}
-.cloud-row .cl{color:var(--subtext0)}.cloud-row .cv{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
-
-/* Timeline */
-.timeline{margin-bottom:10px}
-.tl-item{display:flex;gap:10px;padding:5px 0;font-size:11px;border-left:2px solid var(--surface1);margin-left:6px;padding-left:14px;position:relative}
-.tl-item::before{content:'';position:absolute;left:-4px;top:9px;width:6px;height:6px;border-radius:50%;background:var(--surface2)}
-.tl-item:first-child::before{background:var(--rosewater)}
-.tl-time{color:var(--peach);font-weight:700;min-width:55px;font-variant-numeric:tabular-nums}
-.tl-desc{color:var(--subtext0)}
-
-/* Presets */
-.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.preset-chip{padding:7px 8px;border-radius:6px;background:var(--surface0);border:1px solid var(--surface1);color:var(--subtext0);font-size:10px;cursor:pointer;text-align:center;transition:all .15s;font-weight:600}
-.preset-chip:hover{background:var(--surface1);color:var(--text);border-color:var(--surface2)}
-.preset-chip .chip-yield{display:block;font-size:9px;color:var(--overlay0);margin-top:1px;font-weight:500}
-
-/* Quick Targets */
-.target-pills{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
-.target-pill{padding:4px 10px;border-radius:20px;background:var(--surface0);border:1px solid var(--surface1);color:var(--subtext0);font-size:10px;cursor:pointer;transition:all .15s;font-weight:600;white-space:nowrap}
-.target-pill:hover{background:var(--surface1);color:var(--text);border-color:var(--surface2)}
-
-/* Active Dets */
-.det-item{display:flex;align-items:center;gap:6px;padding:5px 8px;margin-bottom:3px;background:var(--surface0);border-radius:6px;font-size:11px;border:1px solid var(--surface1)}
-.det-item .det-idx{width:18px;height:18px;border-radius:50%;background:var(--red);color:var(--crust);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.det-item .det-name{flex:1;color:var(--subtext1);font-weight:500}
-.det-item .det-yield{color:var(--peach);font-weight:700;font-size:10px}
-.det-item .det-remove{width:18px;height:18px;border-radius:4px;border:none;background:transparent;color:var(--overlay0);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.det-item .det-remove:hover{background:var(--red);color:var(--crust)}
-
-/* Share link */
-.share-row{display:flex;gap:6px;align-items:center}
-#share-input{flex:1;padding:5px 8px;border-radius:6px;background:var(--surface0);border:1px solid var(--surface1);color:var(--text);font-size:10px;outline:none;font-family:monospace}
-.share-copy{padding:5px 10px;border-radius:6px;background:var(--blue);border:none;color:var(--crust);font-size:10px;font-weight:700;cursor:pointer}
-
-/* Info overlay on map */
-#info-bar{
-  position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:1000;
-  background:var(--glass);backdrop-filter:blur(20px) saturate(1.5);
-  border:1px solid var(--glass-border);border-radius:var(--radius);
-  padding:8px 16px;display:none;box-shadow:var(--shadow-lg);
-}
-#info-bar.active{display:flex;align-items:center;gap:16px}
-.ib-stat{text-align:center}.ib-val{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}.ib-lbl{font-size:9px;color:var(--overlay0);text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
-.ib-div{width:1px;height:28px;background:var(--surface1)}
-
-/* Coords display */
-#coords{
-  position:absolute;bottom:16px;right:16px;z-index:999;
-  padding:4px 10px;border-radius:6px;background:var(--glass);backdrop-filter:blur(10px);
-  border:1px solid var(--glass-border);font-size:10px;color:var(--overlay1);
-  font-variant-numeric:tabular-nums;font-family:'Segoe UI',monospace;
-}
-
-/* Online badge */
-#offline-badge{
-  position:absolute;top:12px;right:12px;z-index:1000;
-  padding:5px 10px;border-radius:20px;font-size:10px;font-weight:600;
-  background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);
-  color:var(--overlay1);display:none;
-}
-#offline-badge.show{display:flex;align-items:center;gap:5px}
-.ob-dot{width:7px;height:7px;border-radius:50%}
-.ob-dot.on{background:var(--green)}.ob-dot.off{background:var(--red)}
-
-/* Flash animation */
-@keyframes nuke-flash{0%{opacity:0}3%{opacity:1}10%{opacity:0.7}20%{opacity:0.3}100%{opacity:0}}
-#flash{position:fixed;inset:0;z-index:9999;background:white;pointer-events:none;opacity:0}
-#flash.active{animation:nuke-flash 2s ease-out forwards}
-
-/* Ring expand animation */
-@keyframes ring-expand{0%{stroke-dashoffset:2000;opacity:0}30%{opacity:0.8}100%{stroke-dashoffset:0;opacity:1}}
-
-/* Crosshair */
-.crosshair,.crosshair .leaflet-interactive{cursor:crosshair!important}
-
-/* Ground zero marker */
-.gz-marker{width:28px;height:28px;position:relative}
-.gz-outer{width:28px;height:28px;border-radius:50%;border:2px solid var(--red);background:rgba(243,139,168,0.15);position:absolute;animation:gz-pulse 2s ease-out infinite}
-.gz-inner{width:8px;height:8px;border-radius:50%;background:var(--red);position:absolute;top:10px;left:10px;box-shadow:0 0 8px var(--red)}
-@keyframes gz-pulse{0%{transform:scale(1);opacity:1}100%{transform:scale(2);opacity:0}}
-
-/* Tooltip on rings */
-.ring-tooltip{
-  position:absolute;z-index:10000;padding:8px 12px;border-radius:var(--radius-sm);
-  background:var(--crust);border:1px solid var(--surface1);color:var(--text);
-  font-size:11px;pointer-events:none;white-space:nowrap;box-shadow:var(--shadow-lg);
-  line-height:1.5;max-width:260px;white-space:normal;
-}
-.ring-tooltip .rt-title{font-weight:700;margin-bottom:2px}
-.ring-tooltip .rt-desc{color:var(--overlay1);font-size:10px}
-
-/* Multi-detonation toggle */
-.multi-toggle{display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;user-select:none}
-.multi-toggle input{display:none}
-.mt-slider{width:32px;height:18px;border-radius:9px;background:var(--surface1);position:relative;transition:background .2s;flex-shrink:0}
-.mt-slider::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--overlay0);transition:all .2s}
-.multi-toggle input:checked+.mt-slider{background:var(--blue)}
-.multi-toggle input:checked+.mt-slider::after{left:16px;background:var(--text)}
-.mt-label{font-size:11px;color:var(--subtext0);font-weight:600}
-
-/* Responsive */
-@media(max-width:768px){
-  :root{--panel-w:100vw}
-  #panel{height:45vh;top:auto;width:100%;border-right:none;border-top:1px solid var(--glass-border);border-radius:var(--radius) var(--radius) 0 0}
-  #panel.collapsed{transform:translateY(calc(100% - 44px))}
-  #panel-toggle{top:-38px;right:12px;left:auto;border-radius:var(--radius-sm) var(--radius-sm) 0 0;width:44px;height:34px;border-bottom:none}
-  #coords{display:none}
-}
-</style>
+<link rel="stylesheet" href="css/styles.css"/>
 </head>
 <body>
 
@@ -329,7 +25,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
         </div>
         <div class="brand-text">Nuke<span>Map</span></div>
-        <div class="brand-ver">v2.0.0</div>
+        <div class="brand-ver">v3.0.0</div>
       </div>
       <div class="search-wrap">
         <span class="search-icon"><svg viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg></span>
@@ -339,20 +35,19 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
     </div>
 
     <div class="panel-body">
-      <!-- Quick Targets -->
       <div class="section">
         <div class="section-title">Quick Targets</div>
         <div class="target-pills" id="target-pills"></div>
       </div>
 
-      <!-- Main Tabs -->
       <div class="tabs" id="main-tabs">
         <button class="tab active" data-tab="weapon">Weapon</button>
         <button class="tab" data-tab="effects">Effects</button>
         <button class="tab" data-tab="results">Results</button>
+        <button class="tab" data-tab="tools">Tools</button>
       </div>
 
-      <!-- WEAPON TAB -->
+      <!-- ===== WEAPON TAB ===== -->
       <div class="tab-content active" id="tab-weapon">
         <div class="section">
           <div class="section-title">Warhead</div>
@@ -367,11 +62,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
           <div class="yield-labels"><span>0.001 kT</span><span>100 MT</span></div>
           <div class="yield-input-row">
             <input type="number" id="yield-input" value="15" min="0.001" step="any"/>
-            <select id="yield-unit-select">
-              <option value="kt" selected>kT</option>
-              <option value="mt">MT</option>
-              <option value="t">tons</option>
-            </select>
+            <select id="yield-unit-select"><option value="kt" selected>kT</option><option value="mt">MT</option><option value="t">tons</option></select>
           </div>
         </div>
 
@@ -383,26 +74,17 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
             <button class="burst-btn" data-burst="custom">Custom</button>
           </div>
           <div class="compact-row" id="height-row" style="display:none">
-            <label>Height</label>
-            <input type="number" class="compact-input" id="burst-height" value="0" min="0" max="100000"/>
-            <span class="unit">m</span>
+            <label>Height</label><input type="number" class="compact-input" id="burst-height" value="0" min="0"/><span class="unit">m</span>
           </div>
           <div class="compact-row" id="fission-row">
-            <label>Fission</label>
-            <input type="number" class="compact-input" id="fission-pct" value="50" min="0" max="100"/>
-            <span class="unit">%</span>
+            <label>Fission</label><input type="number" class="compact-input" id="fission-pct" value="50" min="0" max="100"/><span class="unit">%</span>
           </div>
           <div id="wind-wrap" style="display:none">
             <div class="wind-wrap">
-              <div class="wind-compass" id="wind-compass" title="Click to set wind direction">
-                <div class="wind-arrow" id="wind-arrow"></div>
-              </div>
+              <div class="wind-compass" id="wind-compass"><div class="wind-arrow" id="wind-arrow"></div></div>
               <div class="wind-info">
                 <label>Wind (fallout)</label>
-                <div class="wind-speed-row">
-                  <input type="number" id="wind-speed" value="24" min="0" max="300"/>
-                  <span class="unit">km/h</span>
-                </div>
+                <div class="wind-speed-row"><input type="number" id="wind-speed" value="24" min="0" max="300"/><span class="unit">km/h</span></div>
                 <div class="wind-dir-label" id="wind-dir-label">From N (0deg)</div>
               </div>
             </div>
@@ -415,70 +97,88 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
             <button class="btn-secondary" id="clear-btn">Clear All</button>
             <button class="btn-secondary" id="share-btn">Share Link</button>
           </div>
-          <label class="multi-toggle" id="multi-toggle">
-            <input type="checkbox" id="multi-check"/>
-            <span class="mt-slider"></span>
-            <span class="mt-label">Multiple detonations</span>
-          </label>
+          <label class="toggle-row"><input type="checkbox" id="multi-check"/><span class="tg-slider"></span><span class="tg-label">Multiple detonations</span></label>
+          <label class="toggle-row"><input type="checkbox" id="sound-check" checked/><span class="tg-slider"></span><span class="tg-label">Sound effects</span></label>
+          <label class="toggle-row"><input type="checkbox" id="cloud-toggle"/><span class="tg-slider"></span><span class="tg-label">3D mushroom cloud</span></label>
+          <label class="toggle-row"><input type="checkbox" id="heatmap-check"/><span class="tg-slider"></span><span class="tg-label" id="heatmap-label">Population heatmap</span></label>
         </div>
 
-        <!-- Quick Presets -->
         <div class="section">
           <div class="section-title">Weapon Presets</div>
           <div class="preset-grid" id="preset-grid"></div>
         </div>
-
         <div class="section">
           <div class="section-title">Historical Detonations</div>
           <div class="preset-grid" id="historical-grid"></div>
         </div>
       </div>
 
-      <!-- EFFECTS TAB -->
+      <!-- ===== EFFECTS TAB ===== -->
       <div class="tab-content" id="tab-effects">
         <div class="section" id="legend-section">
           <div class="section-title">Effect Rings</div>
           <div id="legend-items"><div style="color:var(--overlay0);font-size:12px;padding:10px 0">Detonate a weapon to see effects</div></div>
         </div>
-
         <div class="section" id="cloud-section" style="display:none">
           <div class="section-title">Mushroom Cloud</div>
           <div class="cloud-panel" id="cloud-panel"></div>
         </div>
-
         <div class="section" id="timeline-section" style="display:none">
           <div class="section-title">Event Timeline</div>
           <div class="timeline" id="timeline"></div>
         </div>
-
         <div class="section" id="crater-section" style="display:none">
           <div class="section-title">Crater</div>
           <div class="cloud-panel" id="crater-panel"></div>
         </div>
+        <div class="section" id="shelter-section" style="display:none">
+          <div class="section-title">Shelter Survival Analysis</div>
+          <div id="shelter-content"></div>
+        </div>
       </div>
 
-      <!-- RESULTS TAB -->
+      <!-- ===== RESULTS TAB ===== -->
       <div class="tab-content" id="tab-results">
-        <div class="section" id="stats-section">
+        <div class="section">
           <div class="section-title">Estimated Casualties</div>
-          <div class="stat-grid" id="stat-grid">
+          <div class="stat-grid">
             <div class="stat-card"><div class="stat-label">Fatalities</div><div class="stat-value deaths" id="stat-deaths">--</div></div>
             <div class="stat-card"><div class="stat-label">Injuries</div><div class="stat-value injuries" id="stat-injuries">--</div></div>
             <div class="stat-card wide"><div class="stat-label">Total Affected</div><div class="stat-value total" id="stat-total">--</div><div class="stat-sub" id="stat-note">Detonate a weapon to see estimates</div></div>
           </div>
         </div>
-
         <div class="section" id="dets-section" style="display:none">
           <div class="section-title">Active Detonations</div>
           <div id="dets-list"></div>
         </div>
-
         <div class="section" id="share-section" style="display:none">
           <div class="section-title">Share</div>
-          <div class="share-row">
-            <input type="text" id="share-input" readonly/>
-            <button class="share-copy" id="share-copy">Copy</button>
+          <div class="share-row"><input type="text" id="share-input" readonly/><button class="share-copy" id="share-copy">Copy</button></div>
+        </div>
+      </div>
+
+      <!-- ===== TOOLS TAB ===== -->
+      <div class="tab-content" id="tab-tools">
+        <!-- MIRV -->
+        <div class="section">
+          <div class="section-title">MIRV Strike</div>
+          <div class="mirv-status" id="mirv-status">Select a MIRV preset, then click the map</div>
+          <div class="preset-grid" id="mirv-grid"></div>
+        </div>
+
+        <!-- Comparison -->
+        <div class="section">
+          <div class="section-title">Weapon Comparison</div>
+          <div class="compare-selects">
+            <select id="compare-a"></select>
+            <span style="color:var(--overlay0);font-size:11px;font-weight:700">vs</span>
+            <select id="compare-b"></select>
           </div>
+          <div class="btn-row" style="margin-top:0">
+            <button class="btn-secondary" id="compare-go">Compare</button>
+            <button class="btn-secondary" id="compare-clear">Clear</button>
+          </div>
+          <div id="compare-result"></div>
         </div>
       </div>
     </div>
@@ -487,940 +187,22 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 
 <div id="info-bar"></div>
 
-<script>
-// ============================================================
-// NukeMap v2.0.0 - Nuclear Weapon Effects Simulator
-// ============================================================
-(function(){
-'use strict';
-
-// ---- WEAPON DATABASE ----
-const WEAPONS = [
-  {name:'Custom',yield_kt:15,country:'',year:'',desc:'Set any yield'},
-  {name:'Davy Crockett (M-28)',yield_kt:0.02,country:'US',year:'1961',desc:'Smallest US tactical weapon'},
-  {name:'W-25 (AIR-2 Genie)',yield_kt:1.5,country:'US',year:'1957',desc:'Air-to-air rocket warhead'},
-  {name:'Little Boy (Hiroshima)',yield_kt:15,country:'US',year:'1945',desc:'Gun-type uranium bomb'},
-  {name:'Fat Man (Nagasaki)',yield_kt:21,country:'US',year:'1945',desc:'Implosion plutonium bomb'},
-  {name:'W76-2 (Trident Low)',yield_kt:5,country:'US',year:'2019',desc:'Low-yield SLBM warhead'},
-  {name:'B61-4 (Tactical)',yield_kt:45,country:'US',year:'1979',desc:'Tactical gravity bomb'},
-  {name:'B61-12 (Guided)',yield_kt:50,country:'US',year:'2022',desc:'Precision guided nuclear bomb'},
-  {name:'W76-1 (Trident II)',yield_kt:100,country:'US',year:'2008',desc:'SLBM warhead, most numerous'},
-  {name:'W80-1 (ALCM)',yield_kt:150,country:'US',year:'1981',desc:'Air-launched cruise missile'},
-  {name:'W87-0 (Minuteman III)',yield_kt:300,country:'US',year:'1986',desc:'ICBM warhead'},
-  {name:'B61-7 (Strategic)',yield_kt:340,country:'US',year:'1985',desc:'Strategic gravity bomb'},
-  {name:'W88 (Trident II)',yield_kt:455,country:'US',year:'1988',desc:'Most powerful US SLBM'},
-  {name:'W87-1 (Sentinel)',yield_kt:475,country:'US',year:'2030',desc:'Next-gen ICBM warhead'},
-  {name:'Ivy King',yield_kt:500,country:'US',year:'1952',desc:'Largest pure fission bomb'},
-  {name:'B83-1 (Largest US)',yield_kt:1200,country:'US',year:'1983',desc:'Largest US weapon in arsenal'},
-  {name:'Ivy Mike',yield_kt:10400,country:'US',year:'1952',desc:'First thermonuclear device'},
-  {name:'Castle Bravo',yield_kt:15000,country:'US',year:'1954',desc:'Largest US test (2.5x expected)'},
-  {name:'RSM-56 Bulava',yield_kt:150,country:'RU',year:'2018',desc:'SLBM, 6 MIRV warheads'},
-  {name:'RT-2PM2 Topol-M',yield_kt:800,country:'RU',year:'1997',desc:'Mobile/silo ICBM'},
-  {name:'RS-28 Sarmat',yield_kt:800,country:'RU',year:'2023',desc:'Heavy ICBM, replaces SS-18'},
-  {name:'R-36M2 SS-18 Satan',yield_kt:20000,country:'RU',year:'1988',desc:'10 MIRV, 20 MT single'},
-  {name:'Tsar Bomba (50 MT)',yield_kt:50000,country:'RU',year:'1961',desc:'Largest detonation in history'},
-  {name:'Tsar Bomba (100 MT)',yield_kt:100000,country:'RU',year:'1961',desc:'Full uranium tamper design'},
-  {name:'DF-41 (China)',yield_kt:350,country:'CN',year:'2019',desc:'Road-mobile ICBM, 3 MIRV'},
-  {name:'DF-5B (China)',yield_kt:5000,country:'CN',year:'1981',desc:'Silo ICBM, single warhead'},
-  {name:'Trident D5 (UK)',yield_kt:100,country:'UK',year:'1994',desc:'UK submarine deterrent'},
-  {name:'M51 (France)',yield_kt:300,country:'FR',year:'2010',desc:'French SLBM, 6 MIRV'},
-  {name:'Agni-V (India)',yield_kt:40,country:'IN',year:'2018',desc:'ICBM-range, road-mobile'},
-  {name:'Shaheen-III (Pakistan)',yield_kt:40,country:'PK',year:'2015',desc:'MRBM, 2750km range'},
-  {name:'Hwasong-15 (DPRK)',yield_kt:250,country:'KP',year:'2017',desc:'ICBM-class, est. yield'},
-  {name:'Jericho III (Israel)',yield_kt:200,country:'IL',year:'2008',desc:'Estimated ICBM capability'},
-];
-
-const HISTORICAL = [
-  {name:'Trinity',lat:33.6773,lng:-106.4754,yield_kt:21,year:'1945',burst:'surface',height:0,desc:'First nuclear test'},
-  {name:'Hiroshima',lat:34.3955,lng:132.4534,yield_kt:15,year:'1945',burst:'airburst',height:580,desc:'Little Boy, 15 kT'},
-  {name:'Nagasaki',lat:32.7736,lng:129.8616,yield_kt:21,year:'1945',burst:'airburst',height:503,desc:'Fat Man, 21 kT'},
-  {name:'Ivy Mike',lat:11.668,lng:162.195,yield_kt:10400,year:'1952',burst:'surface',height:0,desc:'First H-bomb'},
-  {name:'Castle Bravo',lat:11.697,lng:165.273,yield_kt:15000,year:'1954',burst:'surface',height:0,desc:'15 MT, 2.5x expected'},
-  {name:'Tsar Bomba',lat:73.812,lng:54.583,yield_kt:50000,year:'1961',burst:'airburst',height:4000,desc:'50 MT, largest ever'},
-];
-
-const QUICK_TARGETS = [
-  {name:'New York',lat:40.7128,lng:-74.006},{name:'Moscow',lat:55.7558,lng:37.6173},
-  {name:'Washington DC',lat:38.9072,lng:-77.037},{name:'London',lat:51.5074,lng:-0.1278},
-  {name:'Beijing',lat:39.9042,lng:116.407},{name:'Los Angeles',lat:34.0522,lng:-118.244},
-  {name:'Chicago',lat:41.8781,lng:-87.6298},{name:'Tokyo',lat:35.6762,lng:139.65},
-  {name:'Paris',lat:48.8566,lng:2.3522},{name:'Tehran',lat:35.6892,lng:51.389},
-  {name:'Pyongyang',lat:39.0392,lng:125.763},{name:'Pentagon',lat:38.8719,lng:-77.056},
-];
-
-// ---- EFFECT DEFINITIONS (ordered largest to smallest for rendering) ----
-const EFFECTS_DEF = [
-  {id:'emp',      label:'EMP Radius',           color:'#94e2d5',desc:'Line-of-sight electronic disruption. Computers, communications, power grid damage.',dashed:true},
-  {id:'thermal1', label:'1st Degree Burns',      color:'#f5c2e7',desc:'Comparable to bad sunburn. Pain, reddening of skin. ~2 cal/cm\u00B2.'},
-  {id:'psi1',     label:'Light Blast (1 psi)',   color:'#f9e2af',desc:'Glass windows shatter. Light structural damage. Injuries from flying debris.'},
-  {id:'thermal3', label:'3rd Degree Burns',      color:'#fab387',desc:'Full-thickness skin burns, charring. Likely fatal without treatment. ~8 cal/cm\u00B2.'},
-  {id:'psi5',     label:'Moderate Blast (5 psi)',color:'#cba6f7',desc:'Most residential buildings destroyed. Heavy casualties. Winds ~160 mph.'},
-  {id:'psi20',    label:'Heavy Blast (20 psi)',  color:'#89b4fa',desc:'Reinforced concrete severely damaged. Near-total fatalities. Winds ~500 mph.'},
-  {id:'psi200',   label:'Severe Blast (200 psi)',color:'#89dceb',desc:'Everything above ground destroyed. Only deep bunkers survive.'},
-  {id:'radiation',label:'500 rem Radiation',     color:'#a6e3a1',desc:'Lethal radiation dose. ~50-90% mortality within weeks without treatment.'},
-  {id:'fireball', label:'Fireball',              color:'#f5e0dc',desc:'Everything within vaporized. Temperatures exceed 10 million \u00B0C.'},
-  {id:'crater',   label:'Crater',               color:'#585b70',desc:'Ground excavated by blast. Surface burst only.',dashed:true},
-];
-
-// ---- NUCLEAR PHYSICS (Glasstone & Dolan + Brode) ----
-function calcEffects(Y, burstType, heightM, fissionFrac) {
-  Y = Math.max(Y, 0.001);
-  fissionFrac = (fissionFrac ?? 50) / 100;
-  const isSurface = burstType === 'surface';
-  const optH = 0.22 * Math.pow(Y, 1/3) * 1000;
-  const h = burstType === 'airburst' ? optH : (heightM || 0);
-  const hf = isSurface ? 0.8 : 1.0;
-
-  const fireball = isSurface ? 0.05 * Math.pow(Y, 0.4) : 0.066 * Math.pow(Y, 0.4);
-  const psi200 = hf * 0.11 * Math.pow(Y, 1/3);
-  const psi20  = hf * 0.24 * Math.pow(Y, 1/3);
-  const psi5   = hf * 0.59 * Math.pow(Y, 1/3);
-  const psi3   = hf * 0.79 * Math.pow(Y, 1/3);
-  const psi1   = hf * 1.93 * Math.pow(Y, 1/3);
-  const thermal3 = 0.68 * Math.pow(Y, 0.41);
-  const thermal2 = 0.87 * Math.pow(Y, 0.41);
-  const thermal1 = 1.18 * Math.pow(Y, 0.41);
-  const rem500  = 1.15 * Math.pow(Y, 0.19);
-  const emp = Math.min(2.5 * Math.pow(Y, 0.33), 500);
-
-  // Crater (surface bursts only, Glasstone ch. 6)
-  let craterR = 0, craterDepth = 0;
-  if (isSurface) {
-    craterR = 0.038 * Math.pow(Y, 1/3.4);
-    craterDepth = 0.013 * Math.pow(Y, 1/3.4);
-  }
-
-  // Mushroom cloud dimensions (Glasstone ch. 2)
-  const cloudH = 0.29 * Math.pow(Y, 0.4); // stem top km
-  const cloudTopH = isSurface
-    ? 0.24 * Math.pow(Y, 0.42)  // lower for surface
-    : 0.29 * Math.pow(Y, 0.42); // cloud top km
-  const cloudTopR = 0.19 * Math.pow(Y, 0.4); // cloud cap radius km
-  const stemR = 0.05 * Math.pow(Y, 0.35);
-
-  // Fallout
-  let fallout = null;
-  if (isSurface || (heightM !== undefined && heightM < fireball * 1000)) {
-    const fl = 1.3 * Math.pow(Y * fissionFrac, 0.45);
-    const fw = 0.39 * Math.pow(Y * fissionFrac, 0.35);
-    const fll = 4.6 * Math.pow(Y * fissionFrac, 0.45);
-    const flw = 1.1 * Math.pow(Y * fissionFrac, 0.35);
-    fallout = {heavy:{length:fl,width:fw},light:{length:fll,width:flw}};
-  }
-
-  return {
-    fireball, psi200, psi20, psi5, psi3, psi1,
-    thermal3, thermal2, thermal1, radiation: rem500, emp,
-    craterR, craterDepth,
-    cloudTopH, cloudTopR, stemR, cloudH,
-    fallout, burstHeight: h, optimalHeight: optH,
-    isSurface, yieldKt: Y
-  };
-}
-
-// ---- TIMELINE (distance-based arrival times) ----
-function calcTimeline(Y, effects) {
-  const items = [];
-  items.push({time:'0 ms', desc:'Detonation. X-ray pulse heats surrounding air to millions of degrees.'});
-  items.push({time: (0.0013 * Math.pow(Y, 0.4) * 1000).toFixed(0) + ' ms', desc: `Fireball reaches max size (${fmtR(effects.fireball)} radius).`});
-  const shockT5 = effects.psi5 / 0.34; // rough shock speed ~340 m/s avg to 5psi
-  items.push({time: fmtTime(shockT5), desc: `Blast wave reaches 5 psi zone (${fmtR(effects.psi5)}). Buildings destroyed.`});
-  const shockT1 = effects.psi1 / 0.34;
-  items.push({time: fmtTime(shockT1), desc: `Blast wave reaches 1 psi (${fmtR(effects.psi1)}). Windows shatter.`});
-  if (effects.isSurface) {
-    items.push({time: '~10 min', desc: 'Mushroom cloud stabilizes. Fallout begins descending.'});
-    items.push({time: '~30 min', desc: 'Heaviest fallout within ' + fmtR(effects.fallout?.heavy.length || 0) + ' downwind.'});
-    items.push({time: '~24 hrs', desc: 'Light fallout may extend ' + fmtR(effects.fallout?.light.length || 0) + ' downwind.'});
-  } else {
-    items.push({time: '~10 min', desc: `Mushroom cloud reaches ~${effects.cloudTopH.toFixed(1)} km altitude.`});
-  }
-  return items;
-}
-
-function fmtTime(seconds) {
-  if (seconds < 1) return (seconds * 1000).toFixed(0) + ' ms';
-  if (seconds < 60) return seconds.toFixed(1) + ' sec';
-  return (seconds / 60).toFixed(1) + ' min';
-}
-
-// ---- FORMATTING ----
-function fmtR(km) {
-  if (km < 0.01) return Math.round(km * 1000) + ' m';
-  if (km < 1) return (km * 1000).toFixed(0) + ' m';
-  if (km < 10) return km.toFixed(2) + ' km';
-  if (km < 100) return km.toFixed(1) + ' km';
-  return km.toFixed(0) + ' km';
-}
-function fmtArea(km) {
-  const a = Math.PI * km * km;
-  if (a < 0.01) return (a * 1e6).toFixed(0) + ' m\u00B2';
-  if (a < 1) return (a * 100).toFixed(0) + ' ha';
-  return a.toFixed(1) + ' km\u00B2';
-}
-function fmtYield(kt) {
-  if (kt < 0.001) return (kt*1e6).toFixed(0)+' g TNT';
-  if (kt < 1) return kt < 0.01 ? (kt*1000).toFixed(1)+' tons' : (kt*1000).toFixed(0)+' tons';
-  if (kt < 1000) return (kt >= 100 ? kt.toFixed(0) : kt.toFixed(1))+' kT';
-  return (kt/1000).toFixed(kt>=10000?0:1)+' MT';
-}
-function fmtNum(n) {
-  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
-  if (n >= 1e3) return (n/1e3).toFixed(n>=1e4?0:1)+'K';
-  return Math.round(n).toLocaleString();
-}
-function fmtDist(km) {
-  const mi = km * 0.621371;
-  return fmtR(km) + ' (' + (mi < 1 ? (mi * 5280).toFixed(0) + ' ft' : mi.toFixed(mi < 10 ? 1 : 0) + ' mi') + ')';
-}
-
-// ---- YIELD CONVERSION ----
-function sliderToYield(v) {
-  return Math.pow(10, -3 + (v/1000) * 8); // 0.001 to 100,000 kT
-}
-function yieldToSlider(kt) {
-  return ((Math.log10(Math.max(kt,0.001)) + 3) / 8) * 1000;
-}
-
-// ---- CASUALTY ESTIMATION ----
-function estimateCasualties(lat, lng, effects) {
-  const nc = findNearestCity(lat, lng);
-  let density = 40;
-  if (nc) {
-    const d = nc.dist;
-    const p = nc.pop;
-    if (d < 3 && p > 1e6) density = 15000;
-    else if (d < 5 && p > 500000) density = 10000;
-    else if (d < 10 && p > 500000) density = 5000;
-    else if (d < 15 && p > 100000) density = 3000;
-    else if (d < 25 && p > 100000) density = 1500;
-    else if (d < 40 && p > 50000) density = 500;
-    else if (d < 60 && p > 10000) density = 200;
-    else if (d < 100) density = 80;
-  }
-
-  const zones = [
-    {r: effects.fireball, dfrac: 1.0, ifrac: 0},
-    {r: effects.psi200 || 0, dfrac: 0.98, ifrac: 0.02},
-    {r: effects.psi20, dfrac: 0.90, ifrac: 0.08},
-    {r: effects.psi5, dfrac: 0.50, ifrac: 0.40},
-    {r: Math.max(effects.thermal3, effects.psi3), dfrac: 0.25, ifrac: 0.40},
-    {r: effects.psi1, dfrac: 0.05, ifrac: 0.30},
-    {r: effects.thermal1, dfrac: 0.01, ifrac: 0.15},
-  ];
-
-  let deaths = 0, injuries = 0, prevArea = 0;
-  for (const z of zones) {
-    if (z.r < 0.001) continue;
-    const area = Math.PI * z.r * z.r;
-    const ring = Math.max(0, area - prevArea);
-    deaths += ring * density * z.dfrac;
-    injuries += ring * density * z.ifrac;
-    prevArea = area;
-  }
-  return { deaths: Math.round(deaths), injuries: Math.round(injuries), density };
-}
-
-function haversine(lat1,lng1,lat2,lng2){
-  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-
-// ---- CITY DATABASE ----
-const CITIES=[
-["New York","NY",40.7128,-74.006,8336817,"10001,10019,10036,10128"],
-["Los Angeles","CA",34.0522,-118.244,3979576,"90001,90012,90028"],
-["Chicago","IL",41.8781,-87.6298,2693976,"60601,60614,60657"],
-["Houston","TX",29.7604,-95.3698,2320268,"77001,77019,77030"],
-["Phoenix","AZ",33.4484,-112.074,1680992,"85001,85004,85016"],
-["Philadelphia","PA",39.9526,-75.1652,1603797,"19102,19103,19107"],
-["San Antonio","TX",29.4241,-98.4936,1547253,"78201,78205"],
-["San Diego","CA",32.7157,-117.161,1423851,"92101,92103"],
-["Dallas","TX",32.7767,-96.797,1343573,"75201,75204"],
-["San Jose","CA",37.3382,-121.886,1021795,"95110,95113"],
-["Austin","TX",30.2672,-97.7431,978908,"78701,78705"],
-["Jacksonville","FL",30.3322,-81.6557,949611,"32202,32207"],
-["Fort Worth","TX",32.7555,-97.3308,918915,"76102"],
-["Columbus","OH",39.9612,-82.9988,905748,"43201,43215"],
-["Indianapolis","IN",39.7684,-86.1581,887642,"46201,46204"],
-["Charlotte","NC",35.2271,-80.8431,874579,"28202"],
-["San Francisco","CA",37.7749,-122.419,873965,"94102,94109"],
-["Seattle","WA",47.6062,-122.332,737015,"98101,98109"],
-["Denver","CO",39.7392,-104.99,715522,"80202,80204"],
-["Washington","DC",38.9072,-77.0369,689545,"20001,20005,20500"],
-["Nashville","TN",36.1627,-86.7816,689447,"37201"],
-["Oklahoma City","OK",35.4676,-97.5164,681054,"73101"],
-["El Paso","TX",31.7619,-106.485,681124,"79901"],
-["Boston","MA",42.3601,-71.0589,675647,"02101,02116"],
-["Portland","OR",45.5152,-122.678,652503,"97201"],
-["Las Vegas","NV",36.1699,-115.14,641903,"89101,89109"],
-["Memphis","TN",35.1495,-90.049,633104,"38103"],
-["Louisville","KY",38.2527,-85.7585,633045,"40202"],
-["Baltimore","MD",39.2904,-76.6122,585708,"21201"],
-["Milwaukee","WI",43.0389,-87.9065,577222,"53201"],
-["Albuquerque","NM",35.0844,-106.65,564559,"87101"],
-["Tucson","AZ",32.2226,-110.975,548073,"85701"],
-["Fresno","CA",36.7378,-119.787,542107,"93721"],
-["Sacramento","CA",38.5816,-121.494,524943,"95814"],
-["Mesa","AZ",33.4152,-111.832,518012,"85201"],
-["Kansas City","MO",39.0997,-94.5786,508090,"64101"],
-["Atlanta","GA",33.749,-84.388,498715,"30303"],
-["Omaha","NE",41.2565,-95.9345,486051,"68102"],
-["Colorado Springs","CO",38.8339,-104.821,478961,"80903"],
-["Raleigh","NC",35.7796,-78.6382,474069,"27601"],
-["Miami","FL",25.7617,-80.1918,442241,"33131,33139"],
-["Minneapolis","MN",44.9778,-93.265,429954,"55401"],
-["Tampa","FL",27.9506,-82.4572,399700,"33602"],
-["Tulsa","OK",36.154,-95.993,413066,"74103"],
-["New Orleans","LA",29.9511,-90.0715,383997,"70112"],
-["Cleveland","OH",41.4993,-81.6944,372624,"44113"],
-["Honolulu","HI",21.3069,-157.858,350964,"96813"],
-["Pittsburgh","PA",40.4406,-79.9959,302971,"15222"],
-["Cincinnati","OH",39.1031,-84.512,309317,"45202"],
-["St. Louis","MO",38.627,-90.1994,301578,"63101"],
-["Orlando","FL",28.5383,-81.3792,307573,"32801"],
-["Detroit","MI",42.3314,-83.0458,639111,"48226"],
-["Salt Lake City","UT",40.7608,-111.891,200133,"84101"],
-["Boise","ID",43.615,-116.202,235684,"83702"],
-["Anchorage","AK",61.2181,-149.9,291247,"99501"],
-["Richmond","VA",37.5407,-77.436,226610,"23219"],
-["Norfolk","VA",36.8508,-76.2859,245115,"23510"],
-["Spokane","WA",47.6588,-117.426,228989,"99201"],
-["Madison","WI",43.0731,-89.4012,269840,"53703"],
-["Des Moines","IA",41.5868,-93.625,214133,"50309"],
-["Birmingham","AL",33.5207,-86.8025,200733,"35203"],
-["Durham","NC",35.994,-78.8986,283506,"27701"],
-["Reno","NV",39.5296,-119.814,264165,"89501"],
-["Wichita","KS",37.6872,-97.3301,397532,"67202"],
-["Grand Rapids","MI",42.9634,-85.6681,198917,"49503"],
-["Greensboro","NC",36.0726,-79.792,299035,"27401"],
-["Bakersfield","CA",35.3733,-119.019,403455,"93301"],
-["Stockton","CA",37.9577,-121.291,320804,"95202"],
-["Riverside","CA",33.9806,-117.376,314998,"92501"],
-["St. Petersburg","FL",27.7676,-82.6403,258308,"33701"],
-["Savannah","GA",32.0809,-81.0912,147780,"31401"],
-["Charleston","SC",32.7765,-79.9311,150227,"29401"],
-["Knoxville","TN",35.9606,-83.9207,190740,"37902"],
-["Sioux Falls","SD",43.5446,-96.7311,192517,"57104"],
-["Fargo","ND",46.8772,-96.7898,125990,"58102"],
-["Provo","UT",40.2338,-111.659,115162,"84601"],
-["Dayton","OH",39.7589,-84.1916,137644,"45402"],
-// World cities
-["London","UK",51.5074,-0.1278,8982000,""],["Paris","France",48.8566,2.3522,2161000,""],
-["Tokyo","Japan",35.6762,139.65,13960000,""],["Beijing","China",39.9042,116.407,21540000,""],
-["Shanghai","China",31.2304,121.474,24870000,""],["Moscow","Russia",55.7558,37.6173,12540000,""],
-["Mumbai","India",19.076,72.8777,12480000,""],["Delhi","India",28.7041,77.1025,16790000,""],
-["Seoul","South Korea",37.5665,126.978,9776000,""],["Sao Paulo","Brazil",-23.5505,-46.633,12330000,""],
-["Mexico City","Mexico",19.4326,-99.133,9210000,""],["Cairo","Egypt",30.0444,31.2357,9540000,""],
-["Lagos","Nigeria",6.5244,3.3792,15120000,""],["Istanbul","Turkey",41.0082,28.9784,15460000,""],
-["Buenos Aires","Argentina",-34.6037,-58.382,3076000,""],["Karachi","Pakistan",24.8607,67.0011,14910000,""],
-["Jakarta","Indonesia",-6.2088,106.846,10560000,""],["Bangkok","Thailand",13.7563,100.502,8281000,""],
-["Tehran","Iran",35.6892,51.389,8694000,""],["Hong Kong","China",22.3193,114.169,7482000,""],
-["Baghdad","Iraq",33.3152,44.3661,7144000,""],["Riyadh","Saudi Arabia",24.7136,46.6753,7680000,""],
-["Singapore","Singapore",1.3521,103.82,5686000,""],["Sydney","Australia",-33.8688,151.209,5312000,""],
-["Toronto","Canada",43.6532,-79.3832,2930000,""],["Berlin","Germany",52.52,13.405,3645000,""],
-["Madrid","Spain",40.4168,-3.7038,3223000,""],["Rome","Italy",41.9028,12.4964,2873000,""],
-["Kyiv","Ukraine",50.4504,30.5234,2884000,""],["Taipei","Taiwan",25.033,121.565,2646000,""],
-["Pyongyang","North Korea",39.0392,125.763,3255000,""],["Islamabad","Pakistan",33.6844,73.0479,1015000,""],
-["Kabul","Afghanistan",34.5553,69.2075,4222000,""],["Hanoi","Vietnam",21.0285,105.854,8054000,""],
-["Dubai","UAE",25.2048,55.2708,3330000,""],["Nairobi","Kenya",-1.2921,36.8219,4397000,""],
-["Johannesburg","South Africa",-26.2041,28.0473,5783000,""],
-["Warsaw","Poland",52.2297,21.0122,1794000,""],["Vienna","Austria",48.2082,16.3738,1897000,""],
-["Stockholm","Sweden",59.3293,18.0686,975000,""],["Havana","Cuba",23.1136,-82.367,2130000,""],
-["Minsk","Belarus",53.9006,27.559,1982000,""],["Athens","Greece",37.9838,23.7275,664000,""],
-// Strategic targets
-["Pentagon","VA",38.8719,-77.0563,0,"22202"],["White House","DC",38.8977,-77.037,0,"20500"],
-["Kremlin","Russia",55.752,37.6175,0,""],["Cheyenne Mountain","CO",38.7445,-104.845,0,""],
-["STRATCOM (Offutt AFB)","NE",41.1187,-95.913,0,"68113"],
-["Whiteman AFB","MO",38.7267,-93.548,0,""],["Kings Bay Naval","GA",30.7879,-81.562,0,""],
-["Bangor Sub Base","WA",47.7226,-122.715,0,""],["Area 51","NV",37.235,-115.811,0,""],
-["Los Alamos","NM",35.88,-106.303,13166,"87544"],["Cape Canaveral","FL",28.3922,-80.608,0,""],
-["Tiananmen Square","China",39.9054,116.398,0,""],["Buckingham Palace","UK",51.5014,-0.142,0,""],
-["Times Square","NY",40.758,-73.9855,0,"10036"],["Wall Street","NY",40.7074,-74.011,0,"10005"],
-["Hollywood","CA",34.0928,-118.329,0,"90028"],["Silicon Valley","CA",37.323,-122.032,60170,"95014"],
-];
-
-const STATES={'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico','NY':'New York','NC':'North Carolina','ND':'North Dakota','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvania','RI':'Rhode Island','SC':'South Carolina','SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginia','WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming','DC':'District of Columbia'};
-const STATE_REV={};for(const[k,v]of Object.entries(STATES)){STATE_REV[v.toLowerCase()]=k;STATE_REV[k.toLowerCase()]=k}
-const ZIP_IDX={};CITIES.forEach((c,i)=>{if(c[5])c[5].split(',').forEach(z=>{ZIP_IDX[z.trim()]=i})});
-
-function findNearestCity(lat,lng){
-  let best=null,bd=Infinity;
-  for(const c of CITIES){if(!c[4])continue;const d=haversine(lat,lng,c[2],c[3]);if(d<bd){bd=d;best={name:c[0],state:c[1],lat:c[2],lng:c[3],pop:c[4],dist:d}}}
-  return best;
-}
-
-// ---- SEARCH ----
-function searchLocations(q){
-  q=q.trim();if(!q)return[];
-  const cm=q.match(/^(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)$/);
-  if(cm){const la=+cm[1],ln=+cm[2];if(la>=-90&&la<=90&&ln>=-180&&ln<=180)return[{name:`${la.toFixed(4)}, ${ln.toFixed(4)}`,detail:'Coordinates',lat:la,lng:ln,pop:0,score:100}]}
-  if(/^\d{5}$/.test(q)){const i=ZIP_IDX[q];if(i!==undefined){const c=CITIES[i];return[{name:c[0],detail:`${c[1]} ${q}`,lat:c[2],lng:c[3],pop:c[4],score:100}]}}
-  if(/^\d{3,4}$/.test(q)){const r=[];for(const[z,i]of Object.entries(ZIP_IDX)){if(z.startsWith(q)){const c=CITIES[i],k=c[0]+c[1];if(!r.find(x=>x.key===k))r.push({name:c[0],detail:`${c[1]} (${z}...)`,lat:c[2],lng:c[3],pop:c[4],score:50+c[4]/1e5,key:k})}if(r.length>=8)break}if(r.length)return r.sort((a,b)=>b.score-a.score)}
-  const ql=q.toLowerCase(),qp=ql.split(/[,\s]+/).filter(Boolean),r=[];
-  for(const c of CITIES){
-    const n=c[0].toLowerCase(),s=c[1].toLowerCase(),sf=STATES[c[1]]?.toLowerCase()||s;let sc=0;
-    if(n===ql)sc=100;else if(n.startsWith(ql))sc=80;else if(s===ql||sf===ql)sc=40;
-    else if(qp.length>=2){const cq=qp.slice(0,-1).join(' '),sq=qp[qp.length-1];if(n.startsWith(cq)&&(s.startsWith(sq)||sf.startsWith(sq)))sc=90}
-    if(!sc&&n.includes(ql))sc=60;
-    if(!sc&&qp.length===1){for(const w of n.split(/[\s-]+/))if(w.startsWith(ql)){sc=55;break}}
-    if(!sc&&qp.length>=1){const cb=n+' '+s+' '+sf;if(qp.every(p=>cb.includes(p)))sc=45}
-    if(sc>0){sc+=Math.min(20,Math.log10(Math.max(c[4],1))*3);r.push({name:c[0],detail:c[1],lat:c[2],lng:c[3],pop:c[4],score:sc})}
-  }
-  r.sort((a,b)=>b.score-a.score||b.pop-a.pop);return r.slice(0,10);
-}
-
-// ---- WORLD GEOMETRY (Offline) ----
-const WORLD={
-  na:[[-130,50],[-125,49],[-124,42],[-117,33],[-110,31],[-105,29],[-100,26],[-97,26],[-97,28],[-94,29],[-90,29],[-89,30],[-85,30],[-82,25],[-81,25],[-80,27],[-80,32],[-76,35],[-75,38],[-74,40],[-70,41],[-67,45],[-66,44],[-64,47],[-60,47],[-55,50],[-57,52],[-60,54],[-64,58],[-68,59],[-72,60],[-78,62],[-85,65],[-90,68],[-100,70],[-110,72],[-120,72],[-130,68],[-140,60],[-145,60],[-148,62],[-155,58],[-163,55],[-165,62],[-168,66],[-163,67],[-160,70],[-156,72],[-140,70],[-135,69],[-130,56],[-130,50]],
-  sa:[[-80,10],[-75,12],[-70,12],[-62,11],[-60,8],[-52,4],[-50,0],[-48,-4],[-38,-8],[-35,-10],[-38,-15],[-40,-20],[-42,-23],[-44,-23],[-48,-28],[-50,-30],[-52,-33],[-55,-35],[-58,-38],[-65,-42],[-65,-46],[-67,-50],[-68,-53],[-70,-55],[-74,-52],[-75,-46],[-73,-40],[-72,-35],[-70,-30],[-71,-18],[-75,-15],[-76,-10],[-80,-3],[-80,0],[-78,2],[-76,5],[-77,8],[-80,10]],
-  eu:[[-10,36],[-6,36],[0,38],[3,42],[5,43],[8,44],[13,45],[14,42],[16,41],[20,40],[24,38],[26,39],[28,41],[29,42],[34,42],[37,44],[40,44],[38,46],[33,46],[30,46],[28,46],[30,50],[28,52],[22,54],[20,55],[18,56],[14,55],[10,54],[8,55],[6,53],[3,51],[2,49],[-1,46],[-2,48],[-5,48],[-9,43],[-10,44],[-10,36]],
-  af:[[-15,28],[-17,15],[-15,11],[-8,5],[-5,5],[0,5],[5,4],[9,4],[10,2],[10,0],[12,-5],[15,-5],[18,-10],[20,-15],[25,-18],[30,-20],[33,-25],[35,-28],[32,-33],[28,-33],[25,-34],[20,-34],[18,-32],[15,-28],[12,-17],[12,-6],[9,0],[7,4],[3,6],[1,6],[-3,5],[-8,5],[-13,10],[-17,14],[-16,20],[-13,28],[-15,28]],
-  as:[[26,40],[30,40],[35,37],[38,37],[40,38],[44,40],[48,38],[50,37],[55,38],[58,38],[62,37],[66,37],[68,38],[70,37],[72,36],[74,35],[77,35],[80,28],[85,27],[88,28],[92,22],[95,16],[99,14],[101,14],[103,10],[104,2],[106,-5],[110,-7],[115,-8],[120,-8],[125,0],[127,5],[122,10],[120,15],[122,18],[120,22],[122,25],[126,34],[130,35],[132,34],[136,35],[140,36],[143,42],[145,44],[143,46],[140,48],[135,48],[130,43],[128,42],[125,40],[120,38],[115,40],[110,40],[105,42],[100,42],[90,43],[85,48],[80,50],[73,55],[70,60],[65,60],[60,55],[55,55],[50,52],[45,50],[40,48],[35,45],[30,42],[26,40]],
-  au:[[115,-35],[115,-22],[120,-15],[130,-12],[135,-12],[140,-12],[145,-15],[150,-22],[153,-28],[152,-32],[150,-36],[147,-38],[145,-39],[140,-38],[137,-35],[135,-35],[130,-32],[122,-34],[115,-35]],
-};
-
-// ---- MAP ----
-let map, currentDets = [], windAngle = 0;
-
-function initMap() {
-  map = L.map('map', {center:[39.83,-98.58],zoom:5,zoomControl:true,attributionControl:true});
-  const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-    attribution:'&copy; <a href="https://osm.org">OSM</a> &copy; <a href="https://carto.com">CARTO</a>',
-    subdomains:'abcd',maxZoom:19
-  });
-
-  // Offline canvas tiles
-  const Offline = L.TileLayer.extend({
-    createTile(coords){
-      const c=document.createElement('canvas'),s=this.getTileSize();c.width=s.x;c.height=s.y;
-      const ctx=c.getContext('2d'),z=coords.z;
-      ctx.fillStyle='#11111b';ctx.fillRect(0,0,s.x,s.y);
-      ctx.strokeStyle='rgba(69,71,90,0.25)';ctx.lineWidth=0.5;
-      const gs=z<3?30:z<6?10:5;
-      for(let lat=-80;lat<=80;lat+=gs){const y=(this._l2y(lat,z)-coords.y)*s.y;if(y>-s.y&&y<s.y*2){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(s.x,y);ctx.stroke();if(z>=2){ctx.fillStyle='rgba(108,112,134,0.4)';ctx.font='8px sans-serif';ctx.fillText(lat+'\u00B0',2,y-1)}}}
-      for(let lng=-180;lng<=180;lng+=gs){const x=(this._l2x(lng,z)-coords.x)*s.x;if(x>-s.x&&x<s.x*2){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,s.y);ctx.stroke()}}
-      ctx.strokeStyle='rgba(137,180,250,0.35)';ctx.lineWidth=1;ctx.fillStyle='rgba(49,50,68,0.5)';
-      for(const sh of Object.values(WORLD)){ctx.beginPath();let f=true;for(const[lng,lat]of sh){const px=(this._l2x(lng,z)-coords.x)*s.x,py=(this._l2y(lat,z)-coords.y)*s.y;f?(ctx.moveTo(px,py),f=false):ctx.lineTo(px,py)}ctx.closePath();ctx.fill();ctx.stroke()}
-      return c;
-    },
-    _l2y(lat,z){const n=Math.pow(2,z),r=lat*Math.PI/180;return n*(1-(Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI))/2},
-    _l2x(lng,z){return Math.pow(2,z)*((lng+180)/360)}
-  });
-  const offline = new Offline('',{maxZoom:12,attribution:'Offline | NukeMap'});
-
-  let loaded=false;
-  dark.on('tileerror',()=>{if(!loaded){loaded=true;map.removeLayer(dark);offline.addTo(map);showBadge(false)}});
-  dark.on('tileload',()=>{loaded=true});
-  dark.addTo(map);
-  if(!navigator.onLine){offline.addTo(map);showBadge(false)}else showBadge(true);
-  window.addEventListener('online',()=>showBadge(true));
-  window.addEventListener('offline',()=>showBadge(false));
-
-  map.on('click', e => triggerDetonation(e.latlng.lat, e.latlng.lng));
-  map.on('mousemove', e => {
-    document.getElementById('coords').textContent = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
-  });
-  map.getContainer().classList.add('crosshair');
-
-  // Load state from URL
-  loadFromURL();
-}
-
-function showBadge(on){
-  const b=document.getElementById('offline-badge'),d=b.querySelector('.ob-dot'),l=b.querySelector('.ob-lbl');
-  b.classList.add('show');d.className='ob-dot '+(on?'on':'off');l.textContent=on?'Online':'Offline';
-  if(on)setTimeout(()=>b.classList.remove('show'),3000);
-}
-
-// ---- DETONATION ----
-function isMultiMode() { return document.getElementById('multi-check').checked; }
-
-function triggerDetonation(lat, lng) {
-  const Y = getYield();
-  const burst = getBurst();
-  const hM = burst==='custom' ? (+document.getElementById('burst-height').value||0) : 0;
-  const fission = +document.getElementById('fission-pct').value || 50;
-  const effects = calcEffects(Y, burst, hM, fission);
-  const cas = estimateCasualties(lat, lng, effects);
-
-  // Single mode: clear previous detonation first
-  if (!isMultiMode()) {
-    currentDets.forEach(d => d.layers.forEach(l => map.removeLayer(l)));
-    currentDets = [];
-  }
-
-  // Flash
-  const fl = document.getElementById('flash');
-  fl.classList.remove('active');void fl.offsetWidth;fl.classList.add('active');
-
-  const det = {id:Date.now(),lat,lng,yieldKt:Y,burstType:burst,heightM:hM,fission,effects,casualties:cas,layers:[],weapon:document.getElementById('weapon-select').selectedOptions[0]?.textContent||'Custom'};
-
-  drawEffects(det);
-  currentDets.push(det);
-
-  updateDetsList();
-  updateLegend(det);
-  updateStats();
-  updateCloud(det);
-  updateTimeline(det);
-  updateCrater(det);
-
-  document.getElementById('dets-section').style.display='';
-  switchTab('effects');
-
-  // Update URL
-  updateURL();
-}
-
-function drawEffects(det) {
-  const {lat,lng,effects:e} = det;
-  const rings = [
-    {id:'emp',r:e.emp,color:'#94e2d5',fo:0.06,bo:0.25,dashed:true},
-    {id:'thermal1',r:e.thermal1,color:'#f5c2e7',fo:0.08,bo:0.35},
-    {id:'psi1',r:e.psi1,color:'#f9e2af',fo:0.10,bo:0.40},
-    {id:'thermal3',r:e.thermal3,color:'#fab387',fo:0.12,bo:0.45},
-    {id:'psi5',r:e.psi5,color:'#cba6f7',fo:0.15,bo:0.50},
-    {id:'psi20',r:e.psi20,color:'#89b4fa',fo:0.18,bo:0.55},
-    {id:'psi200',r:e.psi200,color:'#89dceb',fo:0.22,bo:0.60},
-    {id:'radiation',r:e.radiation,color:'#a6e3a1',fo:0.20,bo:0.60},
-    {id:'fireball',r:e.fireball,color:'#f5e0dc',fo:0.45,bo:0.75},
-  ];
-
-  if (e.craterR > 0) {
-    rings.push({id:'crater',r:e.craterR,color:'#585b70',fo:0.5,bo:0.7,dashed:true});
-  }
-
-  const layers = [];
-  for (const ring of rings) {
-    if (ring.r < 0.0005) continue;
-    const circ = L.circle([lat,lng],{
-      radius:ring.r*1000,color:ring.color,weight:1.5,opacity:ring.bo,
-      fillColor:ring.color,fillOpacity:ring.fo,
-      dashArray:ring.dashed?'6 5':null
-    });
-    circ._effectId = ring.id;
-    circ._effectR = ring.r;
-
-    // Tooltip on hover
-    const def = EFFECTS_DEF.find(d=>d.id===ring.id);
-    if (def) {
-      circ.on('mouseover', function(ev) {
-        showRingTooltip(ev.latlng, def, ring.r, det);
-      });
-      circ.on('mouseout', hideRingTooltip);
-    }
-
-    circ.addTo(map);
-    layers.push(circ);
-  }
-
-  // Fallout
-  if (e.fallout) {
-    const fl = drawFallout(lat,lng,e.fallout,windAngle);
-    if (fl){fl.addTo(map);layers.push(fl)}
-  }
-
-  // GZ marker
-  const icon = L.divIcon({className:'',html:'<div class="gz-marker"><div class="gz-outer"></div><div class="gz-inner"></div></div>',iconSize:[28,28],iconAnchor:[14,14]});
-  const marker = L.marker([lat,lng],{icon}).bindPopup(buildPopup(det)).addTo(map);
-  layers.push(marker);
-
-  det.layers = layers;
-
-  // Zoom to fit largest ring
-  const largest = rings.filter(r=>r.r>0.001).sort((a,b)=>b.r-a.r)[0];
-  if (largest) {
-    const bounds = L.circle([lat,lng],{radius:largest.r*1000}).getBounds();
-    map.fitBounds(bounds.pad(0.3), {maxZoom:15,animate:true,duration:0.8});
-  }
-}
-
-// Ring tooltip
-let rtEl = null;
-function showRingTooltip(latlng, def, r, det) {
-  if (!rtEl) { rtEl = document.createElement('div'); rtEl.className = 'ring-tooltip'; document.body.appendChild(rtEl); }
-  // Estimate casualties for this zone
-  const zoneArea = Math.PI * r * r;
-  rtEl.innerHTML = `<div class="rt-title" style="color:${def.color}">${def.label}</div>
-    <div>Radius: <b>${fmtDist(r)}</b></div>
-    <div>Area: <b>${fmtArea(r)}</b></div>
-    <div class="rt-desc">${def.desc}</div>`;
-  rtEl.style.display = 'block';
-  const pt = map.latLngToContainerPoint(latlng);
-  rtEl.style.left = (pt.x + 16) + 'px';
-  rtEl.style.top = (pt.y - 20) + 'px';
-}
-function hideRingTooltip() { if (rtEl) rtEl.style.display = 'none'; }
-
-function drawFallout(lat,lng,fo,wDeg) {
-  const dAngle = ((wDeg+180)%360)*Math.PI/180;
-  const mkEllipse = (l,w) => {
-    const pts=[],R=6371;
-    for(let i=0;i<=40;i++){const t=(i/40)*2*Math.PI;
-      let dx=l*(0.5+0.5*Math.cos(t))*Math.cos(dAngle)-(w/2)*Math.sin(t)*Math.sin(dAngle);
-      let dy=l*(0.5+0.5*Math.cos(t))*Math.sin(dAngle)+(w/2)*Math.sin(t)*Math.cos(dAngle);
-      pts.push([lat+(dy/R)*(180/Math.PI),lng+(dx/R)*(180/Math.PI)/Math.cos(lat*Math.PI/180)])}
-    return pts;
-  };
-  const hp = L.polygon(mkEllipse(fo.heavy.length,fo.heavy.width),{color:'#f9e2af',weight:1,opacity:0.5,fillColor:'#f9e2af',fillOpacity:0.15,dashArray:'4 4'});
-  const lp = L.polygon(mkEllipse(fo.light.length,fo.light.width),{color:'#f9e2af',weight:1,opacity:0.25,fillColor:'#f9e2af',fillOpacity:0.05,dashArray:'6 4'});
-  return L.layerGroup([lp,hp]);
-}
-
-function buildPopup(det) {
-  const e=det.effects,nc=findNearestCity(det.lat,det.lng);
-  let loc=`${det.lat.toFixed(4)}, ${det.lng.toFixed(4)}`;
-  if(nc&&nc.dist<50)loc=`${nc.name}, ${nc.state}`;
-  return `<div style="min-width:240px">
-    <div style="font-weight:800;font-size:15px;color:var(--red);margin-bottom:2px">${fmtYield(det.yieldKt)}</div>
-    <div style="font-size:10px;color:var(--overlay1);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">${det.burstType} ${det.burstType==='airburst'?'('+Math.round(e.burstHeight)+'m)':''} &mdash; ${loc}</div>
-    <table style="width:100%;font-size:11px;border-collapse:collapse">
-    ${[
-      ['Fireball',e.fireball,'#f5e0dc'],['500 rem',e.radiation,'#a6e3a1'],
-      ['20 psi',e.psi20,'#89b4fa'],['5 psi',e.psi5,'#cba6f7'],
-      ['3rd\u00B0 burns',e.thermal3,'#fab387'],['1 psi',e.psi1,'#f9e2af'],
-    ].map(([l,r,c])=>`<tr><td style="padding:2px 0"><span style="color:${c};font-size:8px">&#11044;</span> ${l}</td><td style="text-align:right;font-weight:600">${fmtDist(r)}</td></tr>`).join('')}
-    </table>
-    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--surface1);font-size:12px">
-      <span style="color:var(--red);font-weight:700">${fmtNum(det.casualties.deaths)} killed</span> &nbsp;
-      <span style="color:var(--peach);font-weight:600">${fmtNum(det.casualties.injuries)} injured</span>
-    </div>
-  </div>`;
-}
-
-// ---- UI ----
-function getYield(){return sliderToYield(+document.getElementById('yield-slider').value)}
-function getBurst(){return document.querySelector('.burst-btn.active')?.dataset.burst||'airburst'}
-
-function initControls() {
-  // Tabs
-  document.querySelectorAll('.tab').forEach(t=>{
-    t.addEventListener('click',()=>switchTab(t.dataset.tab));
-  });
-
-  // Weapon select
-  const sel=document.getElementById('weapon-select');
-  const groups={};
-  WEAPONS.forEach((w,i)=>{
-    const g=w.country||'Custom';
-    if(!groups[g])groups[g]=[];
-    groups[g].push({...w,idx:i});
-  });
-  for(const[g,ws]of Object.entries(groups)){
-    const og=document.createElement('optgroup');
-    og.label=g==='Custom'?'Custom':g;
-    ws.forEach(w=>{const o=document.createElement('option');o.value=w.idx;o.textContent=w.name;o.title=w.desc;og.appendChild(o)});
-    sel.appendChild(og);
-  }
-  sel.addEventListener('change',()=>{const w=WEAPONS[sel.value];setYield(w.yield_kt)});
-
-  // Yield slider
-  const slider=document.getElementById('yield-slider');
-  slider.addEventListener('input',()=>{const kt=sliderToYield(+slider.value);updateYieldUI(kt);syncYieldInput(kt)});
-
-  // Yield direct input
-  const yi=document.getElementById('yield-input'),yu=document.getElementById('yield-unit-select');
-  const syncFromInput=()=>{
-    let kt=+yi.value;
-    if(yu.value==='mt')kt*=1000;else if(yu.value==='t')kt/=1000;
-    slider.value=yieldToSlider(kt);updateYieldUI(kt);
-  };
-  yi.addEventListener('change',syncFromInput);yu.addEventListener('change',syncFromInput);
-
-  updateYieldUI(sliderToYield(+slider.value));
-
-  // Burst btns
-  document.querySelectorAll('.burst-btn').forEach(b=>{
-    b.addEventListener('click',()=>{
-      document.querySelectorAll('.burst-btn').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      const t=b.dataset.burst;
-      document.getElementById('height-row').style.display=t==='custom'?'':'none';
-      document.getElementById('wind-wrap').style.display=t==='surface'?'':'none';
-    });
-  });
-
-  // Detonate / Clear / Share
-  document.getElementById('detonate-btn').addEventListener('click',()=>{const c=map.getCenter();triggerDetonation(c.lat,c.lng)});
-  document.getElementById('clear-btn').addEventListener('click',clearAll);
-  document.getElementById('share-btn').addEventListener('click',showShareLink);
-  document.getElementById('share-copy').addEventListener('click',copyShareLink);
-
-  // Panel toggle
-  document.getElementById('panel-toggle').addEventListener('click',()=>document.getElementById('panel').classList.toggle('collapsed'));
-
-  // Search
-  initSearch();
-  initPresets();
-  initHistorical();
-  initWindCompass();
-  initQuickTargets();
-}
-
-function switchTab(id){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+id));
-}
-
-function setYield(kt){
-  document.getElementById('yield-slider').value=yieldToSlider(kt);
-  updateYieldUI(kt);syncYieldInput(kt);
-}
-function updateYieldUI(kt){
-  const v=document.getElementById('yield-val'),u=document.getElementById('yield-unit');
-  if(kt>=1000){v.textContent=(kt/1000).toFixed(kt>=10000?0:1);u.textContent='MT'}
-  else if(kt>=1){v.textContent=kt.toFixed(kt>=100?0:1);u.textContent='kT'}
-  else{v.textContent=(kt*1000).toFixed(kt<0.01?1:0);u.textContent='tons'}
-}
-function syncYieldInput(kt){
-  const yi=document.getElementById('yield-input'),yu=document.getElementById('yield-unit-select');
-  if(kt>=1000){yi.value=(kt/1000).toFixed(2);yu.value='mt'}
-  else if(kt>=1){yi.value=kt.toFixed(2);yu.value='kt'}
-  else{yi.value=(kt*1000).toFixed(1);yu.value='t'}
-}
-
-function initSearch(){
-  const inp=document.getElementById('search'),res=document.getElementById('search-results');let si=-1;
-  inp.addEventListener('input',()=>{
-    const items=searchLocations(inp.value);si=-1;
-    if(!items.length){res.classList.remove('active');return}
-    res.innerHTML=items.map((it,i)=>`<div class="sr-item" data-idx="${i}"><div><div class="sr-name">${esc(it.name)}</div><div class="sr-detail">${esc(it.detail)}</div></div>${it.pop?`<div class="sr-pop">${fmtNum(it.pop)}</div>`:''}</div>`).join('');
-    res.classList.add('active');
-    res.querySelectorAll('.sr-item').forEach(el=>el.addEventListener('click',()=>{const it=items[+el.dataset.idx];selectResult(it)}));
-  });
-  inp.addEventListener('keydown',e=>{
-    const items=res.querySelectorAll('.sr-item');if(!items.length)return;
-    if(e.key==='ArrowDown'){e.preventDefault();si=Math.min(si+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('selected',i===si))}
-    else if(e.key==='ArrowUp'){e.preventDefault();si=Math.max(si-1,0);items.forEach((el,i)=>el.classList.toggle('selected',i===si))}
-    else if(e.key==='Enter'){e.preventDefault();(si>=0?items[si]:items[0])?.click()}
-    else if(e.key==='Escape'){res.classList.remove('active');inp.blur()}
-  });
-  inp.addEventListener('blur',()=>setTimeout(()=>res.classList.remove('active'),200));
-  inp.addEventListener('focus',()=>{if(inp.value.trim())inp.dispatchEvent(new Event('input'))});
-}
-function selectResult(it){
-  document.getElementById('search').value=it.name+(it.detail?', '+it.detail:'');
-  document.getElementById('search-results').classList.remove('active');
-  const z=it.pop>1e6?11:it.pop>1e5?12:it.pop>1e4?13:10;
-  map.flyTo([it.lat,it.lng],z,{duration:1});
-}
-function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
-
-function initQuickTargets(){
-  const c=document.getElementById('target-pills');
-  QUICK_TARGETS.forEach(t=>{
-    const p=document.createElement('div');p.className='target-pill';p.textContent=t.name;
-    p.addEventListener('click',()=>map.flyTo([t.lat,t.lng],12,{duration:1}));
-    c.appendChild(p);
-  });
-}
-
-function initPresets(){
-  const g=document.getElementById('preset-grid');
-  [{name:'Davy Crockett',y:0.02},{name:'Hiroshima',y:15},{name:'W76-1',y:100},{name:'W88',y:455},{name:'B83',y:1200},{name:'Castle Bravo',y:15000},{name:'Tsar Bomba',y:50000},{name:'100 MT',y:100000}].forEach(p=>{
-    const ch=document.createElement('div');ch.className='preset-chip';
-    ch.innerHTML=`${esc(p.name)}<span class="chip-yield">${fmtYield(p.y)}</span>`;
-    ch.addEventListener('click',()=>{setYield(p.y);const i=WEAPONS.findIndex(w=>Math.abs(w.yield_kt-p.y)<0.01);if(i>=0)document.getElementById('weapon-select').value=i});
-    g.appendChild(ch);
-  });
-}
-
-function initHistorical(){
-  const g=document.getElementById('historical-grid');
-  HISTORICAL.forEach(h=>{
-    const ch=document.createElement('div');ch.className='preset-chip';
-    ch.innerHTML=`${esc(h.name)}<span class="chip-yield">${h.year} &mdash; ${fmtYield(h.yield_kt)}</span>`;
-    ch.addEventListener('click',()=>{
-      setYield(h.yield_kt);
-      document.querySelectorAll('.burst-btn').forEach(b=>b.classList.toggle('active',b.dataset.burst===h.burst));
-      document.getElementById('height-row').style.display=h.burst==='custom'?'':'none';
-      document.getElementById('wind-wrap').style.display=h.burst==='surface'?'':'none';
-      if(h.height)document.getElementById('burst-height').value=h.height;
-      map.flyTo([h.lat,h.lng],h.yield_kt>5000?8:11,{duration:1.2});
-      setTimeout(()=>triggerDetonation(h.lat,h.lng),1300);
-    });
-    g.appendChild(ch);
-  });
-}
-
-function initWindCompass(){
-  const comp=document.getElementById('wind-compass'),arr=document.getElementById('wind-arrow'),lbl=document.getElementById('wind-dir-label');
-  const dirs=['N','NE','E','SE','S','SW','W','NW'];
-  function upd(){arr.style.transform=`rotate(${windAngle}deg)`;lbl.textContent=`From ${dirs[Math.round(windAngle/45)%8]} (${Math.round(windAngle)}\u00B0)`}
-  comp.addEventListener('click',e=>{const r=comp.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;windAngle=(Math.atan2(e.clientX-cx,-(e.clientY-cy))*180/Math.PI+360)%360;upd()});
-  upd();
-}
-
-// ---- UPDATE UI SECTIONS ----
-function updateDetsList(){
-  const list=document.getElementById('dets-list');list.innerHTML='';
-  currentDets.forEach((d,i)=>{
-    const nc=findNearestCity(d.lat,d.lng);
-    const nm=nc&&nc.dist<50?nc.name:`${d.lat.toFixed(2)}, ${d.lng.toFixed(2)}`;
-    const el=document.createElement('div');el.className='det-item';
-    el.innerHTML=`<span class="det-idx">${i+1}</span><span class="det-name">${esc(nm)}</span><span class="det-yield">${fmtYield(d.yieldKt)}</span><button class="det-remove" data-i="${i}" title="Remove">&times;</button>`;
-    el.querySelector('.det-remove').addEventListener('click',e=>{e.stopPropagation();removeDet(i)});
-    el.addEventListener('click',e=>{if(!e.target.classList.contains('det-remove'))map.flyTo([d.lat,d.lng],map.getZoom(),{duration:0.6})});
-    list.appendChild(el);
-  });
-}
-
-function updateLegend(det){
-  const c=document.getElementById('legend-items');c.innerHTML='';
-  const e=det.effects;
-  const items=[
-    {id:'fireball',r:e.fireball,color:'#f5e0dc'},{id:'radiation',r:e.radiation,color:'#a6e3a1'},
-    {id:'psi200',r:e.psi200,color:'#89dceb'},{id:'psi20',r:e.psi20,color:'#89b4fa'},
-    {id:'psi5',r:e.psi5,color:'#cba6f7'},{id:'thermal3',r:e.thermal3,color:'#fab387'},
-    {id:'psi1',r:e.psi1,color:'#f9e2af'},{id:'thermal1',r:e.thermal1,color:'#f5c2e7'},
-    {id:'emp',r:e.emp,color:'#94e2d5'},
-  ];
-  if(e.craterR>0)items.unshift({id:'crater',r:e.craterR,color:'#585b70'});
-
-  items.forEach(it=>{
-    if(it.r<0.0005)return;
-    const def=EFFECTS_DEF.find(d=>d.id===it.id);if(!def)return;
-    const div=document.createElement('div');div.className='legend-item';
-    div.innerHTML=`<div class="legend-dot" style="background:${it.color}"></div>
-      <div class="legend-label">${def.label}<span class="legend-desc">${def.desc.split('.')[0]}</span></div>
-      <div class="legend-value">${fmtR(it.r)}<span class="legend-area">${fmtArea(it.r)}</span></div>
-      <button class="legend-eye on" data-eid="${it.id}">&#10003;</button>`;
-    div.querySelector('.legend-eye').addEventListener('click',ev=>{
-      const btn=ev.currentTarget;btn.classList.toggle('on');
-      const vis=btn.classList.contains('on');
-      div.classList.toggle('dimmed',!vis);
-      toggleEffect(it.id,vis);
-    });
-    c.appendChild(div);
-  });
-
-  document.getElementById('cloud-section').style.display='';
-  document.getElementById('timeline-section').style.display='';
-}
-
-function updateCloud(det){
-  const e=det.effects,p=document.getElementById('cloud-panel');
-  p.innerHTML=[
-    ['Cloud top altitude',fmtDist(e.cloudTopH)],
-    ['Cloud cap radius',fmtDist(e.cloudTopR)],
-    ['Stem radius',fmtDist(e.stemR)],
-    ['Burst height',e.isSurface?'Surface (0 m)':Math.round(e.burstHeight)+' m'],
-    ['Fireball max radius',fmtDist(e.fireball)],
-  ].map(([l,v])=>`<div class="cloud-row"><span class="cl">${l}</span><span class="cv">${v}</span></div>`).join('');
-}
-
-function updateTimeline(det){
-  const tl=document.getElementById('timeline');
-  const items=calcTimeline(det.yieldKt,det.effects);
-  tl.innerHTML=items.map(it=>`<div class="tl-item"><span class="tl-time">${it.time}</span><span class="tl-desc">${it.desc}</span></div>`).join('');
-}
-
-function updateCrater(det){
-  const e=det.effects;
-  if(e.craterR<=0){document.getElementById('crater-section').style.display='none';return}
-  document.getElementById('crater-section').style.display='';
-  document.getElementById('crater-panel').innerHTML=[
-    ['Crater radius',fmtDist(e.craterR)],
-    ['Crater depth',fmtDist(e.craterDepth)],
-    ['Lip height','~'+fmtR(e.craterDepth*0.5)],
-    ['Ejecta radius','~'+fmtR(e.craterR*2)],
-  ].map(([l,v])=>`<div class="cloud-row"><span class="cl">${l}</span><span class="cv">${v}</span></div>`).join('');
-}
-
-function updateStats(){
-  let td=0,ti=0;currentDets.forEach(d=>{td+=d.casualties.deaths;ti+=d.casualties.injuries});
-  document.getElementById('stat-deaths').textContent=fmtNum(td);
-  document.getElementById('stat-injuries').textContent=fmtNum(ti);
-  document.getElementById('stat-total').textContent=fmtNum(td+ti);
-  const n=document.getElementById('stat-note');
-  n.textContent=currentDets.length>1?`Across ${currentDets.length} detonations (overlap not subtracted)`:'Based on estimated population density at ground zero';
-
-  // Info bar
-  const bar=document.getElementById('info-bar');
-  if(currentDets.length){
-    bar.innerHTML=`<div class="ib-stat"><div class="ib-val" style="color:var(--red)">${fmtNum(td)}</div><div class="ib-lbl">Fatalities</div></div>
-      <div class="ib-div"></div>
-      <div class="ib-stat"><div class="ib-val" style="color:var(--peach)">${fmtNum(ti)}</div><div class="ib-lbl">Injuries</div></div>
-      <div class="ib-div"></div>
-      <div class="ib-stat"><div class="ib-val" style="color:var(--yellow)">${fmtNum(td+ti)}</div><div class="ib-lbl">Total</div></div>`;
-    bar.classList.add('active');
-  } else bar.classList.remove('active');
-}
-
-function toggleEffect(eid,vis){currentDets.forEach(d=>d.layers.forEach(l=>{if(l._effectId===eid){vis?l.addTo(map):map.removeLayer(l)}}))}
-
-function removeDet(i){
-  const d=currentDets[i];if(d)d.layers.forEach(l=>map.removeLayer(l));
-  currentDets.splice(i,1);updateDetsList();updateStats();
-  if(!currentDets.length){
-    document.getElementById('dets-section').style.display='none';
-    document.getElementById('cloud-section').style.display='none';
-    document.getElementById('timeline-section').style.display='none';
-    document.getElementById('crater-section').style.display='none';
-    document.getElementById('legend-items').innerHTML='<div style="color:var(--overlay0);font-size:12px;padding:10px 0">Detonate a weapon to see effects</div>';
-  } else {
-    updateLegend(currentDets[currentDets.length-1]);
-    updateCloud(currentDets[currentDets.length-1]);
-    updateTimeline(currentDets[currentDets.length-1]);
-    updateCrater(currentDets[currentDets.length-1]);
-  }
-  updateURL();
-}
-
-function clearAll(){
-  currentDets.forEach(d=>d.layers.forEach(l=>map.removeLayer(l)));currentDets=[];
-  updateDetsList();updateStats();
-  document.getElementById('dets-section').style.display='none';
-  document.getElementById('cloud-section').style.display='none';
-  document.getElementById('timeline-section').style.display='none';
-  document.getElementById('crater-section').style.display='none';
-  document.getElementById('legend-items').innerHTML='<div style="color:var(--overlay0);font-size:12px;padding:10px 0">Detonate a weapon to see effects</div>';
-  document.getElementById('info-bar').classList.remove('active');
-  updateURL();
-}
-
-// ---- URL STATE (Shareable) ----
-function updateURL(){
-  if(!currentDets.length){history.replaceState(null,'',location.pathname);return}
-  const params=currentDets.map(d=>`${d.lat.toFixed(4)},${d.lng.toFixed(4)},${d.yieldKt},${d.burstType[0]}`).join(';');
-  history.replaceState(null,'',`?d=${params}`);
-}
-
-function loadFromURL(){
-  const p=new URLSearchParams(location.search);
-  const d=p.get('d');if(!d)return;
-  d.split(';').forEach(seg=>{
-    const[lat,lng,y,bt]=seg.split(',');
-    if(lat&&lng&&y){
-      const burst=bt==='s'?'surface':bt==='c'?'custom':'airburst';
-      setYield(+y);
-      document.querySelectorAll('.burst-btn').forEach(b=>b.classList.toggle('active',b.dataset.burst===burst));
-      triggerDetonation(+lat,+lng);
-    }
-  });
-}
-
-function showShareLink(){
-  const sec=document.getElementById('share-section');sec.style.display='';
-  document.getElementById('share-input').value=location.href;
-  switchTab('results');
-}
-function copyShareLink(){
-  const inp=document.getElementById('share-input');inp.select();
-  navigator.clipboard?.writeText(inp.value);
-  document.getElementById('share-copy').textContent='Copied!';
-  setTimeout(()=>document.getElementById('share-copy').textContent='Copy',2000);
-}
-
-// ---- SERVICE WORKER ----
-function initSW(){if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{})}
-
-// ---- INIT ----
-function init(){initMap();initControls();initSW()}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-
-})();
-</script>
+<!-- Libraries -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
+
+<!-- NukeMap Modules -->
+<script src="js/data.js"></script>
+<script src="js/physics.js"></script>
+<script src="js/search.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/animation.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/mushroom3d.js"></script>
+<script src="js/mirv.js"></script>
+<script src="js/shelter.js"></script>
+<script src="js/compare.js"></script>
+<script src="js/heatmap.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

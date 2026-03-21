@@ -1,58 +1,57 @@
-# NukeMap v2.0.0
+# NukeMap v3.0.0
 
 ## Overview
-Nuclear weapon effects simulator. Fully offline-capable single-page web app with Leaflet maps, comprehensive city/ZIP search, and nuclear physics calculations based on Glasstone & Dolan.
+Nuclear weapon effects simulator. Multi-file web app with Leaflet maps, 3D mushroom cloud, animated blast waves, MIRV simulation, sound effects, population heatmap, shelter analysis, weapon comparison, and comprehensive city search.
 
 ## Tech Stack
-- HTML/CSS/JS (single file: `index.html`)
-- Leaflet.js for mapping (CDN + offline canvas fallback)
-- Service worker (`sw.js`) for offline tile caching
-- Catppuccin Mocha dark theme with glassmorphism
+- HTML/CSS/JS (multi-file, 12 JS modules)
+- Leaflet.js (maps), Three.js (3D mushroom cloud)
+- Web Audio API (procedural explosion sounds)
+- Service worker for offline caching
+- Catppuccin Mocha dark theme
+- `build.py` bundles to single offline HTML
 
-## Architecture
-- **Single HTML file** with all CSS/JS inline
-- **Offline map**: Custom `L.TileLayer` extension renders canvas tiles with simplified world coastlines, lat/lng grid
-- **Online map**: CartoDB dark_all tiles
-- **Service worker**: Caches tiles and app shell for offline use after first load
-- **City database**: ~130 entries (US cities, world cities, military targets) embedded in JS array
-- **Search engine**: Fuzzy matching by city name, state, ZIP code, coordinates; population-weighted ranking
+## File Structure
+```
+index.html           - App shell, loads all modules
+css/styles.css       - All styling (~300 lines)
+js/data.js           - Cities (250+), weapons (32), MIRV presets, shelter types, world geometry
+js/physics.js        - Glasstone & Dolan calculations, formatting, helpers
+js/search.js         - Fuzzy search engine
+js/effects.js        - Map ring drawing, fallout, markers, tooltips
+js/animation.js      - Blast wave expansion, fireball glow, camera shake, flash
+js/sound.js          - Web Audio API procedural explosion sounds
+js/mushroom3d.js     - Three.js 3D mushroom cloud overlay
+js/mirv.js           - MIRV pattern generation + staggered detonation
+js/shelter.js        - Shelter survival analysis at multiple distances
+js/compare.js        - Side-by-side weapon comparison table + overlay
+js/heatmap.js        - Population density canvas heatmap overlay
+js/app.js            - Main controller, UI, tabs, map init (~520 lines)
+sw.js                - Service worker (caches app + tiles + CDN libs)
+build.py             - Bundles everything into NukeMap-offline.html
+```
 
-## Key Files
-- `index.html` - Complete application
-- `sw.js` - Service worker for offline caching
+## Key Features (v3.0.0)
+- **Animated blast wave** - Rings expand outward at scaled speed with ease-out
+- **Fireball glow** - Animated color-shifting fireball that grows and fades
+- **Camera shake** - Screen shake proportional to yield
+- **Sound effects** - Procedural crack + deep boom + sub-bass + echo via Web Audio API
+- **3D mushroom cloud** - Three.js rendered with particle cap, stem, debris, inner glow
+- **MIRV simulation** - 8 presets (Trident, Sarmat, SS-18, etc.), circle/triangle/grid/cross patterns
+- **Population heatmap** - Canvas overlay showing city population density
+- **Shelter survival** - Bar chart showing survival % by shelter type at each blast zone
+- **Weapon comparison** - Side-by-side table + overlaid rings on map
+- **4 tabs** - Weapon / Effects / Results / Tools
+- **250+ cities** with ZIP codes, 100+ world cities, 25+ strategic targets
+- **Shareable URLs**, toggleable effects, responsive design
 
-## Nuclear Physics (Glasstone & Dolan + Brode)
-- Fireball: `0.066 * Y^0.4` km (airburst), `0.05 * Y^0.4` (surface)
-- Blast radii: Cube root scaling (`Y^(1/3)`) - 200 psi, 20 psi, 5 psi, 3 psi, 1 psi
-- Thermal: `Y^0.41` scaling - 3rd, 2nd, 1st degree burns
-- Radiation: `Y^0.19` scaling (500 rem)
-- EMP: `2.5 * Y^0.33` km (capped at 500 km)
-- Crater: `0.038 * Y^(1/3.4)` for surface bursts
-- Mushroom cloud: stem/cap dimensions from `Y^0.4` and `Y^0.42`
-- Fallout: Elliptical plume with fission fraction, wind direction/speed
-- Casualty: Zone-based (fireball/200psi/20psi/5psi/3psi/1psi/thermal) with population density model
-
-## v2.0.0 Features (over v1.0.0)
-- **Tabbed UI** (Weapon / Effects / Results) - cleaner organization
-- **10 effect rings** (added 200 psi severe blast + crater)
-- **Ring hover tooltips** - hover any ring for detailed description, radius, area
-- **Mushroom cloud dimensions panel** - cloud top altitude, cap radius, stem radius
-- **Event timeline** - time-sequenced blast/thermal/fallout events
-- **Crater calculations** - radius, depth, lip height, ejecta (surface bursts)
-- **Fission fraction control** - adjustable % affects fallout intensity
-- **Direct yield input** - type exact value with kT/MT/tons unit selector
-- **Quick target pills** - one-click fly to 12 major cities
-- **Weapon select grouped by country** - optgroup organization
-- **Weapon descriptions** - tooltip on each weapon
-- **Shareable URLs** - detonation state encoded in URL params (?d=lat,lng,yield,burst)
-- **Share button + copy** - easy sharing
-- **Info bar overlay** - persistent casualty summary on map
-- **Coordinates display** - live mouse position readout
-- **Auto-zoom to fit** - map fits to largest effect ring after detonation
-- **Imperial+metric** - radii shown as "X km (Y mi)"
-- **SVG icons** - crisp vector icons instead of unicode
-- **Improved styling** - better glass effects, tighter spacing, polished animations
+## Physics
+- 10 effects: fireball, crater, radiation, 200/20/5/1 psi blast, 3rd/1st thermal, EMP
+- Fallout: elliptical with fission fraction + wind
+- Crater + mushroom cloud dimensions
+- Zone-based casualty model with density estimation
 
 ## Version History
-- v2.0.0 - Major upgrade: tabbed UI, 10 effects, tooltips, timeline, crater, mushroom cloud, shareable URLs, fission fraction, quick targets
+- v3.0.0 - Multi-file rebuild. Animated blast wave, 3D mushroom cloud, sound effects, MIRV, population heatmap, shelter analysis, weapon comparison, build script
+- v2.0.0 - Tabbed UI, 10 effects, tooltips, timeline, crater, shareable URLs
 - v1.0.0 - Initial release
