@@ -1,6 +1,5 @@
-const CACHE_NAME = 'nukemap-v1.0.0';
-const TILE_CACHE = 'nukemap-tiles-v1';
-
+const CACHE_NAME = 'nukemap-v2.0.0';
+const TILE_CACHE = 'nukemap-tiles-v2';
 const PRECACHE = ['./', './index.html'];
 
 self.addEventListener('install', e => {
