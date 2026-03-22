@@ -43,6 +43,10 @@ NM.HISTORICAL = [
   {name:'Ivy Mike',lat:11.668,lng:162.195,yield_kt:10400,year:'1952',burst:'surface',height:0,desc:'First H-bomb, Enewetak Atoll'},
   {name:'Castle Bravo',lat:11.697,lng:165.273,yield_kt:15000,year:'1954',burst:'surface',height:0,desc:'15 MT, Bikini Atoll'},
   {name:'Tsar Bomba',lat:73.812,lng:54.583,yield_kt:50000,year:'1961',burst:'airburst',height:4000,desc:'50 MT, Novaya Zemlya'},
+  {name:'Sedan (cratering)',lat:37.177,lng:-116.047,yield_kt:104,year:'1962',burst:'surface',height:0,desc:'Underground cratering test, NTS'},
+  {name:'Starfish Prime',lat:16.28,lng:-169.53,yield_kt:1400,year:'1962',burst:'airburst',height:400000,desc:'Space detonation, 400 km alt, EMP'},
+  {name:'Canopus',lat:-21.87,lng:-138.72,yield_kt:2600,year:'1968',burst:'airburst',height:600,desc:'French H-bomb, Fangataufa'},
+  {name:'DPRK Test 6',lat:41.3,lng:129.078,yield_kt:250,year:'2017',burst:'surface',height:0,desc:'North Korea, est. 250 kT'},
 ];
 
 NM.QUICK_TARGETS = [

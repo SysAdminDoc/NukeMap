@@ -142,14 +142,19 @@ NM.LayerSwitcher = {
   },
 
   switchTo(name) {
-    if (!this.layers[name] || name === this.current) return;
-    // Remove current tile layers + label overlay
-    this.map.eachLayer(l => { if (l instanceof L.TileLayer && !(l instanceof L.TileLayer.Canvas)) this.map.removeLayer(l); });
+    if (!this.layers[name]) return;
+    // Remove ALL tile layers (including initial dark layer and any overlays)
+    const toRemove = [];
+    this.map.eachLayer(l => {
+      if (l instanceof L.TileLayer) toRemove.push(l);
+    });
+    toRemove.forEach(l => this.map.removeLayer(l));
+    // Add selected tile layer
     this.layers[name].addTo(this.map);
     // Add label overlay on satellite
     if (name === 'satLabels') this._labelOverlay.addTo(this.map);
     this.current = name;
-    // Update floating switcher active state
+    // Update active state in both switchers
     document.querySelectorAll('.ms-btn').forEach(b => b.classList.toggle('active', b.dataset.layer === name));
     document.querySelectorAll('#layer-switcher .layer-btn').forEach(b => b.classList.toggle('active', b.dataset.layer === name));
   }

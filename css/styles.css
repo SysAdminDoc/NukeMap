@@ -262,7 +262,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 
 /* Layer switcher */
 .layer-switcher{display:flex;gap:3px;flex-wrap:wrap}
-.layer-btn{padding:4px 8px;border-radius:5px;background:var(--surface0);border:1px solid var(--surface1);color:var(--subtext0);font-size:9px;font-weight:600;cursor:pointer;transition:all .15s}
+.layer-btn{padding:5px 10px;border-radius:5px;background:var(--surface0);border:1px solid var(--surface1);color:var(--subtext0);font-size:9px;font-weight:600;cursor:pointer;transition:all .15s}
 .layer-btn.active{background:var(--surface1);color:var(--text);border-color:var(--blue)}
 .layer-btn:hover:not(.active){background:rgba(69,71,90,0.5)}
 
@@ -503,7 +503,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .ms-toggle{width:32px;height:32px;border-radius:var(--radius-sm);background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);color:var(--overlay1);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;padding:0}
 .ms-toggle:hover{background:var(--glass-hover);color:var(--text)}
 .ms-toggle.open{background:var(--surface1);color:var(--text);border-color:var(--blue)}
-.ms-panel{display:none;position:absolute;top:38px;right:0;min-width:120px;background:var(--glass);backdrop-filter:blur(20px) saturate(1.5);border:1px solid var(--glass-border);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:4px;flex-direction:column;gap:2px;animation:msPanelIn .2s ease-out}
+.ms-panel{display:none;position:absolute;top:38px;right:0;min-width:130px;background:rgba(30,30,46,0.95);backdrop-filter:blur(20px) saturate(1.5);border:1px solid var(--glass-border);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:5px;flex-direction:column;gap:2px;animation:msPanelIn .2s ease-out;z-index:1000}
 .ms-panel.open{display:flex}
 @keyframes msPanelIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 .ms-btn{padding:6px 10px;border-radius:5px;background:transparent;border:1px solid transparent;color:var(--subtext0);font-size:10px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;white-space:nowrap}
