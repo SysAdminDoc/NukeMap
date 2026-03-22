@@ -18,12 +18,13 @@ NM.Mushroom3D = {
     const footprintKm = Math.max(e.cloudTopR * 1.2, e.fireball * 3, 0.5);
     const R = 6371;
     const dLat = (footprintKm / R) * (180 / Math.PI);
-    const vExtent = dLat * 2.8;
+    const totalV = dLat * 3.05; // total vertical extent of bounds
     const hExtent = dLat * 1.4;
-
+    // SVG ground is at 93% from top, so GZ should be 93% down from the top of bounds
+    // top = det.lat + totalV * 0.93, bottom = det.lat - totalV * 0.07
     const bounds = L.latLngBounds(
-      [det.lat - dLat * 0.25, det.lng - hExtent],
-      [det.lat + vExtent, det.lng + hExtent]
+      [det.lat - totalV * 0.07, det.lng - hExtent],
+      [det.lat + totalV * 0.93, det.lng + hExtent]
     );
 
     const svgStr = this._buildSVG(det.yieldKt);
