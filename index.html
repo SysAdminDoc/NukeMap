@@ -14,6 +14,8 @@
 <meta name="twitter:title" content="NukeMap - Nuclear Weapon Effects Simulator">
 <meta name="twitter:description" content="Simulate nuclear detonations with realistic physics, WW3 scenarios, and shelter survival analysis.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='none' stroke='%23f38ba8' stroke-width='6'/><circle cx='50' cy='50' r='12' fill='%23f38ba8'/><line x1='50' y1='5' x2='50' y2='25' stroke='%23f38ba8' stroke-width='4' stroke-linecap='round'/><line x1='50' y1='75' x2='50' y2='95' stroke='%23f38ba8' stroke-width='4' stroke-linecap='round'/><line x1='5' y1='50' x2='25' y2='50' stroke='%23f38ba8' stroke-width='4' stroke-linecap='round'/><line x1='75' y1='50' x2='95' y2='50' stroke='%23f38ba8' stroke-width='4' stroke-linecap='round'/></svg>">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%231e1e2e'/%3E%3Ccircle cx='256' cy='256' r='100' fill='none' stroke='%23f38ba8' stroke-width='16'/%3E%3Ccircle cx='256' cy='256' r='30' fill='%23f38ba8'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous"/>
 <link rel="stylesheet" href="css/styles.css"/>
 </head>
@@ -198,6 +200,10 @@
         <div class="section" id="seismic-section" style="display:none">
           <div class="section-title">Seismic Equivalent</div>
           <div id="seismic-content"></div>
+        </div>
+        <div class="section" id="conventional-section" style="display:none">
+          <div class="section-title">Conventional Weapon Equivalent</div>
+          <div id="conventional-content"></div>
         </div>
         <div class="section" id="sizecompare-section" style="display:none">
           <div class="section-title">Size Comparisons</div>
@@ -404,6 +410,7 @@
           <label class="toggle-row"><input type="checkbox" id="falloutanim-check"/><span class="tg-slider"></span><span class="tg-label">Animated fallout particles</span></label>
           <label class="toggle-row"><input type="checkbox" id="screenshot-check"/><span class="tg-slider"></span><span class="tg-label">Screenshot mode (hide UI)</span></label>
           <label class="toggle-row"><input type="checkbox" id="draggable-check"/><span class="tg-slider"></span><span class="tg-label">Draggable ground zero</span></label>
+          <label class="toggle-row"><input type="checkbox" id="blastwaveinfo-check"/><span class="tg-slider"></span><span class="tg-label">Blast wave arrival on hover</span></label>
         </div>
 
         <!-- Dose Calculator -->
@@ -444,6 +451,14 @@
           <label class="toggle-row"><input type="checkbox" id="geiger-check"/><span class="tg-slider"></span><span class="tg-label">Geiger counter (hover audio)</span></label>
           <label class="toggle-row"><input type="checkbox" id="shockwave-check" checked/><span class="tg-slider"></span><span class="tg-label">Shockwave ring animation</span></label>
           <label class="toggle-row"><input type="checkbox" id="contours-check"/><span class="tg-slider"></span><span class="tg-label">Fallout dose contour lines</span></label>
+          <div id="fallout-timelapse" style="display:none;margin-top:6px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:9px;color:var(--overlay0);font-weight:600;min-width:28px" id="ft-label">1 hr</span>
+              <input type="range" id="ft-slider" min="1" max="48" value="1" step="1" style="flex:1;accent-color:var(--yellow)"/>
+              <button class="btn-secondary" id="ft-play" style="flex:0;padding:4px 8px;font-size:9px">Play</button>
+            </div>
+            <div style="font-size:9px;color:var(--overlay0);margin-top:2px" id="ft-info">Fallout extent at 1 hour after detonation</div>
+          </div>
           <label class="toggle-row"><input type="checkbox" id="testdb-check"/><span class="tg-slider"></span><span class="tg-label">Show historic nuclear tests</span></label>
         </div>
 

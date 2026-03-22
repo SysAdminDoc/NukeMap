@@ -491,3 +491,122 @@ NM.TestDB = {
     this.layers = [];
   }
 };
+
+// ---- CONVENTIONAL WEAPON EQUIVALENTS ----
+NM.ConventionalCompare = {
+  weapons: [
+    {name:'MOAB (GBU-43)', tnt_tons: 11, desc:'Largest non-nuclear US bomb'},
+    {name:'FOAB (Russia)', tnt_tons: 44, desc:'Largest non-nuclear bomb ever'},
+    {name:'Tomahawk cruise missile', tnt_tons: 0.45, desc:'Standard cruise missile'},
+    {name:'Mk 84 bomb', tnt_tons: 0.43, desc:'Standard 2,000 lb bomb'},
+    {name:'Grand Slam (WW2)', tnt_tons: 6.5, desc:'Largest WW2 conventional bomb'},
+    {name:'Oklahoma City bombing', tnt_tons: 2, desc:'1995 truck bomb'},
+    {name:'Halifax Explosion (1917)', tnt_tons: 2900, desc:'Largest accidental non-nuclear'},
+  ],
+
+  generate(yieldKt) {
+    const yieldTons = yieldKt * 1000;
+    let html = '<div class="conv-list">';
+    for (const w of this.weapons) {
+      const count = yieldTons / w.tnt_tons;
+      if (count < 0.5) continue;
+      const display = count >= 1e6 ? (count/1e6).toFixed(1) + 'M' : count >= 1e3 ? (count/1e3).toFixed(count >= 1e4 ? 0 : 1) + 'K' : count.toFixed(count >= 100 ? 0 : 1);
+      html += `<div class="conv-row"><span class="conv-count">${display}x</span><span class="conv-name">${w.name}</span><span class="conv-desc">${w.desc}</span></div>`;
+    }
+    html += '</div>';
+    return html;
+  }
+};
+
+// ---- FALLOUT TIME-LAPSE ----
+NM.FalloutTimelapse = {
+  layer: null,
+  animId: null,
+
+  draw(map, lat, lng, fallout, windAngle, hours) {
+    this.clear(map);
+    if (!fallout) return;
+    const heavyFrac = Math.min(1, hours / 3);
+    const lightFrac = Math.min(1, Math.sqrt(hours / 24));
+    const dAngle = ((windAngle + 180) % 360) * Math.PI / 180;
+    const R = 6371;
+    const mkE = (l, w) => {
+      const pts = [];
+      for (let i = 0; i <= 40; i++) {
+        const t = (i / 40) * 2 * Math.PI;
+        const dx = l * (0.5 + 0.5 * Math.cos(t)) * Math.cos(dAngle) - (w / 2) * Math.sin(t) * Math.sin(dAngle);
+        const dy = l * (0.5 + 0.5 * Math.cos(t)) * Math.sin(dAngle) + (w / 2) * Math.sin(t) * Math.cos(dAngle);
+        pts.push([lat + (dy / R) * (180 / Math.PI), lng + (dx / R) * (180 / Math.PI) / Math.cos(lat * Math.PI / 180)]);
+      }
+      return pts;
+    };
+    const layers = [];
+    layers.push(L.polygon(mkE(fallout.heavy.length * heavyFrac, fallout.heavy.width * Math.min(1, heavyFrac + 0.3)), {
+      color: '#f9e2af', weight: 1.5, opacity: 0.6, fillColor: '#f9e2af', fillOpacity: 0.2, dashArray: '4 4'
+    }));
+    layers.push(L.polygon(mkE(fallout.light.length * lightFrac, fallout.light.width * Math.min(1, lightFrac + 0.2)), {
+      color: '#f9e2af', weight: 1, opacity: 0.3, fillColor: '#f9e2af', fillOpacity: 0.06, dashArray: '6 4'
+    }));
+    this.layer = L.layerGroup(layers).addTo(map);
+  },
+
+  playAnimation(map, lat, lng, fallout, windAngle, onUpdate) {
+    if (this.animId) cancelAnimationFrame(this.animId);
+    let hour = 0.5;
+    const tick = () => {
+      hour += 0.3;
+      if (hour > 48) { this.animId = null; return; }
+      this.draw(map, lat, lng, fallout, windAngle, hour);
+      if (onUpdate) onUpdate(hour);
+      this.animId = requestAnimationFrame(tick);
+    };
+    this.animId = requestAnimationFrame(tick);
+  },
+
+  stopAnimation() {
+    if (this.animId) { cancelAnimationFrame(this.animId); this.animId = null; }
+  },
+
+  clear(map) {
+    this.stopAnimation();
+    if (this.layer) { map.removeLayer(this.layer); this.layer = null; }
+  }
+};
+
+// ---- BLAST WAVE ARRIVAL INDICATOR ----
+NM.BlastArrival = {
+  active: false, el: null, _handler: null,
+
+  init() {
+    this.el = document.createElement('div');
+    this.el.className = 'blast-arrival-indicator';
+    document.body.appendChild(this.el);
+  },
+
+  start(map) {
+    if (!this.el) this.init();
+    this.active = true;
+    this._handler = (e) => {
+      if (!this.active || !NM._lastDet) return;
+      const det = NM._lastDet;
+      const dist = NM.haversine(det.lat, det.lng, e.latlng.lat, e.latlng.lng);
+      const arrivalSec = dist / 0.34;
+      const psi = NM.Shelter.estimatePsi(det.effects, dist);
+      let timeStr;
+      if (arrivalSec < 1) timeStr = (arrivalSec * 1000).toFixed(0) + ' ms';
+      else if (arrivalSec < 60) timeStr = arrivalSec.toFixed(1) + ' sec';
+      else timeStr = (arrivalSec / 60).toFixed(1) + ' min';
+      const sevColor = psi >= 20 ? 'var(--red)' : psi >= 5 ? 'var(--peach)' : psi >= 1 ? 'var(--yellow)' : psi >= 0.5 ? 'var(--teal)' : 'var(--green)';
+      const severity = psi >= 20 ? 'LETHAL' : psi >= 5 ? 'SEVERE' : psi >= 1 ? 'DAMAGE' : psi >= 0.5 ? 'GLASS' : 'SAFE';
+      this.el.innerHTML = `<span class="ba-time">${timeStr}</span> <span class="ba-psi">${psi.toFixed(1)} psi</span> <span class="ba-sev" style="color:${sevColor}">${severity}</span>`;
+      this.el.style.display = 'block';
+    };
+    map.on('mousemove', this._handler);
+  },
+
+  stop(map) {
+    this.active = false;
+    if (this._handler) map.off('mousemove', this._handler);
+    if (this.el) this.el.style.display = 'none';
+  }
+};

@@ -209,9 +209,16 @@ function triggerDetonation(lat, lng) {
   $('seismic-section').style.display = '';
   $('seismic-content').innerHTML = NM.Seismic.generateHTML(Y, effects.isSurface);
 
+  // Conventional weapon comparison
+  $('conventional-section').style.display = '';
+  $('conventional-content').innerHTML = NM.ConventionalCompare.generate(Y);
+
   // Size comparisons
   $('sizecompare-section').style.display = '';
   $('sizecompare-content').innerHTML = NM.SizeCompare.generate(effects);
+
+  // Fallout time-lapse visibility
+  if (effects.fallout) $('fallout-timelapse').style.display = '';
 
   // Escape time
   $('escape-section').style.display = '';
@@ -545,6 +552,30 @@ function initControls() {
     if ($('contours-check').checked && NM._lastDet?.effects.fallout) {
       NM.FalloutContours.draw(map, NM._lastDet.lat, NM._lastDet.lng, NM._lastDet.effects.fallout, windAngle);
     } else NM.FalloutContours.clear(map);
+  });
+
+  // Blast wave arrival indicator
+  $('blastwaveinfo-check').addEventListener('change', () => {
+    if ($('blastwaveinfo-check').checked && currentDets.length) NM.BlastArrival.start(map);
+    else NM.BlastArrival.stop(map);
+  });
+
+  // Fallout time-lapse
+  $('ft-slider').addEventListener('input', () => {
+    const hr = +$('ft-slider').value;
+    $('ft-label').textContent = hr < 24 ? hr + ' hr' : (hr / 24).toFixed(1) + ' d';
+    $('ft-info').textContent = `Fallout extent at ${hr} hour${hr > 1 ? 's' : ''} after detonation`;
+    if (NM._lastDet?.effects.fallout) {
+      NM.FalloutTimelapse.draw(map, NM._lastDet.lat, NM._lastDet.lng, NM._lastDet.effects.fallout, windAngle, hr);
+    }
+  });
+  $('ft-play').addEventListener('click', () => {
+    if (!NM._lastDet?.effects.fallout) return;
+    NM.FalloutTimelapse.playAnimation(map, NM._lastDet.lat, NM._lastDet.lng, NM._lastDet.effects.fallout, windAngle, (hr) => {
+      $('ft-slider').value = Math.min(48, Math.round(hr));
+      $('ft-label').textContent = hr < 24 ? Math.round(hr) + ' hr' : (hr / 24).toFixed(1) + ' d';
+      $('ft-info').textContent = `Fallout extent at ${Math.round(hr)} hours after detonation`;
+    });
   });
 
   // Night mode toggle
@@ -908,6 +939,9 @@ function clearAll() {
   NM.FalloutContours.clear(map);
   NM.Geiger.stop(map);
   NM.WW3.stop(map);
+  NM.FalloutTimelapse.clear(map);
+  NM.BlastArrival.stop(map);
+  $('fallout-timelapse').style.display = 'none';
   NM._lastDet = null;
   updateDetsList(); updateStats(); resetPanels(); updateURL();
 }
@@ -929,6 +963,7 @@ function resetPanels() {
   $('survival-section').style.display = 'none';
   $('weaponinfo-section').style.display = 'none';
   $('seismic-section').style.display = 'none';
+  $('conventional-section').style.display = 'none';
   $('sizecompare-section').style.display = 'none';
   $('escape-section').style.display = 'none';
   $('nearby-section').style.display = 'none';
