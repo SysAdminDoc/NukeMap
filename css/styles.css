@@ -279,6 +279,68 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 /* Screenshot mode hint */
 #screenshot-hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10000;padding:8px 20px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--glass-border);font-size:12px;color:var(--overlay1);display:none;cursor:pointer}
 
+/* Experience report */
+.exp-report{min-width:260px}
+.exp-header{text-align:center;margin-bottom:8px}
+.exp-dist{font-size:22px;font-weight:800;color:var(--peach);font-variant-numeric:tabular-nums}
+.exp-from{font-size:10px;color:var(--overlay0);text-transform:uppercase;letter-spacing:1px}
+.exp-survival{padding:8px;border-radius:var(--radius-sm);border-left:3px solid;background:var(--mantle);margin-bottom:8px}
+.exp-verdict{font-size:12px;font-weight:700}
+.exp-details{font-size:11px}
+.exp-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(69,71,90,0.2)}
+.exp-row:last-child{border-bottom:none}
+.exp-label{color:var(--subtext0)}.exp-val{font-weight:600;font-variant-numeric:tabular-nums}
+.exp-warn{background:rgba(166,227,161,0.1);padding:3px 6px;border-radius:4px;margin-top:4px}
+.exp-advice{margin-top:8px;padding:8px;background:var(--surface0);border-radius:var(--radius-sm);font-size:10px;color:var(--subtext0);line-height:1.5}
+.exp-advice-title{font-weight:700;color:var(--yellow);margin-bottom:2px;text-transform:uppercase;font-size:9px;letter-spacing:0.5px}
+
+/* Measurement tool */
+.measure-label{background:none!important;border:none!important}
+.ml-tag{display:inline-block;padding:2px 8px;border-radius:4px;background:rgba(137,180,250,0.9);color:var(--crust);font-size:10px;font-weight:700;white-space:nowrap}
+
+/* Missile flight */
+.flight-result{font-size:11px}
+.flight-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(69,71,90,0.2)}
+.flight-row:last-child{border-bottom:none}
+.flight-main{padding:6px 0;margin:4px 0}
+.fl-label{color:var(--subtext0)}.fl-val{font-weight:600;font-variant-numeric:tabular-nums}
+.fl-time{font-size:16px;font-weight:800;color:var(--red)}
+.flight-phases{margin:6px 0;display:flex;flex-direction:column;gap:3px}
+.fl-phase{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--overlay1)}
+.fl-bar{height:6px;border-radius:3px;min-width:4px}
+
+/* Yield comparison chart */
+.yield-chart{display:flex;flex-direction:column;gap:4px}
+.yc-row{display:flex;align-items:center;gap:6px;font-size:10px}
+.yc-row.yc-current .yc-name{color:var(--peach);font-weight:700}
+.yc-row.yc-current .yc-bar{background:var(--peach)!important}
+.yc-name{min-width:80px;color:var(--subtext0);font-weight:500;text-align:right}
+.yc-bar-wrap{flex:1;height:8px;background:var(--mantle);border-radius:4px;overflow:hidden}
+.yc-bar{height:100%;background:var(--surface2);border-radius:4px;transition:width .5s}
+.yc-yield{min-width:50px;font-size:9px;color:var(--overlay1);font-variant-numeric:tabular-nums}
+
+/* Nuclear winter */
+.nw-panel{font-size:11px}
+.nw-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(69,71,90,0.2)}
+.nw-row:last-child{border-bottom:none}
+.nw-main{padding:6px 0;margin:3px 0}
+.nw-label{color:var(--subtext0)}.nw-val{font-weight:600;font-variant-numeric:tabular-nums}
+.nw-temp{font-size:15px;font-weight:800;color:var(--sky)}
+.nw-severity{text-align:center;font-size:12px;font-weight:800;padding:6px;margin-top:6px;text-transform:uppercase;letter-spacing:1px}
+.nw-note{font-size:9px;color:var(--overlay0);margin-top:4px;font-style:italic;text-align:center}
+
+/* Scenario chips */
+.scenario-chip{padding:8px 10px;border-radius:6px;background:var(--surface0);border:1px solid var(--surface1);cursor:pointer;transition:all .15s;margin-bottom:4px}
+.scenario-chip:hover{background:var(--surface1);border-color:var(--surface2)}
+.scenario-chip .sc-name{font-size:11px;font-weight:700;color:var(--text)}
+.scenario-chip .sc-desc{font-size:9px;color:var(--overlay0);margin-top:1px}
+
+/* Fact banner */
+#fact-banner{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:999;max-width:500px;padding:8px 16px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);font-size:11px;color:var(--subtext0);display:none;text-align:center;line-height:1.5;box-shadow:var(--shadow-lg);cursor:pointer}
+#fact-banner.show{display:block;animation:factFade 0.5s ease-out}
+@keyframes factFade{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
+.fact-label{font-size:9px;font-weight:700;color:var(--overlay0);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+
 /* Responsive */
 @media(max-width:768px){
   :root{--panel-w:100vw}

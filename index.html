@@ -181,6 +181,62 @@
           <div id="compare-result"></div>
         </div>
 
+        <!-- Experience Mode -->
+        <div class="section">
+          <div class="section-title">What Would I Experience?</div>
+          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">Enable, then click anywhere on the map to see a detailed report of effects at that distance from ground zero.</div>
+          <label class="toggle-row"><input type="checkbox" id="experience-check"/><span class="tg-slider"></span><span class="tg-label">Experience mode</span></label>
+        </div>
+
+        <!-- Measurement -->
+        <div class="section">
+          <div class="section-title">Measure Distance</div>
+          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">Enable, then click two or more points on the map to measure distances.</div>
+          <div class="btn-row">
+            <button class="btn-secondary" id="measure-toggle">Enable Ruler</button>
+            <button class="btn-secondary" id="measure-clear">Clear</button>
+          </div>
+        </div>
+
+        <!-- Attack Scenarios -->
+        <div class="section">
+          <div class="section-title">Attack Scenarios</div>
+          <div id="scenario-list"></div>
+        </div>
+
+        <!-- Missile Flight Time -->
+        <div class="section">
+          <div class="section-title">Missile Flight Time</div>
+          <div class="compact-row">
+            <label>Type</label>
+            <select class="compact-input" id="missile-type" style="max-width:120px;text-align:left">
+              <option value="icbm">ICBM</option>
+              <option value="slbm">SLBM</option>
+              <option value="irbm">IRBM</option>
+              <option value="srbm">SRBM</option>
+            </select>
+          </div>
+          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">Uses last detonation as target. Calculates from major launch sites.</div>
+          <div class="btn-row">
+            <button class="btn-secondary" id="flight-us">From US</button>
+            <button class="btn-secondary" id="flight-ru">From Russia</button>
+            <button class="btn-secondary" id="flight-cn">From China</button>
+          </div>
+          <div id="flight-result"></div>
+        </div>
+
+        <!-- Yield Comparison -->
+        <div class="section" id="yieldchart-section" style="display:none">
+          <div class="section-title">Yield Comparison</div>
+          <div id="yield-chart"></div>
+        </div>
+
+        <!-- Nuclear Winter -->
+        <div class="section" id="nw-section" style="display:none">
+          <div class="section-title">Nuclear Winter Estimate</div>
+          <div id="nw-result"></div>
+        </div>
+
         <!-- Map Layers -->
         <div class="section">
           <div class="section-title">Map Style</div>
@@ -227,6 +283,7 @@
 
 <div id="info-bar"></div>
 <div id="screenshot-hint">Click here or press Escape to exit screenshot mode</div>
+<div id="fact-banner"><div class="fact-label">Did You Know?</div><span id="fact-text"></span></div>
 
 <!-- Libraries -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
@@ -245,6 +302,7 @@
 <script src="js/compare.js"></script>
 <script src="js/heatmap.js"></script>
 <script src="js/extras.js"></script>
+<script src="js/advanced.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

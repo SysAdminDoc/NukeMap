@@ -57,6 +57,17 @@ function showBadge(on) {
 
 // ---- MAP CLICK ----
 function onMapClick(lat, lng) {
+  // Experience mode: analyze click point vs last detonation
+  if (NM.Experience.active && currentDets.length) {
+    NM.Experience.analyze(map, lat, lng, currentDets[currentDets.length - 1]);
+    return;
+  }
+  // Measurement tool
+  if (NM.Measure.active) {
+    NM.Measure.addPoint(map, lat, lng);
+    return;
+  }
+  // MIRV mode
   if (mirvMode && currentMirvPreset) {
     NM.MIRV.execute(map, lat, lng, currentMirvPreset, (la, ln, yk) => {
       const origYield = getYield();
@@ -139,6 +150,17 @@ function triggerDetonation(lat, lng) {
   if (effects.isSurface) $('raddecay-section').style.display = '';
   $('psi-section').style.display = '';
   $('psi-result').innerHTML = NM.CustomPsi.generateHTML(Y);
+
+  // Yield comparison chart
+  $('yieldchart-section').style.display = '';
+  $('yield-chart').innerHTML = NM.YieldChart.generate(Y);
+
+  // Nuclear winter estimate
+  const totalYield = currentDets.reduce((s, d) => s + d.yieldKt, 0);
+  if (totalYield > 10) {
+    $('nw-section').style.display = '';
+    $('nw-result').innerHTML = NM.NuclearWinter.generateHTML(totalYield, currentDets.length);
+  }
 
   // Zoom to fit
   const largest = [effects.emp, effects.thermal1, effects.psi1].filter(r => r > 0).sort((a, b) => b - a)[0];
@@ -321,6 +343,78 @@ function initControls() {
     const dist = +$('raddecay-dist').value || 10;
     $('raddecay-result').innerHTML = NM.RadDecay.generateHTML(det.yieldKt, det.fission, dist);
   });
+
+  // ---- ADVANCED FEATURES ----
+
+  // Experience mode toggle
+  $('experience-check').addEventListener('change', () => {
+    const on = NM.Experience.toggle(map);
+    if (!on) map.getContainer().classList.add('crosshair');
+  });
+
+  // Measurement tool
+  $('measure-toggle').addEventListener('click', () => {
+    const on = NM.Measure.toggle(map);
+    $('measure-toggle').textContent = on ? 'Disable Ruler' : 'Enable Ruler';
+    if (on) map.getContainer().style.cursor = 'crosshair';
+    else { map.getContainer().style.cursor = ''; map.getContainer().classList.add('crosshair'); }
+  });
+  $('measure-clear').addEventListener('click', () => NM.Measure.clear(map));
+
+  // Attack scenarios
+  const scenList = $('scenario-list');
+  NM.Scenarios.forEach(sc => {
+    const div = document.createElement('div');
+    div.className = 'scenario-chip';
+    div.innerHTML = `<div class="sc-name">${NM.esc(sc.name)}</div><div class="sc-desc">${NM.esc(sc.desc)} (${sc.dets.length} warheads)</div>`;
+    div.addEventListener('click', () => {
+      clearAll();
+      multiMode = true; $('multi-check').checked = true;
+      // Zoom to first target
+      map.flyTo([sc.dets[0].lat, sc.dets[0].lng], sc.dets.length > 2 ? 6 : 9, {duration: 1});
+      setTimeout(() => {
+        sc.dets.forEach((d, i) => {
+          setTimeout(() => {
+            setYield(d.yield_kt);
+            document.querySelectorAll('.burst-btn').forEach(b => b.classList.toggle('active', b.dataset.burst === d.burst));
+            $('wind-wrap').style.display = d.burst === 'surface' ? '' : 'none';
+            triggerDetonation(d.lat, d.lng);
+          }, i * 600);
+        });
+      }, 1200);
+    });
+    scenList.appendChild(div);
+  });
+
+  // Missile flight time
+  const launchSites = {
+    us: {lat: 41.145, lng: -104.862, name: 'F.E. Warren AFB'},
+    ru: {lat: 62.5, lng: 40.3, name: 'Plesetsk Cosmodrome'},
+    cn: {lat: 28.2, lng: 102.0, name: 'Xichang (est.)'},
+  };
+  ['us', 'ru', 'cn'].forEach(key => {
+    $('flight-' + key).addEventListener('click', () => {
+      if (!currentDets.length) { $('flight-result').innerHTML = '<div style="color:var(--overlay0);font-size:11px">Detonate first to set a target</div>'; return; }
+      const det = currentDets[currentDets.length - 1];
+      const site = launchSites[key];
+      const type = $('missile-type').value;
+      const result = NM.MissileFlight.calculate(site.lat, site.lng, det.lat, det.lng, type);
+      $('flight-result').innerHTML = `<div style="font-size:10px;color:var(--overlay0);margin-bottom:4px">From ${site.name}</div>` + NM.MissileFlight.generateHTML(result);
+    });
+  });
+
+  // Rotating facts banner
+  let factIdx = Math.floor(Math.random() * NM.Facts.length);
+  function showFact() {
+    const banner = $('fact-banner');
+    $('fact-text').textContent = NM.Facts[factIdx % NM.Facts.length];
+    banner.classList.add('show');
+    factIdx++;
+    setTimeout(() => banner.classList.remove('show'), 12000);
+  }
+  showFact();
+  setInterval(showFact, 30000);
+  $('fact-banner').addEventListener('click', () => { $('fact-banner').classList.remove('show'); showFact(); });
 }
 
 function switchTab(id) {
@@ -560,6 +654,10 @@ function resetPanels() {
   $('timeline-section').style.display = 'none';
   $('crater-section').style.display = 'none';
   $('shelter-section').style.display = 'none';
+  $('raddecay-section').style.display = 'none';
+  $('psi-section').style.display = 'none';
+  $('yieldchart-section').style.display = 'none';
+  $('nw-section').style.display = 'none';
   $('legend-items').innerHTML = '<div style="color:var(--overlay0);font-size:12px;padding:10px 0">Detonate a weapon to see effects</div>';
   $('info-bar').classList.remove('active');
 }
