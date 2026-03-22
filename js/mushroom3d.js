@@ -1,45 +1,40 @@
-// NukeMap - 3D Mushroom Cloud (Three.js overlay on Leaflet)
+// NukeMap - 3D Mushroom Cloud (map-anchored, zoom-relative, overhead view)
 window.NM = window.NM || {};
 
 NM.Mushroom3D = {
   scene: null, camera: null, renderer: null, cloud: null,
   container: null, active: false, animId: null,
-  currentDet: null,
+  currentDet: null, map: null,
 
   init() {
     if (typeof THREE === 'undefined') return;
+    // Container will be positioned over the GZ point on the map
     this.container = document.createElement('div');
     this.container.id = 'mushroom-3d';
-    this.container.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:450;pointer-events:none;display:none';
+    this.container.style.cssText = 'position:absolute;z-index:450;pointer-events:none;display:none;overflow:hidden;border-radius:50%';
     document.getElementById('map').appendChild(this.container);
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.camera.position.set(0, 2, 8);
-    this.camera.lookAt(0, 2, 0);
+    // Perspective from slightly angled overhead
+    this.camera = new THREE.PerspectiveCamera(40, 1, 0.1, 500);
 
     this.renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setClearColor(0x000000, 0);
     this.container.appendChild(this.renderer.domElement);
 
     // Lighting
-    const amb = new THREE.AmbientLight(0x444444);
-    this.scene.add(amb);
+    this.scene.add(new THREE.AmbientLight(0x555555));
     const dir = new THREE.DirectionalLight(0xffaa66, 1.2);
-    dir.position.set(2, 5, 3);
+    dir.position.set(2, 8, 3);
     this.scene.add(dir);
-    const rim = new THREE.DirectionalLight(0xff6633, 0.6);
-    rim.position.set(-2, 3, -3);
+    const rim = new THREE.DirectionalLight(0xff6633, 0.5);
+    rim.position.set(-2, 5, -3);
     this.scene.add(rim);
-
-    window.addEventListener('resize', () => {
-      if (!this.renderer) return;
-      this.camera.aspect = window.innerWidth / window.innerHeight;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+    // Bottom light to illuminate underside of cap
+    const bottom = new THREE.DirectionalLight(0xff4400, 0.3);
+    bottom.position.set(0, -2, 0);
+    this.scene.add(bottom);
   },
 
   show(det) {
@@ -47,77 +42,64 @@ NM.Mushroom3D = {
     this.currentDet = det;
     this.cleanup();
 
-    const e = det.effects;
-    const scale = Math.max(0.5, Math.min(4, Math.log10(Math.max(det.yieldKt, 0.1)) * 0.6 + 1));
-
-    // Build mushroom cloud geometry
     const group = new THREE.Group();
 
-    // Stem (cylinder with slight taper)
-    const stemGeo = new THREE.CylinderGeometry(0.15 * scale, 0.25 * scale, 3 * scale, 16);
+    // Stem
+    const stemGeo = new THREE.CylinderGeometry(0.12, 0.22, 3, 16);
     const stemMat = new THREE.MeshPhongMaterial({
-      color: 0x8b7355, transparent: true, opacity: 0.7,
+      color: 0x8b7355, transparent: true, opacity: 0.65,
       emissive: 0x332211, emissiveIntensity: 0.3
     });
     const stem = new THREE.Mesh(stemGeo, stemMat);
-    stem.position.y = 1.5 * scale;
+    stem.position.y = 1.5;
     group.add(stem);
 
-    // Debris cloud at base
+    // Debris ring at base
     for (let i = 0; i < 8; i++) {
-      const debrisGeo = new THREE.SphereGeometry(0.3 * scale * (0.5 + Math.random() * 0.5), 8, 8);
-      const debrisMat = new THREE.MeshPhongMaterial({
-        color: 0x665544, transparent: true, opacity: 0.5,
+      const dGeo = new THREE.SphereGeometry(0.18 + Math.random() * 0.15, 8, 6);
+      const dMat = new THREE.MeshPhongMaterial({
+        color: 0x665544, transparent: true, opacity: 0.45,
         emissive: 0x221100, emissiveIntensity: 0.2
       });
-      const debris = new THREE.Mesh(debrisGeo, debrisMat);
-      const angle = (i / 8) * Math.PI * 2;
-      debris.position.set(Math.cos(angle) * 0.5 * scale, 0.2 * scale, Math.sin(angle) * 0.5 * scale);
-      group.add(debris);
+      const d = new THREE.Mesh(dGeo, dMat);
+      const a = (i / 8) * Math.PI * 2;
+      d.position.set(Math.cos(a) * 0.4, 0.15, Math.sin(a) * 0.4);
+      group.add(d);
     }
 
-    // Mushroom cap (multiple overlapping spheres for organic look)
-    const capColors = [0xee8844, 0xdd6633, 0xcc5522, 0xff9955, 0xbb4411];
-    for (let i = 0; i < 12; i++) {
-      const r = (0.6 + Math.random() * 0.6) * scale;
-      const capGeo = new THREE.SphereGeometry(r, 12, 10);
-      const capMat = new THREE.MeshPhongMaterial({
+    // Mushroom cap — overlapping spheres
+    const capColors = [0xee8844, 0xdd6633, 0xcc5522, 0xff9955, 0xbb4411, 0xee7733];
+    for (let i = 0; i < 14; i++) {
+      const r = 0.45 + Math.random() * 0.45;
+      const cGeo = new THREE.SphereGeometry(r, 12, 10);
+      const cMat = new THREE.MeshPhongMaterial({
         color: capColors[i % capColors.length],
-        transparent: true, opacity: 0.55 + Math.random() * 0.2,
-        emissive: 0x441100, emissiveIntensity: 0.4
+        transparent: true, opacity: 0.5 + Math.random() * 0.2,
+        emissive: 0x441100, emissiveIntensity: 0.35
       });
-      const cap = new THREE.Mesh(capGeo, capMat);
-      const angle = (i / 12) * Math.PI * 2;
-      const dist = Math.random() * 0.5 * scale;
-      cap.position.set(
-        Math.cos(angle) * dist,
-        3 * scale + (Math.random() - 0.3) * 0.5 * scale,
-        Math.sin(angle) * dist
-      );
-      cap.userData.rotSpeed = (Math.random() - 0.5) * 0.01;
-      cap.userData.bobSpeed = 0.5 + Math.random() * 0.5;
-      cap.userData.bobAmp = 0.02 + Math.random() * 0.03;
-      cap.userData.baseY = cap.position.y;
-      group.add(cap);
+      const c = new THREE.Mesh(cGeo, cMat);
+      const a = (i / 14) * Math.PI * 2;
+      const dist = Math.random() * 0.35;
+      c.position.set(Math.cos(a) * dist, 3 + (Math.random() - 0.3) * 0.4, Math.sin(a) * dist);
+      c.userData.bobSpeed = 0.4 + Math.random() * 0.4;
+      c.userData.bobAmp = 0.015 + Math.random() * 0.02;
+      c.userData.baseY = c.position.y;
+      group.add(c);
     }
 
-    // Inner glow sphere
-    const glowGeo = new THREE.SphereGeometry(0.8 * scale, 16, 16);
-    const glowMat = new THREE.MeshBasicMaterial({
-      color: 0xff6600, transparent: true, opacity: 0.3
-    });
+    // Inner glow
+    const glowGeo = new THREE.SphereGeometry(0.6, 16, 16);
+    const glowMat = new THREE.MeshBasicMaterial({color: 0xff6600, transparent: true, opacity: 0.25});
     const glow = new THREE.Mesh(glowGeo, glowMat);
-    glow.position.y = 3 * scale;
+    glow.position.y = 3;
     group.add(glow);
 
-    // Animate entrance: scale from 0
     group.scale.set(0.01, 0.01, 0.01);
     this.cloud = group;
     this.scene.add(group);
     this.container.style.display = 'block';
     this.active = true;
 
-    // Growth animation
     const startTime = performance.now();
     const growDuration = 2500;
 
@@ -126,28 +108,67 @@ NM.Mushroom3D = {
       const elapsed = now - startTime;
       const growP = Math.min(1, elapsed / growDuration);
       const eased = 1 - Math.pow(1 - growP, 3);
-
       group.scale.set(eased, eased, eased);
+      group.rotation.y += 0.002;
 
-      // Rotate slowly
-      group.rotation.y += 0.003;
-
-      // Bob cap spheres
       group.children.forEach(child => {
         if (child.userData.bobSpeed) {
-          child.position.y = child.userData.baseY + Math.sin(now * 0.001 * child.userData.bobSpeed) * child.userData.bobAmp * scale;
+          child.position.y = child.userData.baseY + Math.sin(now * 0.001 * child.userData.bobSpeed) * child.userData.bobAmp;
         }
       });
+      if (glow) glow.material.opacity = 0.2 + Math.sin(now * 0.003) * 0.08;
 
-      // Glow pulse
-      if (glow) {
-        glow.material.opacity = 0.2 + Math.sin(now * 0.003) * 0.1;
-      }
+      // Reposition on map
+      this._updatePosition();
 
       this.renderer.render(this.scene, this.camera);
       this.animId = requestAnimationFrame(animate);
     };
     this.animId = requestAnimationFrame(animate);
+  },
+
+  // Position the 3D container over the GZ point, sized relative to the fireball/cloud radius on the map
+  _updatePosition() {
+    if (!this.currentDet || !this.active) return;
+    const map = NM._map;
+    if (!map) return;
+
+    const det = this.currentDet;
+    const e = det.effects;
+
+    // Use the cloud cap radius as the visual footprint on the map
+    const cloudR = Math.max(e.cloudTopR, e.fireball * 2, 1);
+
+    // Convert cloud radius to pixels at current zoom
+    const center = map.latLngToContainerPoint([det.lat, det.lng]);
+    const R = 6371;
+    const edgeLat = det.lat + (cloudR / R) * (180 / Math.PI);
+    const edge = map.latLngToContainerPoint([edgeLat, det.lng]);
+    const pixelR = Math.abs(center.y - edge.y);
+
+    // Size the container: diameter = pixelR * 2, clamped
+    const size = Math.max(60, Math.min(500, pixelR * 2.5));
+    const halfSize = size / 2;
+
+    this.container.style.width = size + 'px';
+    this.container.style.height = size + 'px';
+    this.container.style.left = (center.x - halfSize) + 'px';
+    this.container.style.top = (center.y - halfSize) + 'px';
+
+    this.renderer.setSize(size, size);
+    this.camera.aspect = 1;
+
+    // Camera: angled overhead view looking down at the cloud
+    // Distance scales so cloud fills the container nicely
+    const camDist = 7;
+    this.camera.position.set(0, camDist * 0.85, camDist * 0.55);
+    this.camera.lookAt(0, 1.5, 0);
+    this.camera.updateProjectionMatrix();
+  },
+
+  // Call on map move/zoom
+  onMapMove() {
+    if (this.active) this._updatePosition();
   },
 
   hide() {

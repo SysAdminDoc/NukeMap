@@ -9,6 +9,7 @@ let map, currentDets = [], windAngle = 0, multiMode = false, mirvMode = false, c
 // ---- MAP INIT ----
 function initMap() {
   map = L.map('map', {center: [39.83, -98.58], zoom: 5, zoomControl: true, attributionControl: true});
+  NM._map = map; // expose for mushroom3d positioning
   const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://osm.org">OSM</a> &copy; <a href="https://carto.com">CARTO</a>',
     subdomains: 'abcd', maxZoom: 19
@@ -43,6 +44,7 @@ function initMap() {
 
   map.on('click', e => onMapClick(e.latlng.lat, e.latlng.lng));
   map.on('mousemove', e => { document.getElementById('coords').textContent = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`; });
+  map.on('moveend zoomend', () => { if (NM.Mushroom3D.active) NM.Mushroom3D.onMapMove(); });
   map.getContainer().classList.add('crosshair');
 
   NM.Heatmap.init(map);
