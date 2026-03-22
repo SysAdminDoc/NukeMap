@@ -506,7 +506,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .leaflet-control-scale-line{background:var(--glass)!important;backdrop-filter:blur(8px);border-color:var(--surface1)!important;color:var(--overlay1)!important;font-size:10px!important;line-height:1.4!important;padding:1px 6px!important;border-radius:3px!important}
 
 /* Detonation toast */
-.det-toast{position:fixed;top:50px;right:14px;transform:translateY(-20px);z-index:1003;padding:8px 18px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(20px);border:1px solid rgba(243,139,168,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.5);font-size:12px;color:var(--text);white-space:nowrap;opacity:0;transition:all 0.4s cubic-bezier(.4,0,.2,1);pointer-events:none}
+.det-toast{position:fixed;top:12px;right:130px;transform:translateY(-20px);z-index:1003;padding:8px 18px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(20px);border:1px solid rgba(243,139,168,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.5);font-size:12px;color:var(--text);white-space:nowrap;opacity:0;transition:all 0.4s cubic-bezier(.4,0,.2,1);pointer-events:none}
 .det-toast.show{opacity:1;transform:translateY(0)}
 .dt-yield{font-weight:800;color:var(--peach);font-size:14px}
 .dt-loc{color:var(--subtext1);margin-left:6px}
@@ -610,7 +610,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .conv-desc{color:var(--overlay0);font-size:9px;margin-left:auto}
 
 /* Blast wave arrival indicator */
-.blast-arrival-indicator{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:1001;padding:5px 14px;border-radius:20px;background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--glass-border);font-size:11px;font-weight:700;display:none;font-variant-numeric:tabular-nums;box-shadow:var(--shadow-lg);white-space:nowrap}
+.blast-arrival-indicator{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:1001;padding:5px 14px;border-radius:20px;background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--glass-border);font-size:11px;font-weight:700;display:none;font-variant-numeric:tabular-nums;box-shadow:var(--shadow-lg);white-space:nowrap}
 .ba-time{color:var(--peach);font-size:13px}
 .ba-psi{color:var(--overlay1);margin-left:6px}
 .ba-sev{font-weight:800;font-size:10px;margin-left:6px;letter-spacing:0.5px}
@@ -665,7 +665,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .cloud-compare-svg{width:100%;height:auto;border:1px solid var(--surface1);border-radius:var(--radius-sm)}
 
 /* Test timeline year display */
-.test-timeline-year{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:1002;padding:8px 20px;border-radius:var(--radius);background:rgba(17,17,27,0.92);backdrop-filter:blur(16px);border:1px solid var(--glass-border);font-size:13px;font-weight:700;color:var(--text);box-shadow:var(--shadow-lg);white-space:nowrap;letter-spacing:0.5px}
+.test-timeline-year{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:1002;padding:8px 20px;border-radius:var(--radius);background:rgba(17,17,27,0.92);backdrop-filter:blur(16px);border:1px solid var(--glass-border);font-size:13px;font-weight:700;color:var(--text);box-shadow:var(--shadow-lg);white-space:nowrap;letter-spacing:0.5px}
 
 /* Print styles */
 @media print{
@@ -727,6 +727,8 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
   .ms-toggle{width:28px;height:28px}
   .ms-panel{right:0}
   #ww3-quick-btn{bottom:calc(50vh + 6px);right:8px;padding:5px 10px;font-size:9px}
+  .test-timeline-year{bottom:calc(50vh + 50px);font-size:11px;padding:6px 14px}
+  .blast-arrival-indicator{bottom:calc(50vh + 30px);font-size:10px}
   .det-toast{top:auto;bottom:calc(50vh + 10px);font-size:11px;padding:6px 14px}
   .dt-yield{font-size:12px}
   #quick-weapons{bottom:calc(50vh + 32px);left:50%;max-width:95vw;gap:2px;padding:3px}
