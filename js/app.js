@@ -125,6 +125,21 @@ function triggerDetonation(lat, lng) {
 
   $('dets-section').style.display = '';
 
+  // Extras: update overlays based on toggle state
+  if ($('ringlabels-check').checked) NM.RingLabels.draw(map, det);
+  if ($('distrings-check').checked) {
+    const maxR = Math.max(effects.psi1, effects.thermal1, effects.emp);
+    NM.DistanceRings.draw(map, det.lat, det.lng, maxR);
+  }
+  if ($('distfromgz-check').checked) NM.DistanceIndicator.start(map, det.lat, det.lng);
+  if ($('thermal-check').checked) NM.ThermalOverlay.draw(map, det.lat, det.lng, effects);
+  if ($('falloutanim-check').checked && effects.fallout) NM.FalloutParticles.start(map, det.lat, det.lng, effects.fallout, windAngle);
+
+  // Show radiation decay & psi sections in Tools tab
+  if (effects.isSurface) $('raddecay-section').style.display = '';
+  $('psi-section').style.display = '';
+  $('psi-result').innerHTML = NM.CustomPsi.generateHTML(Y);
+
   // Zoom to fit
   const largest = [effects.emp, effects.thermal1, effects.psi1].filter(r => r > 0).sort((a, b) => b - a)[0];
   if (largest) {
@@ -241,6 +256,71 @@ function initControls() {
   initPresets();
   initHistorical();
   initSearch();
+
+  // ---- EXTRAS ----
+  NM.DistanceIndicator.init();
+  NM.LayerSwitcher.init(map);
+
+  // Layer switcher buttons
+  document.querySelectorAll('#layer-switcher .layer-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#layer-switcher .layer-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      NM.LayerSwitcher.switchTo(btn.dataset.layer);
+    });
+  });
+
+  // Ring labels toggle
+  $('ringlabels-check').addEventListener('change', () => {
+    if ($('ringlabels-check').checked && currentDets.length) NM.RingLabels.draw(map, currentDets[currentDets.length - 1]);
+    else NM.RingLabels.clear(map);
+  });
+
+  // Distance reference rings toggle
+  $('distrings-check').addEventListener('change', () => {
+    if ($('distrings-check').checked && currentDets.length) {
+      const det = currentDets[currentDets.length - 1];
+      const maxR = Math.max(det.effects.psi1, det.effects.thermal1, det.effects.emp);
+      NM.DistanceRings.draw(map, det.lat, det.lng, maxR);
+    } else NM.DistanceRings.clear(map);
+  });
+
+  // Distance from GZ toggle
+  $('distfromgz-check').addEventListener('change', () => {
+    if ($('distfromgz-check').checked && currentDets.length) {
+      const det = currentDets[currentDets.length - 1];
+      NM.DistanceIndicator.start(map, det.lat, det.lng);
+    } else NM.DistanceIndicator.stop(map);
+  });
+
+  // Thermal flash gradient toggle
+  $('thermal-check').addEventListener('change', () => {
+    if ($('thermal-check').checked && currentDets.length) {
+      const det = currentDets[currentDets.length - 1];
+      NM.ThermalOverlay.draw(map, det.lat, det.lng, det.effects);
+    } else NM.ThermalOverlay.clear(map);
+  });
+
+  // Fallout particle animation toggle
+  $('falloutanim-check').addEventListener('change', () => {
+    if ($('falloutanim-check').checked && currentDets.length) {
+      const det = currentDets[currentDets.length - 1];
+      if (det.effects.fallout) NM.FalloutParticles.start(map, det.lat, det.lng, det.effects.fallout, windAngle);
+    } else NM.FalloutParticles.stop(map);
+  });
+
+  // Screenshot mode
+  $('screenshot-check').addEventListener('change', () => NM.Screenshot.toggle());
+  $('screenshot-hint').addEventListener('click', () => { $('screenshot-check').checked = false; NM.Screenshot.toggle(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && NM.Screenshot.active) { $('screenshot-check').checked = false; NM.Screenshot.toggle(); } });
+
+  // Radiation decay calculator
+  $('raddecay-calc').addEventListener('click', () => {
+    if (!currentDets.length) return;
+    const det = currentDets[currentDets.length - 1];
+    const dist = +$('raddecay-dist').value || 10;
+    $('raddecay-result').innerHTML = NM.RadDecay.generateHTML(det.yieldKt, det.fission, dist);
+  });
 }
 
 function switchTab(id) {
@@ -466,6 +546,11 @@ function clearAll() {
   NM.Compare.clearOverlay(map);
   NM.MIRV.clearPreview(map);
   NM.Animation.cleanup();
+  NM.RingLabels.clear(map);
+  NM.DistanceRings.clear(map);
+  NM.DistanceIndicator.stop(map);
+  NM.ThermalOverlay.clear(map);
+  NM.FalloutParticles.stop(map);
   updateDetsList(); updateStats(); resetPanels(); updateURL();
 }
 

@@ -241,6 +241,44 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 /* Crosshair */
 .crosshair,.crosshair .leaflet-interactive{cursor:crosshair!important}
 
+/* Ring labels on map */
+.ring-label{background:none!important;border:none!important}
+.rl-tag{display:inline-block;padding:2px 7px;border-radius:4px;background:rgba(17,17,27,0.85);border:1px solid;font-size:9px;font-weight:700;white-space:nowrap;backdrop-filter:blur(4px)}
+.rl-dist{margin-left:4px;opacity:0.6;font-weight:500}
+
+/* Distance indicator */
+.dist-indicator{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:1001;padding:5px 14px;border-radius:20px;background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--glass-border);font-size:11px;font-weight:700;color:var(--peach);display:none;font-variant-numeric:tabular-nums;box-shadow:var(--shadow-lg)}
+
+/* Distance reference rings */
+.dist-ring-label{background:none!important;border:none!important}
+.dist-ring-label span{font-size:8px;color:var(--overlay0);background:rgba(17,17,27,0.7);padding:1px 4px;border-radius:3px;font-weight:600}
+
+/* Layer switcher */
+.layer-switcher{display:flex;gap:3px;flex-wrap:wrap}
+.layer-btn{padding:4px 8px;border-radius:5px;background:var(--surface0);border:1px solid var(--surface1);color:var(--subtext0);font-size:9px;font-weight:600;cursor:pointer;transition:all .15s}
+.layer-btn.active{background:var(--surface1);color:var(--text);border-color:var(--blue)}
+.layer-btn:hover:not(.active){background:rgba(69,71,90,0.5)}
+
+/* Radiation decay table */
+.rd-header{font-size:10px;font-weight:700;color:var(--peach);margin-bottom:6px}
+.rd-table{background:var(--surface0);border-radius:var(--radius-sm);border:1px solid var(--surface1);overflow:hidden}
+.rd-row{display:flex;padding:4px 8px;font-size:10px;border-bottom:1px solid rgba(69,71,90,0.2)}
+.rd-row:last-child{border-bottom:none}
+.rd-head{font-weight:700;color:var(--overlay0);text-transform:uppercase;font-size:9px;letter-spacing:0.5px;background:var(--mantle)}
+.rd-row span{flex:1}.rd-time{color:var(--subtext1);font-weight:600}.rd-rate{font-variant-numeric:tabular-nums;font-weight:600;color:var(--text)}
+.rd-status{font-weight:700;text-align:right}
+.rd-note{font-size:9px;color:var(--overlay0);margin-top:4px;font-style:italic}
+
+/* Custom PSI table */
+.psi-table{background:var(--surface0);border-radius:var(--radius-sm);border:1px solid var(--surface1);overflow:hidden}
+.psi-row{display:flex;padding:3px 8px;font-size:10px;border-bottom:1px solid rgba(69,71,90,0.2)}
+.psi-row:last-child{border-bottom:none}
+.psi-head{font-weight:700;color:var(--overlay0);text-transform:uppercase;font-size:9px;background:var(--mantle)}
+.psi-row span{flex:1}.psi-val{color:var(--blue);font-weight:600}.psi-r{font-variant-numeric:tabular-nums;font-weight:600}.psi-eff{color:var(--overlay1);font-size:9px}
+
+/* Screenshot mode hint */
+#screenshot-hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10000;padding:8px 20px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--glass-border);font-size:12px;color:var(--overlay1);display:none;cursor:pointer}
+
 /* Responsive */
 @media(max-width:768px){
   :root{--panel-w:100vw}
