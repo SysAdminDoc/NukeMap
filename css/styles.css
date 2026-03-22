@@ -431,6 +431,15 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 /* Test tooltip */
 .test-tooltip{background:var(--surface0)!important;color:var(--text)!important;border:1px solid var(--surface1)!important;border-radius:6px!important;font-size:11px!important;box-shadow:var(--shadow-lg)!important;padding:6px 10px!important}
 
+/* WW3 Simulation */
+.btn-ww3-launch{flex:2;padding:8px;border-radius:6px;border:none;background:linear-gradient(135deg,#f38ba8,#fab387);color:var(--crust);font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.5px;transition:all .2s;text-transform:uppercase}
+.btn-ww3-launch:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(243,139,168,0.3)}
+#ww3-stats{display:flex;flex-wrap:wrap;gap:6px}
+.ww3-stat{flex:1;min-width:70px;padding:6px 8px;background:var(--surface0);border-radius:6px;border:1px solid var(--surface1);text-align:center}
+.ww3-stat-val{display:block;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+.ww3-stat-lbl{font-size:8px;color:var(--overlay0);text-transform:uppercase;letter-spacing:0.5px}
+.ww3-arc{pointer-events:none}
+
 /* Responsive */
 @media(max-width:768px){
   :root{--panel-w:100vw}

@@ -493,6 +493,24 @@ function initControls() {
   // Test database
   $('testdb-check').addEventListener('change', () => NM.TestDB.toggle(map));
 
+  // WW3 Simulation
+  const ww3Sel = $('ww3-scenario');
+  NM.WW3_SCENARIOS.forEach(s => {
+    const o = document.createElement('option'); o.value = s.id;
+    o.textContent = s.name + ' (' + NM.WW3.countWarheads(s.id) + ' warheads)';
+    ww3Sel.appendChild(o);
+  });
+  ww3Sel.addEventListener('change', () => {
+    const s = NM.WW3_SCENARIOS.find(sc => sc.id === ww3Sel.value);
+    $('ww3-scenario-desc').textContent = s ? s.desc : '';
+  });
+  $('ww3-launch').addEventListener('click', () => {
+    if (!ww3Sel.value) return;
+    clearAll();
+    NM.WW3.start(map, ww3Sel.value);
+  });
+  $('ww3-stop').addEventListener('click', () => NM.WW3.stop(map));
+
   // Rotating facts banner
   let factIdx = Math.floor(Math.random() * NM.Facts.length);
   function showFact() {
@@ -741,6 +759,7 @@ function clearAll() {
   NM.ShockwaveRing.clear(map);
   NM.FalloutContours.clear(map);
   NM.Geiger.stop(map);
+  NM.WW3.stop(map);
   NM._lastDet = null;
   updateDetsList(); updateStats(); resetPanels(); updateURL();
 }
