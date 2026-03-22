@@ -162,6 +162,34 @@ function triggerDetonation(lat, lng) {
     $('nw-result').innerHTML = NM.NuclearWinter.generateHTML(totalYield, currentDets.length);
   }
 
+  // Premium panels
+  $('altitude-section').style.display = '';
+  $('altitude-profile').innerHTML = NM.AltitudeProfile.generate(effects, Y);
+
+  $('zonecas-section').style.display = '';
+  $('zonecas-content').innerHTML = NM.ZoneCasualties.generate(effects, cas.density);
+
+  $('destruction-section').style.display = '';
+  $('destruction-content').innerHTML = NM.DestructionStats.generate(effects, cas);
+
+  $('emp-section').style.display = '';
+  $('emp-content').innerHTML = NM.EMPDetails.generate(effects.emp);
+
+  $('survival-section').style.display = '';
+  $('survival-content').innerHTML = NM.SurvivalCalc.generateHTML(effects);
+
+  const wInfo = NM.WeaponInfo.generate(det.weapon);
+  if (wInfo) { $('weaponinfo-section').style.display = ''; $('weaponinfo-content').innerHTML = wInfo; }
+  else $('weaponinfo-section').style.display = 'none';
+
+  // Draggable GZ
+  if ($('draggable-check').checked) {
+    NM.DraggableGZ.enable(map, det, (newLat, newLng) => {
+      removeDet(currentDets.length - 1);
+      triggerDetonation(newLat, newLng);
+    });
+  }
+
   // Zoom to fit
   const largest = [effects.emp, effects.thermal1, effects.psi1].filter(r => r > 0).sort((a, b) => b - a)[0];
   if (largest) {
@@ -402,6 +430,20 @@ function initControls() {
       $('flight-result').innerHTML = `<div style="font-size:10px;color:var(--overlay0);margin-bottom:4px">From ${site.name}</div>` + NM.MissileFlight.generateHTML(result);
     });
   });
+
+  // Draggable GZ toggle
+  $('draggable-check').addEventListener('change', () => {
+    if ($('draggable-check').checked && currentDets.length) {
+      const det = currentDets[currentDets.length - 1];
+      NM.DraggableGZ.enable(map, det, (newLat, newLng) => {
+        removeDet(currentDets.length - 1);
+        triggerDetonation(newLat, newLng);
+      });
+    } else NM.DraggableGZ.disable(map);
+  });
+
+  // Export PNG
+  $('export-png').addEventListener('click', () => NM.ExportPNG.capture());
 
   // Rotating facts banner
   let factIdx = Math.floor(Math.random() * NM.Facts.length);
@@ -645,6 +687,8 @@ function clearAll() {
   NM.DistanceIndicator.stop(map);
   NM.ThermalOverlay.clear(map);
   NM.FalloutParticles.stop(map);
+  NM.DraggableGZ.disable(map);
+  NM.DeliveryArc.layer && map.removeLayer(NM.DeliveryArc.layer);
   updateDetsList(); updateStats(); resetPanels(); updateURL();
 }
 
@@ -658,6 +702,12 @@ function resetPanels() {
   $('psi-section').style.display = 'none';
   $('yieldchart-section').style.display = 'none';
   $('nw-section').style.display = 'none';
+  $('altitude-section').style.display = 'none';
+  $('zonecas-section').style.display = 'none';
+  $('destruction-section').style.display = 'none';
+  $('emp-section').style.display = 'none';
+  $('survival-section').style.display = 'none';
+  $('weaponinfo-section').style.display = 'none';
   $('legend-items').innerHTML = '<div style="color:var(--overlay0);font-size:12px;padding:10px 0">Detonate a weapon to see effects</div>';
   $('info-bar').classList.remove('active');
 }

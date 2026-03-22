@@ -341,6 +341,56 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 @keyframes factFade{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
 .fact-label{font-size:9px;font-weight:700;color:var(--overlay0);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
 
+/* Draggable GZ */
+.gz-draggable{cursor:grab!important}.gz-draggable:active{cursor:grabbing!important}
+.gz-drag-hint{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:7px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;opacity:0.7}
+
+/* Per-zone casualty table */
+.zone-table{background:var(--surface0);border-radius:var(--radius-sm);border:1px solid var(--surface1);overflow:hidden}
+.zt-row{display:flex;padding:4px 8px;font-size:10px;border-bottom:1px solid rgba(69,71,90,0.2)}
+.zt-row:last-child{border-bottom:none}
+.zt-head{font-weight:700;color:var(--overlay0);text-transform:uppercase;font-size:9px;background:var(--mantle)}
+.zt-row span{flex:1;font-variant-numeric:tabular-nums}
+.zt-d{color:var(--red);font-weight:600}.zt-i{color:var(--peach);font-weight:600}
+.zt-total{font-weight:800;background:var(--mantle);border-top:1px solid var(--surface1)}
+
+/* EMP details */
+.emp-list{display:flex;flex-direction:column;gap:4px}
+.emp-item{padding:6px 8px;background:var(--surface0);border-radius:6px;border:1px solid var(--surface1);font-size:10px}
+.emp-name{font-weight:700;color:var(--text)}.emp-effect{color:var(--overlay1);font-size:9px;margin-top:1px}
+.emp-range{color:var(--subtext0);font-size:9px;margin-top:2px}
+.emp-note{font-size:9px;color:var(--overlay0);margin-top:6px;font-style:italic}
+
+/* Destruction stats */
+.ds-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.ds-card{padding:8px;border-radius:6px;background:var(--surface0);border:1px solid var(--surface1);text-align:center}
+.ds-val{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.ds-label{font-size:8px;color:var(--overlay0);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
+
+/* Weapon info card */
+.wi-card{background:var(--surface0);border-radius:var(--radius-sm);border:1px solid var(--surface1);padding:8px 10px;font-size:10px}
+.wi-row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(69,71,90,0.2)}
+.wi-row:last-child{border-bottom:none}
+.wi-label{color:var(--overlay0);font-weight:600}.wi-val{color:var(--text);font-weight:500}
+.wi-note{margin-top:6px;padding-top:6px;border-top:1px solid var(--surface1);color:var(--subtext0);font-size:9px;line-height:1.4;font-style:italic}
+
+/* Altitude cross-section SVG */
+.alt-svg{width:100%;height:auto;background:var(--mantle);border-radius:var(--radius-sm);border:1px solid var(--surface1)}
+
+/* Survival probability */
+.surv-table{background:var(--surface0);border-radius:var(--radius-sm);border:1px solid var(--surface1);overflow:hidden}
+.surv-row{display:flex;padding:3px 8px;font-size:10px;border-bottom:1px solid rgba(69,71,90,0.2)}
+.surv-row:last-child{border-bottom:none}
+.surv-head{font-weight:700;color:var(--overlay0);font-size:9px;text-transform:uppercase;background:var(--mantle)}
+.surv-row span{flex:1;font-variant-numeric:tabular-nums}
+.surv-dist{color:var(--subtext0);font-weight:600}
+.surv-pct{font-weight:700}.surv-pct.safe{color:var(--green)}.surv-pct.risk{color:var(--yellow)}.surv-pct.dead{color:var(--red)}
+.surv-psi{color:var(--overlay1)}
+
+/* Export button */
+.export-btn{padding:7px 14px;border-radius:6px;background:var(--blue);border:none;color:var(--crust);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;width:100%}
+.export-btn:hover{opacity:0.85;transform:translateY(-1px)}
+
 /* Responsive */
 @media(max-width:768px){
   :root{--panel-w:100vw}
