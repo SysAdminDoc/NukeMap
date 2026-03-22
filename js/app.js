@@ -284,7 +284,7 @@ function initControls() {
   NM.WEAPONS.forEach((w, i) => { const g = w.country || 'Custom'; if (!groups[g]) groups[g] = []; groups[g].push({...w, idx: i}); });
   for (const [g, ws] of Object.entries(groups)) {
     const og = document.createElement('optgroup'); og.label = g;
-    ws.forEach(w => { const o = document.createElement('option'); o.value = w.idx; o.textContent = w.name; o.title = w.desc; og.appendChild(o); });
+    ws.forEach(w => { const o = document.createElement('option'); o.value = w.idx; o.textContent = `${w.name} (${NM.fmtYield(w.yield_kt)})`; o.title = w.desc; og.appendChild(o); });
     sel.appendChild(og);
   }
   sel.addEventListener('change', () => setYield(NM.WEAPONS[sel.value].yield_kt));
@@ -587,6 +587,33 @@ function initControls() {
     $('ww3-pause').textContent = NM.WW3.paused ? 'Resume' : 'Pause';
   });
 
+  // Quick weapon bar
+  document.querySelectorAll('.qw-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const kt = +chip.dataset.kt;
+      setYield(kt);
+      const i = NM.WEAPONS.findIndex(w => Math.abs(w.yield_kt - kt) < 0.01);
+      if (i >= 0) $('weapon-select').value = i;
+      document.querySelectorAll('.qw-chip').forEach(c => c.classList.remove('qw-active'));
+      chip.classList.add('qw-active');
+    });
+  });
+
+  // Save/Load scenarios
+  $('save-btn').addEventListener('click', () => {
+    if (!currentDets.length) return;
+    const name = $('save-name').value.trim() || `Scenario ${new Date().toLocaleDateString()}`;
+    const saves = JSON.parse(localStorage.getItem('nukemap-saves') || '[]');
+    saves.push({
+      name, date: Date.now(),
+      dets: currentDets.map(d => ({lat:d.lat,lng:d.lng,yieldKt:d.yieldKt,burstType:d.burstType,weapon:d.weapon}))
+    });
+    localStorage.setItem('nukemap-saves', JSON.stringify(saves));
+    $('save-name').value = '';
+    renderSavedList();
+  });
+  renderSavedList();
+
   // Rotating facts banner
   let factIdx = Math.floor(Math.random() * NM.Facts.length);
   function showFact() {
@@ -754,7 +781,8 @@ function updateLegend(det) {
     if (it.r < 0.0005) return;
     const def = NM.EFFECTS_DEF.find(d => d.id === it.id); if (!def) return;
     const div = document.createElement('div'); div.className = 'legend-item';
-    div.innerHTML = `<div class="legend-dot" style="background:${it.color}"></div><div class="legend-label">${def.label}<span class="legend-desc">${def.desc.split('.')[0]}</span></div><div class="legend-value">${NM.fmtR(it.r)}<span class="legend-area">${NM.fmtArea(it.r)}</span></div><button class="legend-eye on" data-eid="${it.id}">&#10003;</button>`;
+    const popEst = Math.round(Math.PI * it.r * it.r * (det.casualties.density || 40));
+    div.innerHTML = `<div class="legend-dot" style="background:${it.color}"></div><div class="legend-label">${def.label}<span class="legend-desc">${def.desc.split('.')[0]}</span><span class="legend-pop">~${NM.fmtNum(popEst)} people in zone</span></div><div class="legend-value">${NM.fmtR(it.r)}<span class="legend-area">${NM.fmtArea(it.r)}</span></div><button class="legend-eye on" data-eid="${it.id}">&#10003;</button>`;
     div.querySelector('.legend-eye').addEventListener('click', ev => {
       const btn = ev.currentTarget; btn.classList.toggle('on');
       div.classList.toggle('dimmed', !btn.classList.contains('on'));
@@ -927,6 +955,44 @@ function loadFromURL() {
 
 function showShareLink() { $('share-section').style.display = ''; $('share-input').value = location.href; switchTab('results'); }
 function copyShareLink() { $('share-input').select(); navigator.clipboard?.writeText($('share-input').value); $('share-copy').textContent = 'Copied!'; setTimeout(() => $('share-copy').textContent = 'Copy', 2000); }
+
+// ---- SAVE/LOAD SCENARIOS ----
+function renderSavedList() {
+  const list = $('saved-list'); if (!list) return;
+  const saves = JSON.parse(localStorage.getItem('nukemap-saves') || '[]');
+  if (!saves.length) { list.innerHTML = '<div style="color:var(--overlay0);font-size:10px">No saved scenarios</div>'; return; }
+  list.innerHTML = '';
+  saves.forEach((s, i) => {
+    const el = document.createElement('div'); el.className = 'saved-item';
+    el.innerHTML = `<span class="si-name">${NM.esc(s.name)}</span><span class="si-meta">${s.dets.length} det${s.dets.length > 1 ? 's' : ''}</span><button class="si-del" data-i="${i}">&times;</button>`;
+    el.addEventListener('click', e => { if (!e.target.classList.contains('si-del')) loadScenario(s); });
+    el.querySelector('.si-del').addEventListener('click', e => { e.stopPropagation(); deleteSave(i); });
+    list.appendChild(el);
+  });
+}
+
+function loadScenario(s) {
+  clearAll();
+  multiMode = true; $('multi-check').checked = true;
+  if (s.dets.length) map.flyTo([s.dets[0].lat, s.dets[0].lng], s.dets.length > 2 ? 6 : 9, {duration: 1});
+  setTimeout(() => {
+    s.dets.forEach((d, i) => {
+      setTimeout(() => {
+        setYield(d.yieldKt);
+        document.querySelectorAll('.burst-btn').forEach(b => b.classList.toggle('active', b.dataset.burst === d.burstType));
+        $('wind-wrap').style.display = d.burstType === 'surface' ? '' : 'none';
+        triggerDetonation(d.lat, d.lng);
+      }, i * 400);
+    });
+  }, 1200);
+}
+
+function deleteSave(i) {
+  const saves = JSON.parse(localStorage.getItem('nukemap-saves') || '[]');
+  saves.splice(i, 1);
+  localStorage.setItem('nukemap-saves', JSON.stringify(saves));
+  renderSavedList();
+}
 
 // ---- DETONATION TOAST ----
 function showDetToast(det) {

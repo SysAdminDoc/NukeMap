@@ -209,6 +209,15 @@
           <div class="section-title">Share</div>
           <div class="share-row"><input type="text" id="share-input" readonly/><button class="share-copy" id="share-copy">Copy</button></div>
         </div>
+        <div class="section">
+          <div class="section-title">Save / Load Scenario</div>
+          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">Save current detonations to browser storage for later.</div>
+          <div class="save-row">
+            <input type="text" id="save-name" class="compact-input" placeholder="Scenario name..." style="flex:1;max-width:none;text-align:left"/>
+            <button class="btn-secondary" id="save-btn" style="flex:0;white-space:nowrap">Save</button>
+          </div>
+          <div id="saved-list" style="margin-top:6px"></div>
+        </div>
       </div>
 
       <!-- ===== TOOLS TAB ===== -->
@@ -421,6 +430,14 @@
   </div>
 </div>
 
+<div id="quick-weapons">
+  <button class="qw-chip" data-kt="15" data-name="Hiroshima"><span class="qw-name">Hiroshima</span><span class="qw-yield">15 kT</span></button>
+  <button class="qw-chip" data-kt="100" data-name="W76-1"><span class="qw-name">W76-1</span><span class="qw-yield">100 kT</span></button>
+  <button class="qw-chip" data-kt="455" data-name="W88"><span class="qw-name">W88</span><span class="qw-yield">455 kT</span></button>
+  <button class="qw-chip" data-kt="800" data-name="Sarmat"><span class="qw-name">Sarmat</span><span class="qw-yield">800 kT</span></button>
+  <button class="qw-chip" data-kt="1200" data-name="B83"><span class="qw-name">B83</span><span class="qw-yield">1.2 MT</span></button>
+  <button class="qw-chip" data-kt="50000" data-name="Tsar Bomba"><span class="qw-name">Tsar</span><span class="qw-yield">50 MT</span></button>
+</div>
 <div id="info-bar"></div>
 <button id="fullscreen-btn" title="Toggle fullscreen"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1h4v1.5h-2.793l3.147 3.146-1.061 1.061L1.5 3.414V6.5H0V1.5A.5.5 0 01.5 1h1zm13 0h-4v1.5h2.793L10.146 5.646l1.061 1.061L14.5 3.414V6.5H16V1.5a.5.5 0 00-.5-.5h-1zM1.5 15h4v-1.5H2.707l3.147-3.146-1.061-1.061L1.5 12.586V9.5H0v5a.5.5 0 00.5.5h1zm13 0h-4v-1.5h2.793l-3.147-3.146 1.061-1.061L14.5 12.586V9.5H16v5a.5.5 0 01-.5.5h-1z"/></svg></button>
 <div id="map-switcher">
