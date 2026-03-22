@@ -1,4 +1,4 @@
-# NukeMap v3.1.0
+# NukeMap v3.2.0
 
 A premium nuclear weapon effects simulator with animated blast waves, SVG mushroom clouds, MIRV strikes, full WW3 simulation engine (418 verified targets, 708 warheads, 7 scenarios), sound effects, missile flight calculator, nuclear winter estimates, shelter survival analysis, and population heatmaps. Physics based on Glasstone & Dolan's *The Effects of Nuclear Weapons*.
 

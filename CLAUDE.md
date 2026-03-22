@@ -1,4 +1,4 @@
-# NukeMap v3.1.0
+# NukeMap v3.2.0
 
 ## Overview
 Nuclear weapon effects simulator with 16 JS modules (~5000 lines), animated blast waves, SVG mushroom cloud, MIRV simulation, full WW3 simulation engine (418 verified targets, 708 warheads, 7 scenarios), sound effects, attack scenarios, missile flight calculator, nuclear winter estimates, shelter analysis, weapon comparison, population heatmap, and comprehensive immersive features.
@@ -82,6 +82,7 @@ data/
 - Sound throttling: explosion max 1/350ms, rocket max 1/200ms, flash max 1/600ms, shake max 1/500ms
 
 ## Version History
+- v3.2.0 - OG meta tags + favicon for social sharing, loading overlay, undo last detonation, total yield stat, right-click to detonate, auto-switch to Effects tab, mobile responsive improvements (480px+768px breakpoints), version bump across all files
 - v3.1.0 - WW3 simulation: 418 targets, 7 scenarios, missile arcs, HUD, nuclear winter, speed control
 - v3.0.0e - Immersive features: Geiger counter, seismic, escape time, GPS safety, shockwave ring, fallout contours, KML export, nuclear test DB
 - v3.0.0d - Realistic SVG mushroom cloud with proper anatomy, per-detonation clouds

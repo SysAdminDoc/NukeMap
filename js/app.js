@@ -1,4 +1,4 @@
-// NukeMap v3.0.0 - Main Application Controller
+// NukeMap v3.2.0 - Main Application Controller
 window.NM = window.NM || {};
 
 (function() {
@@ -43,9 +43,18 @@ function initMap() {
   window.addEventListener('offline', () => showBadge(false));
 
   map.on('click', e => onMapClick(e.latlng.lat, e.latlng.lng));
+  map.on('contextmenu', e => { e.originalEvent.preventDefault(); onMapClick(e.latlng.lat, e.latlng.lng); });
   map.on('mousemove', e => { document.getElementById('coords').textContent = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`; });
   map.on('moveend zoomend', () => { if (NM.Mushroom3D.active) NM.Mushroom3D.onMapMove(); });
   map.getContainer().classList.add('crosshair');
+
+  // Dismiss loading overlay once first tile loads
+  const lo = document.getElementById('loading-overlay');
+  if (lo) {
+    const dismiss = () => { lo.classList.add('hidden'); setTimeout(() => lo.remove(), 600); };
+    dark.once('load', dismiss);
+    setTimeout(dismiss, 4000); // fallback
+  }
 
   NM.Heatmap.init(map);
   loadFromURL();
@@ -216,6 +225,9 @@ function triggerDetonation(lat, lng) {
     });
   }
 
+  // Auto-switch to Effects tab after first detonation
+  if (currentDets.length === 1) switchTab('effects');
+
   // Zoom to fit
   const largest = [effects.emp, effects.thermal1, effects.psi1].filter(r => r > 0).sort((a, b) => b - a)[0];
   if (largest) {
@@ -291,8 +303,9 @@ function initControls() {
     $('wind-wrap').style.display = b.dataset.burst === 'surface' ? '' : 'none';
   }));
 
-  // Detonate / Clear / Share
+  // Detonate / Undo / Clear / Share
   $('detonate-btn').addEventListener('click', () => { const c = map.getCenter(); onMapClick(c.lat, c.lng); });
+  $('undo-btn').addEventListener('click', () => { if (currentDets.length) removeDet(currentDets.length - 1); });
   $('clear-btn').addEventListener('click', clearAll);
   $('share-btn').addEventListener('click', showShareLink);
   $('share-copy').addEventListener('click', copyShareLink);
@@ -725,11 +738,12 @@ function updateShelter(det) {
 }
 
 function updateStats() {
-  let td = 0, ti = 0; currentDets.forEach(d => { td += d.casualties.deaths; ti += d.casualties.injuries; });
+  let td = 0, ti = 0, ty = 0; currentDets.forEach(d => { td += d.casualties.deaths; ti += d.casualties.injuries; ty += d.yieldKt; });
   $('stat-deaths').textContent = NM.fmtNum(td);
   $('stat-injuries').textContent = NM.fmtNum(ti);
   $('stat-total').textContent = NM.fmtNum(td + ti);
-  $('stat-note').textContent = currentDets.length > 1 ? `Across ${currentDets.length} detonations` : 'Based on estimated population density';
+  $('stat-yield').textContent = ty > 0 ? NM.fmtYield(ty) : '--';
+  $('stat-note').textContent = currentDets.length > 1 ? `Across ${currentDets.length} detonations` : currentDets.length === 1 ? 'Based on estimated population density' : 'Detonate a weapon to see estimates';
 
   // Info bar
   const bar = $('info-bar');

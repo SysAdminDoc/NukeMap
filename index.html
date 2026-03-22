@@ -2,14 +2,25 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NukeMap v3.0.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>NukeMap v3.2.0</title>
+<meta name="description" content="Nuclear weapon effects simulator with animated blast waves, WW3 simulation, MIRV strikes, 418 verified targets, and shelter survival analysis. Physics based on Glasstone &amp; Dolan.">
+<meta name="theme-color" content="#1e1e2e">
+<meta property="og:title" content="NukeMap - Nuclear Weapon Effects Simulator">
+<meta property="og:description" content="Simulate nuclear detonations with realistic blast waves, fallout modeling, casualty estimates, and full WW3 scenarios with 708 warheads across 418 verified targets.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sysadmindoc.github.io/NukeMap/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="NukeMap - Nuclear Weapon Effects Simulator">
+<meta name="twitter:description" content="Simulate nuclear detonations with realistic physics, WW3 scenarios, and shelter survival analysis.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='none' stroke='%23f38ba8' stroke-width='6'/><circle cx='50' cy='50' r='12' fill='%23f38ba8'/><line x1='50' y1='5' x2='50' y2='25' stroke='%23f38ba8' stroke-width='4' stroke-linecap='round'/><line x1='50' y1='75' x2='50' y2='95' stroke='%23f38ba8' stroke-width='4' stroke-linecap='round'/><line x1='5' y1='50' x2='25' y2='50' stroke='%23f38ba8' stroke-width='4' stroke-linecap='round'/><line x1='75' y1='50' x2='95' y2='50' stroke='%23f38ba8' stroke-width='4' stroke-linecap='round'/></svg>">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous"/>
 <link rel="stylesheet" href="css/styles.css"/>
 </head>
 <body>
 
 <div id="map"></div>
+<div id="loading-overlay"><div class="loading-spinner"></div><div class="loading-text">Loading NukeMap...</div></div>
 <div id="flash"></div>
 <div id="coords">--</div>
 <div id="offline-badge"><span class="ob-dot"></span><span class="ob-lbl">Online</span></div>
@@ -25,7 +36,7 @@
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
         </div>
         <div class="brand-text">Nuke<span>Map</span></div>
-        <div class="brand-ver">v3.0.0</div>
+        <div class="brand-ver">v3.2.0</div>
       </div>
       <div class="search-wrap">
         <span class="search-icon"><svg viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg></span>
@@ -94,6 +105,7 @@
         <div class="section">
           <button id="detonate-btn">DETONATE</button>
           <div class="btn-row">
+            <button class="btn-secondary" id="undo-btn">Undo Last</button>
             <button class="btn-secondary" id="clear-btn">Clear All</button>
             <button class="btn-secondary" id="share-btn">Share Link</button>
           </div>
@@ -180,7 +192,9 @@
           <div class="stat-grid">
             <div class="stat-card"><div class="stat-label">Fatalities</div><div class="stat-value deaths" id="stat-deaths">--</div></div>
             <div class="stat-card"><div class="stat-label">Injuries</div><div class="stat-value injuries" id="stat-injuries">--</div></div>
-            <div class="stat-card wide"><div class="stat-label">Total Affected</div><div class="stat-value total" id="stat-total">--</div><div class="stat-sub" id="stat-note">Detonate a weapon to see estimates</div></div>
+            <div class="stat-card"><div class="stat-label">Total Affected</div><div class="stat-value total" id="stat-total">--</div></div>
+            <div class="stat-card"><div class="stat-label">Total Yield</div><div class="stat-value" id="stat-yield" style="color:var(--mauve)">--</div></div>
+            <div class="stat-card wide"><div class="stat-sub" id="stat-note">Detonate a weapon to see estimates</div></div>
           </div>
         </div>
         <div class="section" id="dets-section" style="display:none">
