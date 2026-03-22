@@ -199,8 +199,8 @@ NM.WW3_SCENARIOS = [
     name: 'US vs Russia (Full Exchange)',
     desc: 'Princeton Plan A-style escalation: counterforce then countervalue',
     phases: [
-      {name:'Phase 1: Counterforce',delay:0,duration:8000,side:'both',filter:t=>t.type!=='city',color:'#f38ba8'},
-      {name:'Phase 2: Countervalue',delay:12000,duration:10000,side:'both',filter:t=>t.type==='city',color:'#fab387'},
+      {name:'Phase 1: Counterforce',delay:0,duration:20000,side:'both',filter:t=>t.type!=='city',color:'#f38ba8'},
+      {name:'Phase 2: Countervalue',delay:35000,duration:25000,side:'both',filter:t=>t.type==='city',color:'#fab387'},
     ],
     targetSets: {us: NM.WW3_TARGETS_US, ru: NM.WW3_TARGETS_RU},
     launchSets: {us: ['us_icbm','us_slbm'], ru: ['ru_icbm','ru_slbm']},
@@ -210,8 +210,8 @@ NM.WW3_SCENARIOS = [
     name: 'Russia vs NATO Europe',
     desc: 'Russian strike on NATO bases and European capitals',
     phases: [
-      {name:'Phase 1: NATO bases',delay:0,duration:6000,side:'ru',filter:t=>t.type!=='city',color:'#f38ba8'},
-      {name:'Phase 2: European cities',delay:8000,duration:8000,side:'ru',filter:t=>t.type==='city',color:'#fab387'},
+      {name:'Phase 1: NATO bases',delay:0,duration:18000,side:'ru',filter:t=>t.type!=='city',color:'#f38ba8'},
+      {name:'Phase 2: European cities',delay:30000,duration:20000,side:'ru',filter:t=>t.type==='city',color:'#fab387'},
     ],
     targetSets: {nato: NM.WW3_TARGETS_NATO},
     launchSets: {ru: ['ru_icbm','ru_slbm']},
@@ -221,8 +221,8 @@ NM.WW3_SCENARIOS = [
     name: 'US vs China',
     desc: 'US counterforce strike on Chinese nuclear assets + cities',
     phases: [
-      {name:'Phase 1: Chinese nuclear forces',delay:0,duration:6000,side:'us',filter:t=>t.type!=='city',color:'#89b4fa'},
-      {name:'Phase 2: Chinese cities',delay:8000,duration:8000,side:'us',filter:t=>t.type==='city',color:'#fab387'},
+      {name:'Phase 1: Chinese nuclear forces',delay:0,duration:18000,side:'us',filter:t=>t.type!=='city',color:'#89b4fa'},
+      {name:'Phase 2: Chinese cities',delay:30000,duration:20000,side:'us',filter:t=>t.type==='city',color:'#fab387'},
     ],
     targetSets: {cn: NM.WW3_TARGETS_CN},
     launchSets: {us: ['us_icbm','us_slbm']},
@@ -232,7 +232,7 @@ NM.WW3_SCENARIOS = [
     name: 'Counterforce Only (US-Russia)',
     desc: 'Military targets only - no cities struck',
     phases: [
-      {name:'Counterforce exchange',delay:0,duration:10000,side:'both',filter:t=>t.type!=='city',color:'#cba6f7'},
+      {name:'Counterforce exchange',delay:0,duration:25000,side:'both',filter:t=>t.type!=='city',color:'#cba6f7'},
     ],
     targetSets: {us: NM.WW3_TARGETS_US, ru: NM.WW3_TARGETS_RU},
     launchSets: {us: ['us_icbm','us_slbm'], ru: ['ru_icbm','ru_slbm']},
@@ -242,8 +242,8 @@ NM.WW3_SCENARIOS = [
     name: 'Global Thermonuclear War',
     desc: 'All nuclear powers launch everything. Worst case.',
     phases: [
-      {name:'Phase 1: Counterforce',delay:0,duration:8000,side:'both',filter:t=>t.type!=='city',color:'#f38ba8'},
-      {name:'Phase 2: All cities',delay:10000,duration:12000,side:'both',filter:t=>t.type==='city',color:'#fab387'},
+      {name:'Phase 1: Counterforce',delay:0,duration:25000,side:'both',filter:t=>t.type!=='city',color:'#f38ba8'},
+      {name:'Phase 2: All cities',delay:40000,duration:30000,side:'both',filter:t=>t.type==='city',color:'#fab387'},
     ],
     targetSets: {us: NM.WW3_TARGETS_US, ru: NM.WW3_TARGETS_RU, nato: NM.WW3_TARGETS_NATO, cn: NM.WW3_TARGETS_CN},
     launchSets: {us: ['us_icbm','us_slbm'], ru: ['ru_icbm','ru_slbm'], cn: ['cn_icbm']},
@@ -346,20 +346,18 @@ NM.WW3 = {
     if (!this.active) return;
     this._updateStatus(phase.name);
 
-    // Collect targets for this phase
+    // Collect targets for this phase from ALL sides simultaneously
     const allTargets = [];
     for (const [side, targets] of Object.entries(scenario.targetSets)) {
       const filtered = targets.filter(phase.filter);
-      // Determine who attacks this target set
       let attackerKeys;
-      if (side === 'us') attackerKeys = scenario.launchSets.ru ? ['ru'] : ['cn'];
-      else if (side === 'ru') attackerKeys = ['us'];
-      else if (side === 'nato') attackerKeys = ['ru'];
-      else if (side === 'cn') attackerKeys = ['us'];
+      if (side === 'us') attackerKeys = scenario.launchSets.ru ? ['ru'] : (scenario.launchSets.cn ? ['cn'] : []);
+      else if (side === 'ru') attackerKeys = scenario.launchSets.us ? ['us'] : [];
+      else if (side === 'nato') attackerKeys = scenario.launchSets.ru ? ['ru'] : [];
+      else if (side === 'cn') attackerKeys = scenario.launchSets.us ? ['us'] : [];
       else attackerKeys = Object.keys(scenario.launchSets);
 
       for (const t of filtered) {
-        // Pick a random launcher
         const attackerKey = attackerKeys[Math.floor(Math.random() * attackerKeys.length)];
         const launcherSets = scenario.launchSets[attackerKey];
         if (!launcherSets) continue;
@@ -369,11 +367,10 @@ NM.WW3 = {
         const launcher = launchers[Math.floor(Math.random() * launchers.length)];
 
         for (let w = 0; w < t.warheads; w++) {
-          // Slight offset for multiple warheads on same target
-          const offLat = t.warheads > 1 ? (Math.random() - 0.5) * 0.08 : 0;
-          const offLng = t.warheads > 1 ? (Math.random() - 0.5) * 0.08 : 0;
+          const offLat = t.warheads > 1 ? (Math.random() - 0.5) * 0.1 : 0;
+          const offLng = t.warheads > 1 ? (Math.random() - 0.5) * 0.1 : 0;
           allTargets.push({
-            target: t, launcher,
+            target: t, launcher, side,
             tLat: t.lat + offLat, tLng: t.lng + offLng,
             yieldKt: t.yieldKt
           });
@@ -381,9 +378,16 @@ NM.WW3 = {
       }
     }
 
-    // Stagger launches across the phase duration
+    // Shuffle so both sides' missiles interleave (simultaneous launch)
+    for (let i = allTargets.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allTargets[i], allTargets[j]] = [allTargets[j], allTargets[i]];
+    }
+
+    // Stagger launches across the phase - all sides launch within the first ~40% of phase
+    const launchWindow = phase.duration * 0.4;
     allTargets.forEach((at, i) => {
-      const delay = (i / allTargets.length) * phase.duration + Math.random() * 400;
+      const delay = (i / allTargets.length) * launchWindow + Math.random() * 600;
       const tid = setTimeout(() => {
         if (!this.active) return;
         this._launchMissile(map, at, phase.color);
@@ -395,48 +399,62 @@ NM.WW3 = {
   _launchMissile(map, at, color) {
     const dist = gcDistance(at.launcher.lat, at.launcher.lng, at.tLat, at.tLng);
     const isSlbm = at.launcher.name.includes('SSBN') || at.launcher.name.includes('Atlantic') || at.launcher.name.includes('Pacific');
-    const flightMs = isSlbm ? Math.min(dist / 8, 3000) : Math.min(dist / 6, 4500); // scaled for animation
-    const steps = 40;
+    // Much slower: ICBM 10-14s, SLBM 7-10s so you can watch them fly
+    const flightMs = isSlbm
+      ? 7000 + Math.min(dist / 2, 3000)
+      : 10000 + Math.min(dist / 2, 4000);
+    const steps = 60;
     const pts = gcInterpolate(at.launcher.lat, at.launcher.lng, at.tLat, at.tLng, steps);
 
-    // Arc with altitude bulge
+    // Arc with altitude bulge proportional to distance
+    const bulgeFactor = Math.min(4, dist / 3000);
     const arcPts = pts.map((p, i) => {
       const f = i / steps;
-      const alt = Math.sin(f * Math.PI) * 0.3; // bulge factor for visual only
-      return [p[0] + alt * 2, p[1]]; // slight lat offset to simulate arc curvature
+      const alt = Math.sin(f * Math.PI) * bulgeFactor;
+      return [p[0] + alt, p[1]];
     });
 
-    // Draw fading trail
+    // Glowing trail that persists behind the warhead
     const trail = L.polyline([], {
-      color, weight: 1.5, opacity: 0.6, dashArray: '4 3', className: 'ww3-arc'
+      color, weight: 2, opacity: 0.7, className: 'ww3-arc'
     }).addTo(map);
     this.layers.push(trail);
 
-    // Warhead dot
+    // Bright warhead dot - bigger and glowing
     const dot = L.circleMarker(pts[0], {
-      radius: 2.5, color, fillColor: '#fff', fillOpacity: 1, weight: 1.5, opacity: 0.9
+      radius: 4, color: '#fff', fillColor: color, fillOpacity: 1, weight: 2, opacity: 1
     }).addTo(map);
     this.layers.push(dot);
 
-    // Animate flight
     const start = performance.now();
     const tick = (now) => {
       if (!this.active) return;
       const p = Math.min(1, (now - start) / flightMs);
-      const idx = Math.floor(p * steps);
+      // Ease-in-out for more realistic flight (accelerate, coast, descend)
+      const eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      const idx = Math.floor(eased * steps);
       const pos = arcPts[Math.min(idx, steps)];
       dot.setLatLng(pos);
 
-      // Build trail
-      const trailPts = arcPts.slice(Math.max(0, idx - 15), idx + 1);
-      trail.setLatLngs(trailPts);
-      trail.setStyle({opacity: 0.4 * (1 - p * 0.3)});
+      // Trail shows full path so far
+      trail.setLatLngs(arcPts.slice(0, idx + 1));
+
+      // Fade trail as it lengthens
+      trail.setStyle({opacity: Math.max(0.2, 0.7 - p * 0.4), weight: Math.max(1, 2 - p)});
 
       if (p < 1) requestAnimationFrame(tick);
       else {
-        // Impact!
+        // Impact
         map.removeLayer(dot);
-        map.removeLayer(trail);
+        // Fade out the trail over 3 seconds
+        const fadeStart = performance.now();
+        const fadeTick = (now2) => {
+          const fp = Math.min(1, (now2 - fadeStart) / 3000);
+          trail.setStyle({opacity: 0.3 * (1 - fp)});
+          if (fp < 1 && this.active) requestAnimationFrame(fadeTick);
+          else { try { map.removeLayer(trail); } catch(e) {} }
+        };
+        requestAnimationFrame(fadeTick);
         this._detonate(map, at.tLat, at.tLng, at.yieldKt, color);
       }
     };
@@ -446,40 +464,50 @@ NM.WW3 = {
   _detonate(map, lat, lng, yieldKt, color) {
     if (!this.active) return;
 
-    // Impact flash circle
+    // Calculate real effects
+    const effects = NM.calcEffects(yieldKt, 'airburst', 0, 50);
+
+    // Draw actual effect rings (fireball, blast, thermal, etc.)
+    const det = {
+      id: Date.now() + Math.random(), lat, lng, yieldKt, burstType: 'airburst',
+      heightM: 0, fission: 50, effects, casualties: {deaths: 0, injuries: 0}, layers: []
+    };
+    const ringLayers = NM.Effects.drawRings(map, det);
+    ringLayers.forEach(l => this.layers.push(l));
+
+    // Animated flash expanding outward (white -> orange -> red)
+    const flashR = Math.max(effects.fireball * 1000, 1000);
     const flash = L.circle([lat, lng], {
-      radius: Math.max(500, Math.sqrt(yieldKt) * 200),
-      color: '#fff', fillColor: '#fff', fillOpacity: 0.8, weight: 0, opacity: 0
+      radius: flashR * 0.3, color: '#fff', fillColor: '#fff', fillOpacity: 0.9,
+      weight: 0, opacity: 0
     }).addTo(map);
     this.layers.push(flash);
 
-    // Animate flash
     const start = performance.now();
-    const flashDur = 1200;
+    const flashDur = 2000;
     const tick = (now) => {
       const p = Math.min(1, (now - start) / flashDur);
-      const r = Math.max(500, Math.sqrt(yieldKt) * 200) * (1 + p * 2);
-      flash.setRadius(r);
+      flash.setRadius(flashR * (0.3 + p * 1.5));
       flash.setStyle({
-        fillOpacity: 0.8 * (1 - p),
-        fillColor: p < 0.2 ? '#fff' : p < 0.5 ? '#fab387' : '#f38ba8',
-        opacity: 0
+        fillOpacity: Math.max(0, 0.9 * (1 - p * p)),
+        fillColor: p < 0.15 ? '#fff' : p < 0.4 ? '#f9e2af' : p < 0.7 ? '#fab387' : '#f38ba8',
       });
       if (p < 1 && this.active) requestAnimationFrame(tick);
       else {
-        map.removeLayer(flash);
-        // Leave a permanent impact marker
-        const impact = L.circleMarker([lat, lng], {
-          radius: Math.max(2, Math.min(6, Math.log10(yieldKt) * 2)),
-          color: color, fillColor: color, fillOpacity: 0.6, weight: 1, opacity: 0.7
-        }).addTo(map);
-        this.layers.push(impact);
+        try { map.removeLayer(flash); } catch(e) {}
       }
     };
     requestAnimationFrame(tick);
 
+    // GZ marker
+    const gzIcon = L.divIcon({
+      className: '', iconSize: [16, 16], iconAnchor: [8, 8],
+      html: '<div style="width:16px;height:16px;border-radius:50%;background:rgba(243,139,168,0.6);border:1px solid #f38ba8;box-shadow:0 0 8px rgba(243,139,168,0.4)"></div>'
+    });
+    const gzMarker = L.marker([lat, lng], {icon: gzIcon, interactive: false}).addTo(map);
+    this.layers.push(gzMarker);
+
     // Estimate casualties
-    const effects = NM.calcEffects(yieldKt, 'airburst', 0, 50);
     const cas = NM.estimateCasualties(lat, lng, effects);
     this.casualties.deaths += cas.deaths;
     this.casualties.injuries += cas.injuries;
