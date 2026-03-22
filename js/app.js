@@ -280,8 +280,10 @@ function triggerDetonation(lat, lng) {
 
   // Zoom to fit
   const largest = [effects.emp, effects.thermal1, effects.psi1].filter(r => r > 0).sort((a, b) => b - a)[0];
-  if (largest) {
-    map.fitBounds(L.circle([lat, lng], {radius: largest * 1000}).getBounds().pad(0.3), {maxZoom: 15, animate: true, duration: 0.8});
+  if (largest && largest > 0.001) {
+    const R = 6371, dLat = (largest / R) * (180 / Math.PI);
+    const dLng = dLat / Math.cos(lat * Math.PI / 180);
+    map.fitBounds([[lat - dLat, lng - dLng], [lat + dLat, lng + dLng]], {maxZoom: 15, animate: true, duration: 0.8, padding: [40, 40]});
   }
 
   updateURL();
@@ -695,6 +697,15 @@ function initControls() {
     $('ww3-pause').textContent = NM.WW3.paused ? 'Resume' : 'Pause';
   });
 
+  // Collapsible sections in Effects tab
+  document.querySelectorAll('#tab-effects .section-title, #tab-encyclopedia .section-title').forEach(title => {
+    title.classList.add('collapsible');
+    title.addEventListener('click', () => {
+      title.classList.toggle('collapsed');
+      title.closest('.section').classList.toggle('sec-collapsed');
+    });
+  });
+
   // WW3 quick-launch button
   $('ww3-quick-btn').addEventListener('click', () => {
     switchTab('tools');
@@ -938,8 +949,9 @@ function updateCrater(det) {
   ].map(([l, v]) => `<div class="cloud-row"><span class="cl">${l}</span><span class="cv">${v}</span></div>`).join('');
 
   // SVG crater cross-section
+  if (e.craterR < 0.001 || e.craterDepth < 0.001) { $('crater-panel').innerHTML = stats; return; }
   const W = 280, H = 100;
-  const rPx = 120, dPx = 50;
+  const rPx = 120, dPx = Math.max(10, 50);
   const lipH = dPx * 0.35;
   const ejectaR = rPx * 1.6;
   const svg = `<svg viewBox="0 0 ${W} ${H}" class="crater-svg">
@@ -1004,6 +1016,14 @@ function updateStats() {
   $('stat-total').textContent = NM.fmtNum(td + ti);
   $('stat-yield').textContent = ty > 0 ? NM.fmtYield(ty) : '--';
   $('stat-note').textContent = currentDets.length > 1 ? `${currentDets.length} detonations | ${hiro >= 10 ? hiro.toFixed(0) : hiro.toFixed(1)}x Hiroshima` : currentDets.length === 1 ? (hiro >= 0.01 ? `${hiro >= 10 ? hiro.toFixed(0) : hiro.toFixed(1)}x Hiroshima equivalent` : 'Sub-tactical yield') : 'Detonate a weapon to see estimates';
+
+  // Detonation counter badge
+  const dc = $('det-counter');
+  if (currentDets.length) {
+    $('det-counter-num').textContent = currentDets.length;
+    dc.querySelector('.dc-label').textContent = currentDets.length === 1 ? 'strike' : 'strikes';
+    dc.style.display = '';
+  } else dc.style.display = 'none';
 
   // Info bar
   const bar = $('info-bar');
@@ -1308,21 +1328,21 @@ function init() {
   initControls();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 
-  // Auto-geolocation (center map on user's location if available)
-  if (navigator.geolocation && !new URLSearchParams(location.search).get('d')) {
-    navigator.geolocation.getCurrentPosition(
-      pos => { map.flyTo([pos.coords.latitude, pos.coords.longitude], 10, {duration: 1.5}); },
-      () => {}, {timeout: 5000, maximumAge: 300000}
-    );
-  }
-
   // Welcome overlay
   const wo = $('welcome-overlay');
+  const hasUrlDets = new URLSearchParams(location.search).get('d');
   if (wo && !localStorage.getItem('nukemap-welcomed')) {
     wo.style.display = '';
     $('welcome-dismiss').addEventListener('click', () => {
       if ($('welcome-noshow').checked) localStorage.setItem('nukemap-welcomed', '1');
       wo.classList.add('hidden');
+      // Demo detonation on first visit
+      if (!hasUrlDets && !currentDets.length) {
+        setTimeout(() => {
+          map.flyTo([40.7128, -74.006], 11, {duration: 1.2});
+          setTimeout(() => { setYield(455); triggerDetonation(40.7128, -74.006); }, 1400);
+        }, 300);
+      }
     });
   } else if (wo) wo.classList.add('hidden');
 }

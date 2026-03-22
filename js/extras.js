@@ -146,7 +146,7 @@ NM.LayerSwitcher = {
     // Remove ALL tile layers (including initial dark layer and any overlays)
     const toRemove = [];
     this.map.eachLayer(l => {
-      if (l instanceof L.TileLayer) toRemove.push(l);
+      if (l._url !== undefined && l._tiles !== undefined) toRemove.push(l); // duck-type check for tile layers
     });
     toRemove.forEach(l => this.map.removeLayer(l));
     // Add selected tile layer

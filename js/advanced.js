@@ -160,6 +160,50 @@ NM.Scenarios = [
       {lat:55.752,lng:37.6175,yield_kt:800,burst:'airburst'},
     ]
   },
+  {
+    name: 'London Strike',
+    desc: '3 warheads targeting central London',
+    dets: [
+      {lat:51.5014,lng:-0.1419,yield_kt:800,burst:'airburst'},  // Buckingham Palace
+      {lat:51.5155,lng:-0.0922,yield_kt:455,burst:'airburst'},   // City of London
+      {lat:51.4775,lng:-0.0014,yield_kt:300,burst:'surface'},    // Canary Wharf
+    ]
+  },
+  {
+    name: 'Beijing Strike',
+    desc: '3 warheads on Chinese capital',
+    dets: [
+      {lat:39.9042,lng:116.3974,yield_kt:455,burst:'airburst'},  // Forbidden City
+      {lat:39.9554,lng:116.3976,yield_kt:300,burst:'airburst'},   // Olympic area
+      {lat:39.8665,lng:116.3658,yield_kt:300,burst:'surface'},    // South Beijing
+    ]
+  },
+  {
+    name: 'Tel Aviv + Tehran',
+    desc: 'Middle East exchange scenario',
+    dets: [
+      {lat:32.0853,lng:34.7818,yield_kt:200,burst:'airburst'},   // Tel Aviv
+      {lat:35.6892,lng:51.389,yield_kt:250,burst:'airburst'},     // Tehran
+    ]
+  },
+  {
+    name: 'Korean Peninsula',
+    desc: 'DPRK strikes Seoul, US retaliates on Pyongyang',
+    dets: [
+      {lat:37.5665,lng:126.978,yield_kt:250,burst:'airburst'},    // Seoul
+      {lat:39.0392,lng:125.763,yield_kt:455,burst:'airburst'},     // Pyongyang
+      {lat:39.0319,lng:125.754,yield_kt:100,burst:'surface'},      // Pyongyang military
+    ]
+  },
+  {
+    name: 'US West Coast',
+    desc: 'Strikes on LA, SF, and Seattle',
+    dets: [
+      {lat:34.0522,lng:-118.244,yield_kt:800,burst:'airburst'},
+      {lat:37.7749,lng:-122.419,yield_kt:455,burst:'airburst'},
+      {lat:47.6062,lng:-122.332,yield_kt:300,burst:'airburst'},
+    ]
+  },
 ];
 
 // ---- MEASUREMENT TOOL ----

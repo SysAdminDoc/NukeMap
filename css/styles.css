@@ -65,6 +65,10 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .section{margin-bottom:16px}
 .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--overlay0);margin-bottom:7px;display:flex;align-items:center;gap:8px}
 .section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--surface1),transparent)}
+.section-title.collapsible{cursor:pointer;user-select:none}
+.section-title.collapsible::before{content:'\25BE';font-size:10px;transition:transform .2s;display:inline-block;width:10px;text-align:center}
+.section-title.collapsible.collapsed::before{transform:rotate(-90deg)}
+.section.sec-collapsed>*:not(.section-title){display:none!important}
 
 /* Tabs */
 .tabs{display:flex;gap:2px;background:var(--surface0);border-radius:var(--radius-sm);padding:2px;margin-bottom:12px}
@@ -225,6 +229,11 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 #offline-badge{position:absolute;top:12px;right:12px;z-index:1000;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);color:var(--overlay1);display:none}
 #offline-badge.show{display:flex;align-items:center;gap:5px}
 .ob-dot{width:7px;height:7px;border-radius:50%}.ob-dot.on{background:var(--green)}.ob-dot.off{background:var(--red)}
+
+/* Detonation counter */
+#det-counter{position:absolute;top:12px;left:var(--panel-w);margin-left:14px;z-index:999;padding:4px 12px;border-radius:20px;background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);font-size:11px;color:var(--text);font-weight:700;display:none}
+#det-counter-num{color:var(--red);font-size:14px;font-weight:900;margin-right:4px;font-variant-numeric:tabular-nums}
+.dc-label{color:var(--overlay0);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
 
 /* Flash */
 @keyframes nuke-flash{0%{opacity:0}3%{opacity:1}10%{opacity:0.7}20%{opacity:0.3}100%{opacity:0}}
@@ -705,6 +714,8 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
   #ww3-defcon{top:48px;right:8px;font-size:14px;padding:4px 12px}
   #ww3-toasts{bottom:calc(50vh + 10px)}
   #ww3-legend{bottom:calc(50vh + 10px);right:8px;font-size:8px}
+  #det-counter{top:8px;left:8px;margin-left:0;font-size:10px;padding:3px 10px}
+  #det-counter-num{font-size:12px}
   #fullscreen-btn{top:8px;right:44px;width:28px;height:28px}
   #map-switcher{top:8px;right:78px}
   .ms-toggle{width:28px;height:28px}
