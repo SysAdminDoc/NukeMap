@@ -370,13 +370,31 @@ function initControls() {
   NM.DistanceIndicator.init();
   NM.LayerSwitcher.init(map);
 
-  // Layer switcher buttons
+  // Layer switcher buttons (panel)
   document.querySelectorAll('#layer-switcher .layer-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#layer-switcher .layer-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
       NM.LayerSwitcher.switchTo(btn.dataset.layer);
     });
+  });
+
+  // Floating map switcher
+  $('ms-toggle').addEventListener('click', () => {
+    $('ms-toggle').classList.toggle('open');
+    $('ms-panel').classList.toggle('open');
+  });
+  document.querySelectorAll('.ms-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      NM.LayerSwitcher.switchTo(btn.dataset.layer);
+      $('ms-toggle').classList.remove('open');
+      $('ms-panel').classList.remove('open');
+    });
+  });
+  // Close panel on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#map-switcher')) {
+      $('ms-toggle').classList.remove('open');
+      $('ms-panel').classList.remove('open');
+    }
   });
 
   // Ring labels toggle

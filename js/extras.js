@@ -120,33 +120,38 @@ NM.DistanceRings = {
 NM.LayerSwitcher = {
   layers: {},
   current: 'dark',
-  control: null,
 
   init(map) {
     this.layers = {
-      dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OSM &copy; CARTO', subdomains: 'abcd', maxZoom: 19
-      }),
-      satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '&copy; Esri', maxZoom: 19
-      }),
-      topo: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 19
-      }),
-      osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OSM', maxZoom: 19
-      }),
+      dark:       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution:'&copy; OSM &copy; CARTO',subdomains:'abcd',maxZoom:19}),
+      darkClean:  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {attribution:'&copy; CARTO',subdomains:'abcd',maxZoom:19}),
+      satellite:  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {attribution:'&copy; Esri',maxZoom:19}),
+      satLabels:  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {attribution:'&copy; Esri',maxZoom:19}),
+      terrain:    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {attribution:'&copy; Esri',maxZoom:19}),
+      osm:        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OSM',maxZoom:19}),
+      voyager:    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {attribution:'&copy; CARTO',subdomains:'abcd',maxZoom:19}),
+      positron:   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'&copy; CARTO',subdomains:'abcd',maxZoom:19}),
+      stamen:     L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}{r}.png', {attribution:'&copy; Stamen &copy; Stadia',maxZoom:20}),
+      watercolor: L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', {attribution:'&copy; Stamen &copy; Stadia',maxZoom:18}),
+      alidade:    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {attribution:'&copy; Stadia',maxZoom:20}),
+      outdoors:   L.tileLayer('https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png', {attribution:'&copy; Stadia',maxZoom:20}),
     };
-    // Dark is already added by app.js, store ref
+    // Satellite + labels combo: overlay labels on imagery
+    this._labelOverlay = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {subdomains:'abcd',maxZoom:19,pane:'shadowPane'});
     this.map = map;
   },
 
   switchTo(name) {
     if (!this.layers[name] || name === this.current) return;
-    // Remove current
+    // Remove current tile layers + label overlay
     this.map.eachLayer(l => { if (l instanceof L.TileLayer && !(l instanceof L.TileLayer.Canvas)) this.map.removeLayer(l); });
     this.layers[name].addTo(this.map);
+    // Add label overlay on satellite
+    if (name === 'satLabels') this._labelOverlay.addTo(this.map);
     this.current = name;
+    // Update floating switcher active state
+    document.querySelectorAll('.ms-btn').forEach(b => b.classList.toggle('active', b.dataset.layer === name));
+    document.querySelectorAll('#layer-switcher .layer-btn').forEach(b => b.classList.toggle('active', b.dataset.layer === name));
   }
 };
 
