@@ -21,6 +21,30 @@
 
 <div id="map"></div>
 <div id="loading-overlay"><div class="loading-spinner"></div><div class="loading-text">Loading NukeMap...</div></div>
+<div id="welcome-overlay">
+  <div class="welcome-card">
+    <div class="welcome-header">
+      <div class="welcome-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div>
+      <div class="welcome-title">Nuke<span>Map</span> v3.2.0</div>
+    </div>
+    <div class="welcome-body">
+      <div class="welcome-step"><span class="ws-num">1</span><span class="ws-text">Search for a city or click a quick target pill</span></div>
+      <div class="welcome-step"><span class="ws-num">2</span><span class="ws-text">Select a weapon or use the quick bar at the bottom</span></div>
+      <div class="welcome-step"><span class="ws-num">3</span><span class="ws-text">Click anywhere on the map to detonate</span></div>
+      <div class="welcome-step"><span class="ws-num">4</span><span class="ws-text">Explore effects, casualties, shelter analysis, and more</span></div>
+      <div class="welcome-features">
+        <span class="wf-tag">32 Weapons</span>
+        <span class="wf-tag">WW3 Simulation</span>
+        <span class="wf-tag">MIRV Strikes</span>
+        <span class="wf-tag">Fallout Modeling</span>
+        <span class="wf-tag">Shelter Analysis</span>
+        <span class="wf-tag">12 Map Styles</span>
+      </div>
+    </div>
+    <button class="welcome-dismiss" id="welcome-dismiss">Start Exploring</button>
+    <label class="welcome-remember"><input type="checkbox" id="welcome-noshow" checked/> Don't show again</label>
+  </div>
+</div>
 <div id="flash"></div>
 <div id="coords">--</div>
 <div id="offline-badge"><span class="ob-dot"></span><span class="ob-lbl">Online</span></div>
@@ -186,6 +210,10 @@
         <div class="section" id="nearby-section" style="display:none">
           <div class="section-title">Nearby Strategic Targets</div>
           <div id="nearby-content"></div>
+        </div>
+        <div class="section" id="guide-section" style="display:none">
+          <div class="section-title">Emergency Action Guide</div>
+          <div id="guide-content"></div>
         </div>
       </div>
 
@@ -423,7 +451,9 @@
         <div class="section">
           <div class="section-title">Export</div>
           <button class="export-btn" id="export-png" style="margin-bottom:5px">Export Map as PNG</button>
-          <button class="export-btn" id="export-kml" style="background:var(--mauve)">Export to Google Earth (KML)</button>
+          <button class="export-btn" id="export-kml" style="background:var(--mauve);margin-bottom:5px">Export to Google Earth (KML)</button>
+          <button class="export-btn" id="export-json" style="background:var(--teal);margin-bottom:5px">Export Data as JSON</button>
+          <button class="export-btn" id="export-report" style="background:var(--green)">Generate Summary Report</button>
         </div>
       </div>
     </div>

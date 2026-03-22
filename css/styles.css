@@ -557,6 +557,34 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 /* Legend population estimate */
 .legend-pop{font-size:7px;color:var(--overlay0);display:block;font-weight:400}
 
+/* Welcome overlay */
+#welcome-overlay{position:fixed;inset:0;z-index:10001;background:rgba(17,17,27,0.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;animation:welcomeFade .5s ease}
+#welcome-overlay.hidden{display:none}
+@keyframes welcomeFade{from{opacity:0}to{opacity:1}}
+.welcome-card{max-width:420px;width:90%;background:var(--mantle);border:1px solid var(--surface1);border-radius:var(--radius);padding:28px 24px 20px;box-shadow:0 24px 64px rgba(0,0,0,0.6);animation:welcomeSlide .4s ease-out}
+@keyframes welcomeSlide{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.welcome-header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.welcome-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--red),var(--peach));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(243,139,168,0.3)}
+.welcome-icon svg{width:22px;height:22px;color:var(--crust)}
+.welcome-title{font-size:24px;font-weight:800;letter-spacing:-0.5px}
+.welcome-title span{color:var(--red)}
+.welcome-body{margin-bottom:18px}
+.welcome-step{display:flex;align-items:center;gap:10px;padding:6px 0}
+.ws-num{width:22px;height:22px;border-radius:50%;background:var(--surface0);color:var(--peach);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ws-text{font-size:12px;color:var(--subtext1);line-height:1.4}
+.welcome-features{display:flex;flex-wrap:wrap;gap:4px;margin-top:12px}
+.wf-tag{padding:3px 9px;border-radius:20px;background:var(--surface0);border:1px solid var(--surface1);color:var(--overlay1);font-size:9px;font-weight:600}
+.welcome-dismiss{width:100%;padding:12px;border-radius:var(--radius-sm);border:none;background:linear-gradient(135deg,var(--red),#e64553);color:var(--crust);font-size:14px;font-weight:800;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s;box-shadow:0 4px 16px rgba(243,139,168,0.25)}
+.welcome-dismiss:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(243,139,168,0.35)}
+.welcome-remember{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:10px;color:var(--overlay0);cursor:pointer;justify-content:center}
+.welcome-remember input{accent-color:var(--blue)}
+
+/* Emergency guide */
+.guide-list{display:flex;flex-direction:column;gap:6px}
+.guide-item{padding:8px 10px;background:var(--surface0);border-radius:6px;border:1px solid var(--surface1);border-left:3px solid}
+.gi-title{font-size:11px;font-weight:700;color:var(--text);margin-bottom:3px}
+.gi-body{font-size:10px;color:var(--subtext0);line-height:1.5}
+
 /* Loading overlay */
 #loading-overlay{position:fixed;inset:0;z-index:10000;background:var(--crust);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.5s ease}
 #loading-overlay.hidden{opacity:0;pointer-events:none}

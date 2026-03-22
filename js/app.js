@@ -198,6 +198,10 @@ function triggerDetonation(lat, lng) {
   // Nearby strategic targets
   updateNearbyTargets(det);
 
+  // Emergency guide
+  $('guide-section').style.display = '';
+  $('guide-content').innerHTML = NM.EmergencyGuide.generate(det);
+
   // Dose calculator visibility
   if (effects.isSurface) $('dosecalc-section').style.display = '';
 
@@ -519,9 +523,11 @@ function initControls() {
     } else NM.DraggableGZ.disable(map);
   });
 
-  // Export PNG + KML
+  // Export PNG + KML + JSON + Report
   $('export-png').addEventListener('click', () => NM.ExportPNG.capture());
   $('export-kml').addEventListener('click', () => { if (currentDets.length) NM.KMLExport.download(currentDets); });
+  $('export-json').addEventListener('click', () => { if (currentDets.length) exportJSON(); });
+  $('export-report').addEventListener('click', () => { if (currentDets.length) exportReport(); });
 
   // GPS check
   $('gps-check').addEventListener('click', () => NM.GPSSafe.check(map));
@@ -926,6 +932,7 @@ function resetPanels() {
   $('sizecompare-section').style.display = 'none';
   $('escape-section').style.display = 'none';
   $('nearby-section').style.display = 'none';
+  $('guide-section').style.display = 'none';
   $('dosecalc-section').style.display = 'none';
   $('legend-items').innerHTML = '<div style="color:var(--overlay0);font-size:12px;padding:10px 0">Detonate a weapon to see effects</div>';
   $('info-bar').classList.remove('active');
@@ -955,6 +962,80 @@ function loadFromURL() {
 
 function showShareLink() { $('share-section').style.display = ''; $('share-input').value = location.href; switchTab('results'); }
 function copyShareLink() { $('share-input').select(); navigator.clipboard?.writeText($('share-input').value); $('share-copy').textContent = 'Copied!'; setTimeout(() => $('share-copy').textContent = 'Copy', 2000); }
+
+// ---- EXPORT JSON ----
+function exportJSON() {
+  const data = currentDets.map(d => {
+    const nc = NM.findNearestCity(d.lat, d.lng);
+    return {
+      location: {lat: d.lat, lng: d.lng, nearestCity: nc && nc.dist < 50 ? nc.name : null},
+      weapon: d.weapon, yieldKt: d.yieldKt, burstType: d.burstType,
+      effects: {
+        fireball_km: +d.effects.fireball.toFixed(3), psi20_km: +d.effects.psi20.toFixed(3),
+        psi5_km: +d.effects.psi5.toFixed(3), psi1_km: +d.effects.psi1.toFixed(3),
+        thermal3_km: +d.effects.thermal3.toFixed(3), thermal1_km: +d.effects.thermal1.toFixed(3),
+        radiation_km: +d.effects.radiation.toFixed(3), emp_km: +d.effects.emp.toFixed(3),
+        firestorm_km: +d.effects.firestormR.toFixed(3),
+        cloudTop_km: +d.effects.cloudTopH.toFixed(2),
+      },
+      casualties: d.casualties, hiroshimaEquivalent: +(d.yieldKt / 15).toFixed(2)
+    };
+  });
+  const blob = new Blob([JSON.stringify({version:'3.2.0', generated: new Date().toISOString(), detonations: data}, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nukemap-data.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
+}
+
+// ---- SUMMARY REPORT ----
+function exportReport() {
+  let td = 0, ti = 0, ty = 0;
+  currentDets.forEach(d => { td += d.casualties.deaths; ti += d.casualties.injuries; ty += d.yieldKt; });
+  const hiro = ty / 15;
+
+  let report = `NUKEMAP DETONATION REPORT\n`;
+  report += `Generated: ${new Date().toLocaleString()}\n`;
+  report += `${'='.repeat(50)}\n\n`;
+  report += `SUMMARY\n`;
+  report += `  Detonations: ${currentDets.length}\n`;
+  report += `  Total Yield: ${NM.fmtYield(ty)} (${hiro.toFixed(1)}x Hiroshima)\n`;
+  report += `  Est. Fatalities: ${NM.fmtNum(td)}\n`;
+  report += `  Est. Injuries: ${NM.fmtNum(ti)}\n`;
+  report += `  Total Affected: ${NM.fmtNum(td + ti)}\n\n`;
+
+  currentDets.forEach((d, i) => {
+    const nc = NM.findNearestCity(d.lat, d.lng);
+    const loc = nc && nc.dist < 50 ? `${nc.name}, ${nc.state}` : `${d.lat.toFixed(4)}, ${d.lng.toFixed(4)}`;
+    report += `DETONATION ${i + 1}: ${d.weapon}\n`;
+    report += `${'-'.repeat(40)}\n`;
+    report += `  Location: ${loc}\n`;
+    report += `  Coordinates: ${d.lat.toFixed(4)}, ${d.lng.toFixed(4)}\n`;
+    report += `  Yield: ${NM.fmtYield(d.yieldKt)} (${(d.yieldKt/15).toFixed(1)}x Hiroshima)\n`;
+    report += `  Burst Type: ${d.burstType}\n`;
+    report += `  Fatalities: ${NM.fmtNum(d.casualties.deaths)}\n`;
+    report += `  Injuries: ${NM.fmtNum(d.casualties.injuries)}\n`;
+    report += `  Effect Radii:\n`;
+    report += `    Fireball: ${NM.fmtDist(d.effects.fireball)}\n`;
+    report += `    20 psi: ${NM.fmtDist(d.effects.psi20)}\n`;
+    report += `    5 psi: ${NM.fmtDist(d.effects.psi5)}\n`;
+    report += `    1 psi: ${NM.fmtDist(d.effects.psi1)}\n`;
+    report += `    3rd deg burns: ${NM.fmtDist(d.effects.thermal3)}\n`;
+    report += `    Firestorm: ${NM.fmtDist(d.effects.firestormR)}\n`;
+    report += `    EMP: ${NM.fmtDist(d.effects.emp)}\n`;
+    report += `    Cloud top: ${NM.fmtDist(d.effects.cloudTopH)}\n`;
+    if (d.effects.fallout) {
+      report += `    Fallout (heavy): ${NM.fmtDist(d.effects.fallout.heavy.length)} downwind\n`;
+      report += `    Fallout (light): ${NM.fmtDist(d.effects.fallout.light.length)} downwind\n`;
+    }
+    report += `\n`;
+  });
+
+  report += `\nPhysics: Glasstone & Dolan, "The Effects of Nuclear Weapons"\n`;
+  report += `Generated by NukeMap v3.2.0 - https://sysadmindoc.github.io/NukeMap/\n`;
+
+  const blob = new Blob([report], {type:'text/plain'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nukemap-report.txt';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
+}
 
 // ---- SAVE/LOAD SCENARIOS ----
 function renderSavedList() {
@@ -1024,6 +1105,16 @@ function init() {
   initMap();
   initControls();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+
+  // Welcome overlay
+  const wo = $('welcome-overlay');
+  if (wo && !localStorage.getItem('nukemap-welcomed')) {
+    wo.style.display = '';
+    $('welcome-dismiss').addEventListener('click', () => {
+      if ($('welcome-noshow').checked) localStorage.setItem('nukemap-welcomed', '1');
+      wo.classList.add('hidden');
+    });
+  } else if (wo) wo.classList.add('hidden');
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
