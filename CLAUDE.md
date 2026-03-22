@@ -4,7 +4,7 @@
 Nuclear weapon effects simulator with 16 JS modules (~5000 lines), animated blast waves, SVG mushroom cloud, MIRV simulation, full WW3 simulation engine (418 verified targets, 708 warheads, 7 scenarios), sound effects, attack scenarios, missile flight calculator, nuclear winter estimates, shelter analysis, weapon comparison, population heatmap, and comprehensive immersive features.
 
 ## Tech Stack
-- HTML/CSS/JS (16 JS modules, ~5000+ lines total, ww3.js alone is 1070 lines)
+- HTML/CSS/JS (17 JS modules, ~7000 lines total, ww3.js alone is 1070 lines)
 - Leaflet.js (maps), Web Audio API (sounds)
 - Service worker for offline, `build.py` for bundling, `build_targets.py` for target DB
 - Catppuccin Mocha dark theme
