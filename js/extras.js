@@ -415,3 +415,48 @@ NM.FalloutParticles = {
     this.particles = [];
   }
 };
+
+// ---- CUMULATIVE DOSE CALCULATOR ----
+NM.DoseCalc = {
+  // Calculate cumulative dose for a person arriving at `arriveHr` hours after detonation
+  // staying for `stayHr` hours, at `distKm` from GZ of a `yieldKt` surface burst
+  calculate(yieldKt, fissionFrac, distKm, arriveHr, stayHr) {
+    fissionFrac = (fissionFrac || 50) / 100;
+    const refRate = 3000 * yieldKt * fissionFrac;
+    const distFactor = Math.pow(Math.max(distKm, 0.1), -2);
+    const rateAt1hr = refRate * distFactor;
+
+    // Integrate dose rate R(t) = R1 * t^(-1.2) from arriveHr to arriveHr+stayHr
+    // Integral of t^(-1.2) = t^(-0.2) / (-0.2)
+    const t1 = Math.max(arriveHr, 0.1);
+    const t2 = t1 + stayHr;
+    const dose = rateAt1hr * (Math.pow(t1, -0.2) - Math.pow(t2, -0.2)) / 0.2;
+
+    const rateOnArrival = rateAt1hr * Math.pow(t1, -1.2);
+    const rateOnLeave = rateAt1hr * Math.pow(t2, -1.2);
+
+    let prognosis, progColor;
+    if (dose > 600) { prognosis = 'LETHAL - Near-certain death within days to weeks'; progColor = 'var(--red)'; }
+    else if (dose > 300) { prognosis = 'SEVERE - 50%+ mortality without medical treatment'; progColor = 'var(--red)'; }
+    else if (dose > 100) { prognosis = 'ACUTE - Radiation sickness, hospitalization required'; progColor = 'var(--peach)'; }
+    else if (dose > 50) { prognosis = 'MODERATE - Nausea, fatigue, blood count changes'; progColor = 'var(--yellow)'; }
+    else if (dose > 10) { prognosis = 'LOW - Minimal symptoms, long-term cancer risk elevated'; progColor = 'var(--teal)'; }
+    else { prognosis = 'NEGLIGIBLE - Below threshold for acute effects'; progColor = 'var(--green)'; }
+
+    return { dose, rateOnArrival, rateOnLeave, prognosis, progColor };
+  },
+
+  generateHTML(yieldKt, fissionFrac, distKm, arriveHr, stayHr) {
+    const r = this.calculate(yieldKt, fissionFrac, distKm, arriveHr, stayHr);
+    return `<div class="dose-panel">
+      <div class="dose-main"><span class="dose-val">${r.dose >= 1 ? r.dose.toFixed(0) : r.dose.toFixed(2)}</span><span class="dose-unit">rem</span></div>
+      <div class="dose-prognosis" style="color:${r.progColor}">${r.prognosis}</div>
+      <div class="dose-detail">
+        <div class="dose-row"><span>Rate on arrival (${arriveHr}h)</span><span>${r.rateOnArrival >= 1 ? r.rateOnArrival.toFixed(0) : r.rateOnArrival.toFixed(2)} R/hr</span></div>
+        <div class="dose-row"><span>Rate on departure (${(arriveHr + stayHr).toFixed(1)}h)</span><span>${r.rateOnLeave >= 1 ? r.rateOnLeave.toFixed(0) : r.rateOnLeave.toFixed(2)} R/hr</span></div>
+        <div class="dose-row"><span>Total time exposed</span><span>${stayHr}h</span></div>
+      </div>
+      <div class="dose-note">Assumes outdoor exposure with no shielding. Sheltering reduces dose proportionally to protection factor.</div>
+    </div>`;
+  }
+};

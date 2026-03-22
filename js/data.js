@@ -65,6 +65,8 @@ NM.EFFECTS_DEF = [
   {id:'psi1',      label:'Light Blast (1 psi)',    color:'#f9e2af',desc:'Glass windows shatter into lethal shrapnel. Light structural damage. Injuries from flying debris.'},
   {id:'thermal1',  label:'1st Degree Burns',       color:'#f5c2e7',desc:'Pain, skin reddening comparable to severe sunburn. Temporary flash blindness at night. ~2 cal/cm\u00B2.'},
   {id:'emp',       label:'EMP Radius',             color:'#94e2d5',desc:'Electromagnetic pulse disables electronics, power grid, communications. Line-of-sight from burst.',dashed:true},
+  {id:'flashblind',label:'Flash Blindness',         color:'#b4befe',desc:'Temporary retinal burn causing blindness for seconds to minutes. Range is dramatically larger at night. Looking directly at fireball causes permanent damage.',dashed:true},
+  {id:'firestorm', label:'Firestorm Zone',          color:'#e64553',desc:'Self-sustaining fire with hurricane-force inward winds. Consumes all oxygen. Survival impossible within zone. Requires sufficient urban fuel loading.'},
 ];
 
 NM.MIRV_PRESETS = [

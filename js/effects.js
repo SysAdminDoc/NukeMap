@@ -6,11 +6,14 @@ NM.Effects = {
 
   drawRings(map, det) {
     const {lat, lng, effects: e} = det;
+    const flashR = NM._nightMode ? e.flashBlindNight : e.flashBlindDay;
     const rings = [
+      {id:'flashblind',r:flashR,color:'#b4befe',fo:0.03,bo:0.15,dashed:true},
       {id:'emp',r:e.emp,color:'#94e2d5',fo:0.06,bo:0.25,dashed:true},
       {id:'thermal1',r:e.thermal1,color:'#f5c2e7',fo:0.08,bo:0.35},
       {id:'psi1',r:e.psi1,color:'#f9e2af',fo:0.10,bo:0.40},
       {id:'thermal3',r:e.thermal3,color:'#fab387',fo:0.12,bo:0.45},
+      {id:'firestorm',r:e.firestormR,color:'#e64553',fo:0.14,bo:0.50},
       {id:'psi5',r:e.psi5,color:'#cba6f7',fo:0.15,bo:0.50},
       {id:'psi20',r:e.psi20,color:'#89b4fa',fo:0.18,bo:0.55},
       {id:'psi200',r:e.psi200,color:'#89dceb',fo:0.22,bo:0.60},
@@ -80,7 +83,7 @@ NM.Effects = {
       <div style="font-weight:800;font-size:15px;color:var(--red)">${NM.fmtYield(det.yieldKt)}</div>
       <div style="font-size:10px;color:var(--overlay1);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">${det.burstType}${det.burstType==='airburst'?' ('+Math.round(e.burstHeight)+'m)':''} \u2014 ${loc}</div>
       <table style="width:100%;font-size:11px;border-collapse:collapse">
-      ${[['Fireball',e.fireball,'#f5e0dc'],['500 rem',e.radiation,'#a6e3a1'],['20 psi',e.psi20,'#89b4fa'],['5 psi',e.psi5,'#cba6f7'],['3rd\u00B0 burns',e.thermal3,'#fab387'],['1 psi',e.psi1,'#f9e2af']].map(([l,r,c])=>`<tr><td style="padding:2px 0"><span style="color:${c};font-size:8px">\u2B24</span> ${l}</td><td style="text-align:right;font-weight:600">${NM.fmtDist(r)}</td></tr>`).join('')}
+      ${[['Fireball',e.fireball,'#f5e0dc'],['500 rem',e.radiation,'#a6e3a1'],['20 psi',e.psi20,'#89b4fa'],['Firestorm',e.firestormR,'#e64553'],['5 psi',e.psi5,'#cba6f7'],['3rd\u00B0 burns',e.thermal3,'#fab387'],['1 psi',e.psi1,'#f9e2af'],['Flash blind',NM._nightMode?e.flashBlindNight:e.flashBlindDay,'#b4befe']].map(([l,r,c])=>`<tr><td style="padding:2px 0"><span style="color:${c};font-size:8px">\u2B24</span> ${l}</td><td style="text-align:right;font-weight:600">${NM.fmtDist(r)}</td></tr>`).join('')}
       </table>
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--surface1);font-size:12px">
         <span style="color:var(--red);font-weight:700">${NM.fmtNum(det.casualties.deaths)} killed</span> &nbsp;

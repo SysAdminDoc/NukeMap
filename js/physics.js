@@ -31,6 +31,9 @@ NM.calcEffects = function(Y, burstType, heightM, fissionFrac) {
       ? { heavy:{length:1.3*Math.pow(Y*fissionFrac,0.45), width:0.39*Math.pow(Y*fissionFrac,0.35)},
           light:{length:4.6*Math.pow(Y*fissionFrac,0.45), width:1.1*Math.pow(Y*fissionFrac,0.35)} }
       : null,
+    flashBlindDay:  2.1 * Math.pow(Y, 0.4),   // km - temporary blindness in daylight
+    flashBlindNight: 55 * Math.pow(Y, 0.25),  // km - temporary blindness at night (much larger)
+    firestormR: 0.68 * Math.pow(Y, 0.41) * 0.85, // km - firestorm probability zone (inside 3rd degree burns)
     burstHeight: h, optimalHeight: optH, isSurface, yieldKt: Y
   };
 };
@@ -38,10 +41,12 @@ NM.calcEffects = function(Y, burstType, heightM, fissionFrac) {
 NM.calcTimeline = function(Y, e) {
   const items = [
     {time:'0 ms', desc:'Detonation. X-ray pulse heats air to millions of degrees.'},
+    {time:'0.1 ms', desc:'Thermal flash. Temporary blindness to '+NM.fmtR(e.flashBlindDay)+' (day) or '+NM.fmtR(e.flashBlindNight)+' (night).'},
     {time: (0.0013*Math.pow(Y,0.4)*1000).toFixed(0)+' ms', desc:'Fireball reaches max size ('+NM.fmtR(e.fireball)+' radius). Surface temperature ~10,000,000\u00B0C.'},
     {time: NM.fmtTime(e.psi5/0.34), desc:'Blast wave at 5 psi ('+NM.fmtR(e.psi5)+'). Buildings destroyed. 160 mph winds.'},
     {time: NM.fmtTime(e.psi1/0.34), desc:'Blast wave at 1 psi ('+NM.fmtR(e.psi1)+'). Windows shatter into shrapnel.'},
   ];
+  if (e.firestormR > 0.1) items.push({time:'~5 min', desc:'Firestorm ignites within '+NM.fmtR(e.firestormR)+'. Hurricane-force inward winds feed the fire.'});
   if (e.isSurface && e.fallout) {
     items.push({time:'~10 min', desc:'Mushroom cloud stabilizes at ~'+e.cloudTopH.toFixed(1)+' km. Fallout begins.'});
     items.push({time:'~30 min', desc:'Heaviest fallout within '+NM.fmtR(e.fallout.heavy.length)+' downwind.'});

@@ -5,6 +5,7 @@ window.NM = window.NM || {};
 'use strict';
 
 let map, currentDets = [], windAngle = 0, multiMode = false, mirvMode = false, currentMirvPreset = null;
+NM._nightMode = false;
 
 // ---- MAP INIT ----
 function initMap() {
@@ -193,6 +194,12 @@ function triggerDetonation(lat, lng) {
   const wInfo = NM.WeaponInfo.generate(det.weapon);
   if (wInfo) { $('weaponinfo-section').style.display = ''; $('weaponinfo-content').innerHTML = wInfo; }
   else $('weaponinfo-section').style.display = 'none';
+
+  // Nearby strategic targets
+  updateNearbyTargets(det);
+
+  // Dose calculator visibility
+  if (effects.isSurface) $('dosecalc-section').style.display = '';
 
   // Seismic equivalent
   $('seismic-section').style.display = '';
@@ -516,6 +523,24 @@ function initControls() {
     } else NM.FalloutContours.clear(map);
   });
 
+  // Night mode toggle
+  $('night-check').addEventListener('change', () => {
+    NM._nightMode = $('night-check').checked;
+    $('night-label').textContent = NM._nightMode ? 'Night mode ON (flash blindness 20x)' : 'Night mode (flash blindness)';
+    if (currentDets.length) { updateLegend(currentDets[currentDets.length - 1]); }
+  });
+
+  // Dose calculator
+  $('dose-calc').addEventListener('click', () => {
+    if (!currentDets.length) return;
+    const det = currentDets[currentDets.length - 1];
+    if (!det.effects.isSurface) { $('dose-result').innerHTML = '<div style="color:var(--overlay0);font-size:11px">Dose calculator requires a surface burst (fallout)</div>'; return; }
+    const dist = +$('dose-dist').value || 5;
+    const arrive = +$('dose-arrive').value || 1;
+    const stay = +$('dose-stay').value || 4;
+    $('dose-result').innerHTML = NM.DoseCalc.generateHTML(det.yieldKt, det.fission, dist, arrive, stay);
+  });
+
   // Test database
   $('testdb-check').addEventListener('change', () => NM.TestDB.toggle(map));
 
@@ -695,12 +720,15 @@ function updateDetsList() {
 function updateLegend(det) {
   const c = $('legend-items'); c.innerHTML = '';
   const e = det.effects;
+  const flashR = NM._nightMode ? e.flashBlindNight : e.flashBlindDay;
   const items = [
     {id: 'fireball', r: e.fireball, color: '#f5e0dc'}, {id: 'radiation', r: e.radiation, color: '#a6e3a1'},
     {id: 'psi200', r: e.psi200, color: '#89dceb'}, {id: 'psi20', r: e.psi20, color: '#89b4fa'},
+    {id: 'firestorm', r: e.firestormR, color: '#e64553'},
     {id: 'psi5', r: e.psi5, color: '#cba6f7'}, {id: 'thermal3', r: e.thermal3, color: '#fab387'},
     {id: 'psi1', r: e.psi1, color: '#f9e2af'}, {id: 'thermal1', r: e.thermal1, color: '#f5c2e7'},
     {id: 'emp', r: e.emp, color: '#94e2d5'},
+    {id: 'flashblind', r: flashR, color: '#b4befe'},
   ];
   if (e.craterR > 0) items.unshift({id: 'crater', r: e.craterR, color: '#585b70'});
 
@@ -748,6 +776,38 @@ function updateCrater(det) {
 function updateShelter(det) {
   $('shelter-section').style.display = '';
   $('shelter-content').innerHTML = NM.Shelter.generateReport(det.effects);
+}
+
+function updateNearbyTargets(det) {
+  const allTargets = [
+    ...(NM.WW3_TARGETS_US || []).map(t => ({...t, side: 'US'})),
+    ...(NM.WW3_TARGETS_RU || []).map(t => ({...t, side: 'Russia'})),
+    ...(NM.WW3_TARGETS_NATO || []).map(t => ({...t, side: 'NATO'})),
+  ];
+  const nearby = allTargets.map(t => ({...t, dist: NM.haversine(det.lat, det.lng, t.lat, t.lng)}))
+    .filter(t => t.dist < 200)
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, 12);
+
+  if (!nearby.length) { $('nearby-section').style.display = 'none'; return; }
+  $('nearby-section').style.display = '';
+
+  const typeColors = {icbm:'#f38ba8',bomber:'#fab387',sub:'#89b4fa',c2:'#cba6f7',nuclear:'#a6e3a1',military:'#f9e2af',infra:'#94e2d5',city:'#f5c2e7'};
+  const typeLabels = {icbm:'ICBM',bomber:'Bomber',sub:'Submarine',c2:'Command',nuclear:'Nuclear',military:'Military',infra:'Infrastructure',city:'City'};
+
+  let html = '<div class="nearby-list">';
+  for (const t of nearby) {
+    const c = typeColors[t.type] || '#cdd6f4';
+    const inBlast = t.dist <= det.effects.psi1;
+    html += `<div class="nearby-item${inBlast ? ' nearby-hit' : ''}">
+      <div class="nb-header"><span class="nb-type" style="color:${c}">${typeLabels[t.type] || t.type}</span><span class="nb-dist">${NM.fmtR(t.dist)}</span></div>
+      <div class="nb-name">${NM.esc(t.name)}</div>
+      ${t.cat ? `<div class="nb-cat">${NM.esc(t.cat.substring(0, 80))}${t.cat.length > 80 ? '...' : ''}</div>` : ''}
+      ${inBlast ? '<div class="nb-status">WITHIN BLAST ZONE</div>' : ''}
+    </div>`;
+  }
+  html += '</div>';
+  $('nearby-content').innerHTML = html;
 }
 
 function updateStats() {
@@ -819,6 +879,8 @@ function resetPanels() {
   $('seismic-section').style.display = 'none';
   $('sizecompare-section').style.display = 'none';
   $('escape-section').style.display = 'none';
+  $('nearby-section').style.display = 'none';
+  $('dosecalc-section').style.display = 'none';
   $('legend-items').innerHTML = '<div style="color:var(--overlay0);font-size:12px;padding:10px 0">Detonate a weapon to see effects</div>';
   $('info-bar').classList.remove('active');
 }

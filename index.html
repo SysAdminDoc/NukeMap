@@ -183,6 +183,10 @@
           <div class="section-title">Escape Time</div>
           <div id="escape-content"></div>
         </div>
+        <div class="section" id="nearby-section" style="display:none">
+          <div class="section-title">Nearby Strategic Targets</div>
+          <div id="nearby-content"></div>
+        </div>
       </div>
 
       <!-- ===== RESULTS TAB ===== -->
@@ -357,6 +361,29 @@
           <label class="toggle-row"><input type="checkbox" id="draggable-check"/><span class="tg-slider"></span><span class="tg-label">Draggable ground zero</span></label>
         </div>
 
+        <!-- Dose Calculator -->
+        <div class="section" id="dosecalc-section" style="display:none">
+          <div class="section-title">Radiation Dose Calculator</div>
+          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">Estimate cumulative dose based on time spent at a distance from ground zero after a surface burst.</div>
+          <div class="compact-row">
+            <label>Distance</label>
+            <input type="number" class="compact-input" id="dose-dist" value="5" min="0.1" step="any"/>
+            <span class="unit">km</span>
+          </div>
+          <div class="compact-row">
+            <label>Arrive at</label>
+            <input type="number" class="compact-input" id="dose-arrive" value="1" min="0.1" step="any"/>
+            <span class="unit">hr after</span>
+          </div>
+          <div class="compact-row">
+            <label>Stay for</label>
+            <input type="number" class="compact-input" id="dose-stay" value="4" min="0.1" step="any"/>
+            <span class="unit">hours</span>
+          </div>
+          <button class="btn-secondary" id="dose-calc" style="width:100%;margin-top:4px">Calculate Dose</button>
+          <div id="dose-result" style="margin-top:6px"></div>
+        </div>
+
         <!-- GPS Am I Safe -->
         <div class="section">
           <div class="section-title">Am I Safe? (GPS)</div>
@@ -368,6 +395,7 @@
         <!-- Extra toggles -->
         <div class="section">
           <div class="section-title">Immersive</div>
+          <label class="toggle-row"><input type="checkbox" id="night-check"/><span class="tg-slider"></span><span class="tg-label" id="night-label">Night mode (flash blindness)</span></label>
           <label class="toggle-row"><input type="checkbox" id="geiger-check"/><span class="tg-slider"></span><span class="tg-label">Geiger counter (hover audio)</span></label>
           <label class="toggle-row"><input type="checkbox" id="shockwave-check" checked/><span class="tg-slider"></span><span class="tg-label">Shockwave ring animation</span></label>
           <label class="toggle-row"><input type="checkbox" id="contours-check"/><span class="tg-slider"></span><span class="tg-label">Fallout dose contour lines</span></label>
