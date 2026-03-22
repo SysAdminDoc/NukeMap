@@ -15,8 +15,8 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .leaflet-control-zoom{border:none!important;box-shadow:var(--shadow-lg)!important}
 .leaflet-control-zoom a{background:var(--surface0)!important;color:var(--text)!important;border-color:var(--surface1)!important;width:34px!important;height:34px!important;line-height:34px!important;font-size:16px!important}
 .leaflet-control-zoom a:hover{background:var(--surface1)!important}
-.leaflet-control-attribution{background:var(--glass)!important;color:var(--overlay0)!important;font-size:10px!important;backdrop-filter:blur(10px);border-radius:4px 0 0 0}
-.leaflet-control-attribution a{color:var(--blue)!important}
+.leaflet-control-attribution{display:none!important}
+
 .leaflet-popup-content-wrapper{background:var(--surface0);color:var(--text);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);border:1px solid var(--surface1)}
 .leaflet-popup-tip{background:var(--surface0)}
 .leaflet-popup-content{margin:12px 16px;font-size:13px;line-height:1.6}
@@ -550,7 +550,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .dose-note{font-size:9px;color:var(--overlay0);margin-top:6px;font-style:italic;text-align:center}
 
 /* WW3 quick launch button */
-#ww3-quick-btn{position:absolute;bottom:14px;right:14px;z-index:1000;padding:8px 16px;border-radius:var(--radius-sm);border:none;background:linear-gradient(135deg,#f38ba8,#fab387);color:var(--crust);font-size:12px;font-weight:900;cursor:pointer;letter-spacing:2px;box-shadow:0 4px 16px rgba(243,139,168,0.3);transition:all .2s;text-transform:uppercase}
+#ww3-quick-btn{position:absolute;bottom:38px;right:14px;z-index:1000;padding:6px 14px;border-radius:var(--radius-sm);border:none;background:linear-gradient(135deg,#f38ba8,#fab387);color:var(--crust);font-size:11px;font-weight:900;cursor:pointer;letter-spacing:2px;box-shadow:0 4px 16px rgba(243,139,168,0.3);transition:all .2s;text-transform:uppercase}
 #ww3-quick-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(243,139,168,0.4)}
 
 /* Quick weapon bar */
@@ -720,7 +720,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
   #map-switcher{top:8px;right:78px}
   .ms-toggle{width:28px;height:28px}
   .ms-panel{right:0}
-  #ww3-quick-btn{bottom:calc(50vh + 6px);right:8px;padding:6px 12px;font-size:10px}
+  #ww3-quick-btn{bottom:calc(50vh + 6px);right:8px;padding:5px 10px;font-size:9px}
   .det-toast{top:auto;bottom:calc(50vh + 10px);font-size:11px;padding:6px 14px}
   .dt-yield{font-size:12px}
   #quick-weapons{bottom:calc(50vh + 32px);left:50%;max-width:95vw;gap:2px;padding:3px}
