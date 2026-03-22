@@ -278,13 +278,7 @@ function triggerDetonation(lat, lng) {
   // Detonation toast
   showDetToast(det);
 
-  // Zoom to fit
-  const largest = [effects.emp, effects.thermal1, effects.psi1].filter(r => r > 0).sort((a, b) => b - a)[0];
-  if (largest && largest > 0.001) {
-    const R = 6371, dLat = (largest / R) * (180 / Math.PI);
-    const dLng = dLat / Math.cos(lat * Math.PI / 180);
-    map.fitBounds([[lat - dLat, lng - dLng], [lat + dLat, lng + dLng]], {maxZoom: 15, animate: true, duration: 0.8, padding: [40, 40]});
-  }
+  // No auto-zoom — let user control the map view
 
   updateURL();
 }
