@@ -46,15 +46,31 @@ NM.Mushroom3D = {
 
     this.active = true;
 
-    // Animate growth via CSS
+    // Animate: reveal from bottom up using the SVG clip-path
+    // The SVG has a <clipPath id="XX-reveal"> with a <rect> we animate
+    const uid = svgNode.querySelector('clipPath')?.id?.replace('-reveal', '');
+    const clipRect = svgNode.querySelector('.mc-reveal-rect');
+    if (clipRect) {
+      const totalH = 500; // matches SVG viewBox height
+      const duration = 3000;
+      const start = performance.now();
+      const tick = (now) => {
+        const p = Math.min(1, (now - start) / duration);
+        // Ease-out cubic
+        const eased = 1 - Math.pow(1 - p, 3);
+        // Rect starts at full height (everything clipped) and shrinks upward
+        const y = totalH * (1 - eased);
+        clipRect.setAttribute('y', y.toFixed(1));
+        clipRect.setAttribute('height', (totalH - y + 10).toFixed(1));
+        if (p < 1 && this.active) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    // Fade in quickly
     svgNode.style.opacity = '0';
-    svgNode.style.transform = 'scaleY(0.1) scaleX(0.3)';
-    svgNode.style.transformOrigin = 'center bottom';
-    svgNode.style.transition = 'transform 2.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease-out';
-    requestAnimationFrame(() => {
-      svgNode.style.opacity = '1';
-      svgNode.style.transform = 'scaleY(1) scaleX(1)';
-    });
+    svgNode.style.transition = 'opacity 0.4s ease-out';
+    requestAnimationFrame(() => { svgNode.style.opacity = '1'; });
   },
 
   _buildSVG(yieldKt, footprintKm, heightKm) {
@@ -93,6 +109,11 @@ NM.Mushroom3D = {
           <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="rgba(0,0,0,0.4)"/>
         </filter>
 
+        <!-- Reveal clip-path: starts showing nothing, animated to show everything -->
+        <clipPath id="${uid}-reveal">
+          <rect class="mc-reveal-rect" x="-50" y="${H}" width="${W+100}" height="10"/>
+        </clipPath>
+
         <!-- Cap gradient (fire -> smoke) -->
         <radialGradient id="${uid}-capGrad" cx="50%" cy="40%" r="55%">
           <stop offset="0%" stop-color="rgb(${Math.round(255*intensity)},${Math.round(160*intensity)},${Math.round(60*intensity)})"/>
@@ -126,50 +147,55 @@ NM.Mushroom3D = {
         </radialGradient>
       </defs>
 
-      <!-- Drop shadow layer -->
-      <g filter="url(#${uid}-shadow)" opacity="0.7">
+      <!-- All visible content clipped by the rising reveal rect -->
+      <g clip-path="url(#${uid}-reveal)">
 
-        <!-- Ground debris / dust ring -->
-        <ellipse cx="${cx}" cy="${stemBase}" rx="${W*0.35}" ry="${H*0.06}"
-          fill="url(#${uid}-baseGrad)" filter="url(#${uid}-turb2)"/>
+        <!-- Drop shadow layer -->
+        <g filter="url(#${uid}-shadow)" opacity="0.7">
 
-        <!-- Stem -->
-        <path d="M${cx-stemW} ${stemBase} Q${cx-stemW*1.5} ${(stemBase+stemTop)/2} ${cx-stemW*0.7} ${stemTop}
-                 L${cx+stemW*0.7} ${stemTop} Q${cx+stemW*1.5} ${(stemBase+stemTop)/2} ${cx+stemW} ${stemBase} Z"
-          fill="url(#${uid}-stemGrad)" filter="url(#${uid}-turb2)"/>
+          <!-- Ground debris / dust ring -->
+          <ellipse cx="${cx}" cy="${stemBase}" rx="${W*0.35}" ry="${H*0.06}"
+            fill="url(#${uid}-baseGrad)" filter="url(#${uid}-turb2)"/>
 
-        <!-- Stem collar / skirt where it meets cap -->
-        <ellipse cx="${cx}" cy="${stemTop+capRY*0.3}" rx="${capRX*0.5}" ry="${capRY*0.4}"
-          fill="rgb(130,95,65)" opacity="0.5" filter="url(#${uid}-turb2)"/>
+          <!-- Stem -->
+          <path d="M${cx-stemW} ${stemBase} Q${cx-stemW*1.5} ${(stemBase+stemTop)/2} ${cx-stemW*0.7} ${stemTop}
+                   L${cx+stemW*0.7} ${stemTop} Q${cx+stemW*1.5} ${(stemBase+stemTop)/2} ${cx+stemW} ${stemBase} Z"
+            fill="url(#${uid}-stemGrad)" filter="url(#${uid}-turb2)"/>
 
-        <!-- Main mushroom cap - large ellipse with turbulence -->
-        <ellipse cx="${cx}" cy="${capCY}" rx="${capRX}" ry="${capRY}"
-          fill="url(#${uid}-capGrad)" filter="url(#${uid}-turb)" opacity="0.9"/>
+          <!-- Stem collar / skirt where it meets cap -->
+          <ellipse cx="${cx}" cy="${stemTop+capRY*0.3}" rx="${capRX*0.5}" ry="${capRY*0.4}"
+            fill="rgb(130,95,65)" opacity="0.5" filter="url(#${uid}-turb2)"/>
 
-        <!-- Cap top dome (slightly smaller, brighter) -->
-        <ellipse cx="${cx}" cy="${capCY - capRY*0.15}" rx="${capRX*0.75}" ry="${capRY*0.7}"
-          fill="url(#${uid}-capGrad)" filter="url(#${uid}-turb)" opacity="0.7"/>
+          <!-- Main mushroom cap - large ellipse with turbulence -->
+          <ellipse cx="${cx}" cy="${capCY}" rx="${capRX}" ry="${capRY}"
+            fill="url(#${uid}-capGrad)" filter="url(#${uid}-turb)" opacity="0.9"/>
 
-        <!-- Inner fire glow -->
-        <ellipse cx="${cx}" cy="${capCY + capRY*0.1}" rx="${capRX*0.5}" ry="${capRY*0.5}"
-          fill="url(#${uid}-fireGrad)" filter="url(#${uid}-glow)"/>
+          <!-- Cap top dome (slightly smaller, brighter) -->
+          <ellipse cx="${cx}" cy="${capCY - capRY*0.15}" rx="${capRX*0.75}" ry="${capRY*0.7}"
+            fill="url(#${uid}-capGrad)" filter="url(#${uid}-turb)" opacity="0.7"/>
 
-        <!-- Cap edge wisps (smaller ellipses around the rim) -->
-        ${this._generateWisps(cx, capCY, capRX, capRY, uid)}
+          <!-- Inner fire glow -->
+          <ellipse cx="${cx}" cy="${capCY + capRY*0.1}" rx="${capRX*0.5}" ry="${capRY*0.5}"
+            fill="url(#${uid}-fireGrad)" filter="url(#${uid}-glow)"/>
 
-        <!-- Rising smoke column above cap -->
-        <ellipse cx="${cx}" cy="${capCY - capRY*0.8}" rx="${capRX*0.3}" ry="${capRY*0.5}"
-          fill="rgb(110,85,65)" opacity="0.3" filter="url(#${uid}-turb)"/>
+          <!-- Cap edge wisps (smaller ellipses around the rim) -->
+          ${this._generateWisps(cx, capCY, capRX, capRY, uid)}
+
+          <!-- Rising smoke column above cap -->
+          <ellipse cx="${cx}" cy="${capCY - capRY*0.8}" rx="${capRX*0.3}" ry="${capRY*0.5}"
+            fill="rgb(110,85,65)" opacity="0.3" filter="url(#${uid}-turb)"/>
+
+        </g>
+
+        <!-- Animated inner pulse -->
+        <ellipse cx="${cx}" cy="${capCY}" rx="${capRX*0.35}" ry="${capRY*0.35}"
+          fill="rgba(255,180,80,0.15)">
+          <animate attributeName="rx" values="${capRX*0.3};${capRX*0.4};${capRX*0.3}" dur="3s" repeatCount="indefinite"/>
+          <animate attributeName="ry" values="${capRY*0.3};${capRY*0.4};${capRY*0.3}" dur="3s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.15;0.25;0.15" dur="3s" repeatCount="indefinite"/>
+        </ellipse>
 
       </g>
-
-      <!-- Animated inner pulse -->
-      <ellipse cx="${cx}" cy="${capCY}" rx="${capRX*0.35}" ry="${capRY*0.35}"
-        fill="rgba(255,180,80,0.15)">
-        <animate attributeName="rx" values="${capRX*0.3};${capRX*0.4};${capRX*0.3}" dur="3s" repeatCount="indefinite"/>
-        <animate attributeName="ry" values="${capRY*0.3};${capRY*0.4};${capRY*0.3}" dur="3s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.15;0.25;0.15" dur="3s" repeatCount="indefinite"/>
-      </ellipse>
 
     </svg>`;
   },
