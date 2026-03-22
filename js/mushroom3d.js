@@ -1,193 +1,206 @@
-// NukeMap - 3D Mushroom Cloud (map-anchored, zoom-relative, overhead view)
+// NukeMap - Mushroom Cloud (SVG Leaflet overlay, map-anchored, zoom-scaled)
 window.NM = window.NM || {};
 
 NM.Mushroom3D = {
-  scene: null, camera: null, renderer: null, cloud: null,
-  container: null, active: false, animId: null,
-  currentDet: null, map: null,
+  active: false,
+  overlay: null,
+  currentDet: null,
 
-  init() {
-    if (typeof THREE === 'undefined') return;
-    // Container will be positioned over the GZ point on the map
-    this.container = document.createElement('div');
-    this.container.id = 'mushroom-3d';
-    this.container.style.cssText = 'position:absolute;z-index:450;pointer-events:none;display:none;overflow:hidden;border-radius:50%';
-    document.getElementById('map').appendChild(this.container);
-
-    this.scene = new THREE.Scene();
-    // Perspective from slightly angled overhead
-    this.camera = new THREE.PerspectiveCamera(40, 1, 0.1, 500);
-
-    this.renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.setClearColor(0x000000, 0);
-    this.container.appendChild(this.renderer.domElement);
-
-    // Lighting
-    this.scene.add(new THREE.AmbientLight(0x555555));
-    const dir = new THREE.DirectionalLight(0xffaa66, 1.2);
-    dir.position.set(2, 8, 3);
-    this.scene.add(dir);
-    const rim = new THREE.DirectionalLight(0xff6633, 0.5);
-    rim.position.set(-2, 5, -3);
-    this.scene.add(rim);
-    // Bottom light to illuminate underside of cap
-    const bottom = new THREE.DirectionalLight(0xff4400, 0.3);
-    bottom.position.set(0, -2, 0);
-    this.scene.add(bottom);
-  },
+  init() { /* no-op, no Three.js needed */ },
 
   show(det) {
-    if (!this.renderer) return;
+    this.hide();
     this.currentDet = det;
-    this.cleanup();
-
-    const group = new THREE.Group();
-
-    // Stem
-    const stemGeo = new THREE.CylinderGeometry(0.12, 0.22, 3, 16);
-    const stemMat = new THREE.MeshPhongMaterial({
-      color: 0x8b7355, transparent: true, opacity: 0.65,
-      emissive: 0x332211, emissiveIntensity: 0.3
-    });
-    const stem = new THREE.Mesh(stemGeo, stemMat);
-    stem.position.y = 1.5;
-    group.add(stem);
-
-    // Debris ring at base
-    for (let i = 0; i < 8; i++) {
-      const dGeo = new THREE.SphereGeometry(0.18 + Math.random() * 0.15, 8, 6);
-      const dMat = new THREE.MeshPhongMaterial({
-        color: 0x665544, transparent: true, opacity: 0.45,
-        emissive: 0x221100, emissiveIntensity: 0.2
-      });
-      const d = new THREE.Mesh(dGeo, dMat);
-      const a = (i / 8) * Math.PI * 2;
-      d.position.set(Math.cos(a) * 0.4, 0.15, Math.sin(a) * 0.4);
-      group.add(d);
-    }
-
-    // Mushroom cap — overlapping spheres
-    const capColors = [0xee8844, 0xdd6633, 0xcc5522, 0xff9955, 0xbb4411, 0xee7733];
-    for (let i = 0; i < 14; i++) {
-      const r = 0.45 + Math.random() * 0.45;
-      const cGeo = new THREE.SphereGeometry(r, 12, 10);
-      const cMat = new THREE.MeshPhongMaterial({
-        color: capColors[i % capColors.length],
-        transparent: true, opacity: 0.5 + Math.random() * 0.2,
-        emissive: 0x441100, emissiveIntensity: 0.35
-      });
-      const c = new THREE.Mesh(cGeo, cMat);
-      const a = (i / 14) * Math.PI * 2;
-      const dist = Math.random() * 0.35;
-      c.position.set(Math.cos(a) * dist, 3 + (Math.random() - 0.3) * 0.4, Math.sin(a) * dist);
-      c.userData.bobSpeed = 0.4 + Math.random() * 0.4;
-      c.userData.bobAmp = 0.015 + Math.random() * 0.02;
-      c.userData.baseY = c.position.y;
-      group.add(c);
-    }
-
-    // Inner glow
-    const glowGeo = new THREE.SphereGeometry(0.6, 16, 16);
-    const glowMat = new THREE.MeshBasicMaterial({color: 0xff6600, transparent: true, opacity: 0.25});
-    const glow = new THREE.Mesh(glowGeo, glowMat);
-    glow.position.y = 3;
-    group.add(glow);
-
-    group.scale.set(0.01, 0.01, 0.01);
-    this.cloud = group;
-    this.scene.add(group);
-    this.container.style.display = 'block';
-    this.active = true;
-
-    const startTime = performance.now();
-    const growDuration = 2500;
-
-    const animate = (now) => {
-      if (!this.active) return;
-      const elapsed = now - startTime;
-      const growP = Math.min(1, elapsed / growDuration);
-      const eased = 1 - Math.pow(1 - growP, 3);
-      group.scale.set(eased, eased, eased);
-      group.rotation.y += 0.002;
-
-      group.children.forEach(child => {
-        if (child.userData.bobSpeed) {
-          child.position.y = child.userData.baseY + Math.sin(now * 0.001 * child.userData.bobSpeed) * child.userData.bobAmp;
-        }
-      });
-      if (glow) glow.material.opacity = 0.2 + Math.sin(now * 0.003) * 0.08;
-
-      // Reposition on map
-      this._updatePosition();
-
-      this.renderer.render(this.scene, this.camera);
-      this.animId = requestAnimationFrame(animate);
-    };
-    this.animId = requestAnimationFrame(animate);
-  },
-
-  // Position the 3D container over the GZ point, sized relative to the fireball/cloud radius on the map
-  _updatePosition() {
-    if (!this.currentDet || !this.active) return;
     const map = NM._map;
     if (!map) return;
 
-    const det = this.currentDet;
     const e = det.effects;
+    // Cloud footprint: use cloud cap radius, minimum fireball*2
+    const footprintKm = Math.max(e.cloudTopR * 1.2, e.fireball * 3, 0.5);
+    const heightKm = e.cloudTopH;
+    const stemRatio = e.stemR / Math.max(e.cloudTopR, 0.1);
+    const capRatio = footprintKm / Math.max(heightKm, 0.1);
 
-    // Use the cloud cap radius as the visual footprint on the map
-    const cloudR = Math.max(e.cloudTopR, e.fireball * 2, 1);
-
-    // Convert cloud radius to pixels at current zoom
-    const center = map.latLngToContainerPoint([det.lat, det.lng]);
+    // Compute map bounds for the overlay
     const R = 6371;
-    const edgeLat = det.lat + (cloudR / R) * (180 / Math.PI);
-    const edge = map.latLngToContainerPoint([edgeLat, det.lng]);
-    const pixelR = Math.abs(center.y - edge.y);
+    const dLat = (footprintKm / R) * (180 / Math.PI);
+    // Height in map: we want the cloud to extend upward (north) from GZ
+    // Use ~2x footprint vertically to show the full cloud shape
+    const vExtent = dLat * 2.5;
+    const hExtent = dLat * 1.3;
 
-    // Size the container: diameter = pixelR * 2, clamped
-    const size = Math.max(60, Math.min(500, pixelR * 2.5));
-    const halfSize = size / 2;
+    const bounds = L.latLngBounds(
+      [det.lat - dLat * 0.3, det.lng - hExtent],
+      [det.lat + vExtent, det.lng + hExtent]
+    );
 
-    this.container.style.width = size + 'px';
-    this.container.style.height = size + 'px';
-    this.container.style.left = (center.x - halfSize) + 'px';
-    this.container.style.top = (center.y - halfSize) + 'px';
+    const svgStr = this._buildSVG(det.yieldKt, footprintKm, heightKm);
+    const svgEl = document.createElement('div');
+    svgEl.innerHTML = svgStr;
+    const svgNode = svgEl.firstElementChild;
 
-    this.renderer.setSize(size, size);
-    this.camera.aspect = 1;
+    this.overlay = L.svgOverlay(svgNode, bounds, {
+      interactive: false,
+      className: 'mushroom-overlay'
+    }).addTo(map);
 
-    // Camera: angled overhead view looking down at the cloud
-    // Distance scales so cloud fills the container nicely
-    const camDist = 7;
-    this.camera.position.set(0, camDist * 0.85, camDist * 0.55);
-    this.camera.lookAt(0, 1.5, 0);
-    this.camera.updateProjectionMatrix();
+    this.active = true;
+
+    // Animate growth via CSS
+    svgNode.style.opacity = '0';
+    svgNode.style.transform = 'scaleY(0.1) scaleX(0.3)';
+    svgNode.style.transformOrigin = 'center bottom';
+    svgNode.style.transition = 'transform 2.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease-out';
+    requestAnimationFrame(() => {
+      svgNode.style.opacity = '1';
+      svgNode.style.transform = 'scaleY(1) scaleX(1)';
+    });
   },
 
-  // Call on map move/zoom
-  onMapMove() {
-    if (this.active) this._updatePosition();
+  _buildSVG(yieldKt, footprintKm, heightKm) {
+    // Determine color intensity based on yield (hotter for bigger)
+    const intensity = Math.min(1, Math.log10(Math.max(yieldKt, 0.1)) / 5 + 0.5);
+    const W = 400, H = 500;
+    const cx = W / 2;
+
+    // Cloud proportions
+    const stemW = W * 0.08;
+    const stemBase = H * 0.95;
+    const stemTop = H * 0.45;
+    const capCY = H * 0.3;
+    const capRX = W * 0.38;
+    const capRY = H * 0.18;
+
+    // Generate unique ID for filters
+    const uid = 'mc' + Date.now();
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+      <defs>
+        <!-- Turbulence for cloud texture -->
+        <filter id="${uid}-turb" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="${Math.floor(Math.random()*100)}" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="18" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <filter id="${uid}-turb2" x="-10%" y="-10%" width="120%" height="120%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed="${Math.floor(Math.random()*100)+50}" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="10" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <filter id="${uid}-glow">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="${uid}-shadow">
+          <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="rgba(0,0,0,0.4)"/>
+        </filter>
+
+        <!-- Cap gradient (fire -> smoke) -->
+        <radialGradient id="${uid}-capGrad" cx="50%" cy="40%" r="55%">
+          <stop offset="0%" stop-color="rgb(${Math.round(255*intensity)},${Math.round(160*intensity)},${Math.round(60*intensity)})"/>
+          <stop offset="25%" stop-color="rgb(${Math.round(220*intensity)},${Math.round(120*intensity)},${Math.round(40*intensity)})"/>
+          <stop offset="50%" stop-color="rgb(${Math.round(180*intensity)},${Math.round(90*intensity)},${Math.round(30*intensity)})"/>
+          <stop offset="75%" stop-color="rgb(140,100,70)"/>
+          <stop offset="100%" stop-color="rgb(90,70,55)"/>
+        </radialGradient>
+
+        <!-- Inner fire glow -->
+        <radialGradient id="${uid}-fireGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(255,200,100,0.6)"/>
+          <stop offset="40%" stop-color="rgba(255,120,40,0.3)"/>
+          <stop offset="100%" stop-color="rgba(200,60,20,0)"/>
+        </radialGradient>
+
+        <!-- Stem gradient -->
+        <linearGradient id="${uid}-stemGrad" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0%" stop-color="rgb(100,80,60)" stop-opacity="0.3"/>
+          <stop offset="30%" stop-color="rgb(140,110,80)" stop-opacity="0.7"/>
+          <stop offset="50%" stop-color="rgb(160,120,85)" stop-opacity="0.8"/>
+          <stop offset="70%" stop-color="rgb(140,110,80)" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="rgb(100,80,60)" stop-opacity="0.3"/>
+        </linearGradient>
+
+        <!-- Base debris gradient -->
+        <radialGradient id="${uid}-baseGrad" cx="50%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="rgba(200,150,100,0.5)"/>
+          <stop offset="50%" stop-color="rgba(150,110,75,0.3)"/>
+          <stop offset="100%" stop-color="rgba(100,80,60,0)"/>
+        </radialGradient>
+      </defs>
+
+      <!-- Drop shadow layer -->
+      <g filter="url(#${uid}-shadow)" opacity="0.7">
+
+        <!-- Ground debris / dust ring -->
+        <ellipse cx="${cx}" cy="${stemBase}" rx="${W*0.35}" ry="${H*0.06}"
+          fill="url(#${uid}-baseGrad)" filter="url(#${uid}-turb2)"/>
+
+        <!-- Stem -->
+        <path d="M${cx-stemW} ${stemBase} Q${cx-stemW*1.5} ${(stemBase+stemTop)/2} ${cx-stemW*0.7} ${stemTop}
+                 L${cx+stemW*0.7} ${stemTop} Q${cx+stemW*1.5} ${(stemBase+stemTop)/2} ${cx+stemW} ${stemBase} Z"
+          fill="url(#${uid}-stemGrad)" filter="url(#${uid}-turb2)"/>
+
+        <!-- Stem collar / skirt where it meets cap -->
+        <ellipse cx="${cx}" cy="${stemTop+capRY*0.3}" rx="${capRX*0.5}" ry="${capRY*0.4}"
+          fill="rgb(130,95,65)" opacity="0.5" filter="url(#${uid}-turb2)"/>
+
+        <!-- Main mushroom cap - large ellipse with turbulence -->
+        <ellipse cx="${cx}" cy="${capCY}" rx="${capRX}" ry="${capRY}"
+          fill="url(#${uid}-capGrad)" filter="url(#${uid}-turb)" opacity="0.9"/>
+
+        <!-- Cap top dome (slightly smaller, brighter) -->
+        <ellipse cx="${cx}" cy="${capCY - capRY*0.15}" rx="${capRX*0.75}" ry="${capRY*0.7}"
+          fill="url(#${uid}-capGrad)" filter="url(#${uid}-turb)" opacity="0.7"/>
+
+        <!-- Inner fire glow -->
+        <ellipse cx="${cx}" cy="${capCY + capRY*0.1}" rx="${capRX*0.5}" ry="${capRY*0.5}"
+          fill="url(#${uid}-fireGrad)" filter="url(#${uid}-glow)"/>
+
+        <!-- Cap edge wisps (smaller ellipses around the rim) -->
+        ${this._generateWisps(cx, capCY, capRX, capRY, uid)}
+
+        <!-- Rising smoke column above cap -->
+        <ellipse cx="${cx}" cy="${capCY - capRY*0.8}" rx="${capRX*0.3}" ry="${capRY*0.5}"
+          fill="rgb(110,85,65)" opacity="0.3" filter="url(#${uid}-turb)"/>
+
+      </g>
+
+      <!-- Animated inner pulse -->
+      <ellipse cx="${cx}" cy="${capCY}" rx="${capRX*0.35}" ry="${capRY*0.35}"
+        fill="rgba(255,180,80,0.15)">
+        <animate attributeName="rx" values="${capRX*0.3};${capRX*0.4};${capRX*0.3}" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="ry" values="${capRY*0.3};${capRY*0.4};${capRY*0.3}" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.15;0.25;0.15" dur="3s" repeatCount="indefinite"/>
+      </ellipse>
+
+    </svg>`;
+  },
+
+  _generateWisps(cx, cy, rx, ry, uid) {
+    let wisps = '';
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const wx = cx + Math.cos(angle) * rx * (0.85 + Math.random() * 0.2);
+      const wy = cy + Math.sin(angle) * ry * (0.7 + Math.random() * 0.3);
+      const wr = 15 + Math.random() * 25;
+      wisps += `<circle cx="${wx.toFixed(1)}" cy="${wy.toFixed(1)}" r="${wr.toFixed(1)}"
+        fill="rgb(${120+Math.floor(Math.random()*40)},${80+Math.floor(Math.random()*30)},${50+Math.floor(Math.random()*20)})"
+        opacity="${(0.3 + Math.random()*0.3).toFixed(2)}" filter="url(#${uid}-turb2)"/>`;
+    }
+    return wisps;
   },
 
   hide() {
     this.active = false;
-    if (this.animId) cancelAnimationFrame(this.animId);
-    if (this.container) this.container.style.display = 'none';
-    this.cleanup();
+    const map = NM._map;
+    if (this.overlay && map) {
+      map.removeLayer(this.overlay);
+      this.overlay = null;
+    }
+    this.currentDet = null;
   },
 
-  cleanup() {
-    if (this.cloud) {
-      this.cloud.children.forEach(c => {
-        if (c.geometry) c.geometry.dispose();
-        if (c.material) c.material.dispose();
-      });
-      this.scene.remove(this.cloud);
-      this.cloud = null;
-    }
-  },
+  cleanup() { this.hide(); },
+
+  onMapMove() { /* SVG overlay auto-tracks with Leaflet, no manual reposition needed */ },
 
   toggle(det) {
     if (this.active) this.hide();

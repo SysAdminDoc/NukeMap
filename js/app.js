@@ -742,7 +742,7 @@ function copyShareLink() { $('share-input').select(); navigator.clipboard?.write
 // ---- INIT ----
 function init() {
   NM.Sound.init();
-  if (typeof THREE !== 'undefined') NM.Mushroom3D.init();
+  NM.Mushroom3D.init();
   initMap();
   initControls();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
