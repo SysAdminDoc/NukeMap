@@ -1,6 +1,14 @@
 // NukeMap - Search Engine (cities + 41,958 ZIP codes + 29,976 ZIPDB cities + military targets)
 window.NM = window.NM || {};
 
+// Common city aliases/abbreviations
+NM._ALIASES = {
+  'nyc':'New York','ny':'New York','la':'Los Angeles','sf':'San Francisco',
+  'dc':'Washington','philly':'Philadelphia','vegas':'Las Vegas',
+  'chi':'Chicago','atl':'Atlanta','det':'Detroit','nola':'New Orleans',
+  'slc':'Salt Lake City','kc':'Kansas City','okc':'Oklahoma City',
+};
+
 // Build city index from ZIPDB on first search (lazy init)
 NM._zipCityIndex = null;
 NM._buildZipCityIndex = function() {
@@ -20,6 +28,10 @@ NM._buildZipCityIndex = function() {
 
 NM.searchLocations = function(q) {
   q = q.trim(); if (!q) return [];
+
+  // Alias expansion
+  const alias = NM._ALIASES[q.toLowerCase()];
+  if (alias) q = alias;
 
   // Exact coordinates
   const cm = q.match(/^(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)$/);
@@ -107,9 +119,11 @@ NM.searchLocations = function(q) {
   for (const t of allTargets) {
     const n = t.name.toLowerCase(), catL = (t.cat || '').toLowerCase(), typeL = (t.type || '').toLowerCase();
     let sc = 0;
+    const searchable = n + ' ' + catL + ' ' + typeL + ' ' + (typeLabels[t.type]||'').toLowerCase();
     if (n === ql) sc = 95; else if (n.startsWith(ql)) sc = 75; else if (n.includes(ql)) sc = 55;
-    else if (typeL.includes(ql)) sc = 50; else if (catL.includes(ql)) sc = 40;
-    else if (qp.length >= 1 && qp.every(p => (n + ' ' + catL + ' ' + typeL).includes(p))) sc = 45;
+    else if (typeL.includes(ql) || (typeLabels[t.type]||'').toLowerCase().includes(ql)) sc = 50;
+    else if (catL.includes(ql)) sc = 40;
+    else if (qp.length >= 1 && qp.every(p => searchable.includes(p))) sc = 45;
     if (sc > 0 && !r.find(x => Math.abs(x.lat - t.lat) < 0.01 && Math.abs(x.lng - t.lng) < 0.01)) {
       r.push({name: t.name, detail: `${typeLabels[t.type] || t.type} (${t.side})`, lat: t.lat, lng: t.lng, pop: 0, score: sc, isTarget: true});
     }
