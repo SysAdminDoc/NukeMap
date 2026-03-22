@@ -184,6 +184,30 @@ function triggerDetonation(lat, lng) {
   if (wInfo) { $('weaponinfo-section').style.display = ''; $('weaponinfo-content').innerHTML = wInfo; }
   else $('weaponinfo-section').style.display = 'none';
 
+  // Seismic equivalent
+  $('seismic-section').style.display = '';
+  $('seismic-content').innerHTML = NM.Seismic.generateHTML(Y, effects.isSurface);
+
+  // Size comparisons
+  $('sizecompare-section').style.display = '';
+  $('sizecompare-content').innerHTML = NM.SizeCompare.generate(effects);
+
+  // Escape time
+  $('escape-section').style.display = '';
+  $('escape-content').innerHTML = NM.EscapeTime.generate(effects);
+
+  // Casualty counter animation
+  NM.CasualtyCounter.animate(cas.deaths, cas.injuries);
+
+  // Shockwave ring
+  if ($('shockwave-check')?.checked) NM.ShockwaveRing.draw(map, lat, lng, effects);
+
+  // Fallout contours
+  if ($('contours-check')?.checked && effects.fallout) NM.FalloutContours.draw(map, lat, lng, effects.fallout, windAngle);
+
+  // Store last det ref for GPS/Geiger
+  NM._lastDet = det;
+
   // Draggable GZ
   if ($('draggable-check').checked) {
     NM.DraggableGZ.enable(map, det, (newLat, newLng) => {
@@ -444,8 +468,30 @@ function initControls() {
     } else NM.DraggableGZ.disable(map);
   });
 
-  // Export PNG
+  // Export PNG + KML
   $('export-png').addEventListener('click', () => NM.ExportPNG.capture());
+  $('export-kml').addEventListener('click', () => { if (currentDets.length) NM.KMLExport.download(currentDets); });
+
+  // GPS check
+  $('gps-check').addEventListener('click', () => NM.GPSSafe.check(map));
+
+  // Geiger counter
+  $('geiger-check').addEventListener('change', () => {
+    if ($('geiger-check').checked) NM.Geiger.start(map);
+    else NM.Geiger.stop(map);
+  });
+
+  // Shockwave (on by default, handled in triggerDetonation)
+
+  // Fallout contours
+  $('contours-check').addEventListener('change', () => {
+    if ($('contours-check').checked && NM._lastDet?.effects.fallout) {
+      NM.FalloutContours.draw(map, NM._lastDet.lat, NM._lastDet.lng, NM._lastDet.effects.fallout, windAngle);
+    } else NM.FalloutContours.clear(map);
+  });
+
+  // Test database
+  $('testdb-check').addEventListener('change', () => NM.TestDB.toggle(map));
 
   // Rotating facts banner
   let factIdx = Math.floor(Math.random() * NM.Facts.length);
@@ -692,6 +738,10 @@ function clearAll() {
   NM.FalloutParticles.stop(map);
   NM.DraggableGZ.disable(map);
   NM.DeliveryArc.layer && map.removeLayer(NM.DeliveryArc.layer);
+  NM.ShockwaveRing.clear(map);
+  NM.FalloutContours.clear(map);
+  NM.Geiger.stop(map);
+  NM._lastDet = null;
   updateDetsList(); updateStats(); resetPanels(); updateURL();
 }
 
@@ -711,6 +761,9 @@ function resetPanels() {
   $('emp-section').style.display = 'none';
   $('survival-section').style.display = 'none';
   $('weaponinfo-section').style.display = 'none';
+  $('seismic-section').style.display = 'none';
+  $('sizecompare-section').style.display = 'none';
+  $('escape-section').style.display = 'none';
   $('legend-items').innerHTML = '<div style="color:var(--overlay0);font-size:12px;padding:10px 0">Detonate a weapon to see effects</div>';
   $('info-bar').classList.remove('active');
 }

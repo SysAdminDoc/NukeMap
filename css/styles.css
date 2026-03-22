@@ -394,6 +394,43 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .export-btn{padding:7px 14px;border-radius:6px;background:var(--blue);border:none;color:var(--crust);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;width:100%}
 .export-btn:hover{opacity:0.85;transform:translateY(-1px)}
 
+/* Size comparisons */
+.sc-list{display:flex;flex-direction:column;gap:4px}
+.sc-item{padding:6px 8px;background:var(--surface0);border-radius:6px;border:1px solid var(--surface1);font-size:10px}
+.sc-zone{font-weight:700;margin-bottom:1px}
+.sc-comp{color:var(--subtext0)}
+
+/* Seismic */
+.seismic-panel{text-align:center;padding:10px;background:var(--surface0);border-radius:var(--radius-sm);border:1px solid var(--surface1)}
+.seis-mag{font-size:36px;font-weight:900;color:var(--peach);font-variant-numeric:tabular-nums;line-height:1}
+.seis-label{font-size:9px;color:var(--overlay0);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.seis-comp{font-size:11px;color:var(--text);font-weight:500}
+.seis-felt{font-size:10px;color:var(--overlay1);margin-top:4px}
+
+/* Escape time */
+.escape-table{background:var(--surface0);border-radius:var(--radius-sm);border:1px solid var(--surface1);overflow:hidden}
+.esc-row{display:flex;padding:4px 8px;font-size:10px;border-bottom:1px solid rgba(69,71,90,0.2)}
+.esc-row:last-child{border-bottom:none}
+.esc-head{font-weight:700;color:var(--overlay0);font-size:9px;text-transform:uppercase;background:var(--mantle)}
+.esc-row span{flex:1;text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
+.esc-mode{text-align:left!important;color:var(--subtext0)}
+.esc-too-slow{color:var(--red);text-decoration:line-through;opacity:0.5}
+.esc-note{font-size:9px;color:var(--red);margin-top:4px;font-style:italic}
+
+/* GPS Safe */
+.gps-report{text-align:center;padding:8px}
+.gps-status{font-size:20px;font-weight:900;letter-spacing:2px}
+.gps-dist{font-size:12px;color:var(--peach);font-weight:600;margin:4px 0}
+.gps-advice{font-size:11px;color:var(--subtext0);line-height:1.5;margin:6px 0}
+.gps-coords{font-size:9px;color:var(--overlay0);font-family:monospace}
+
+/* Fallout contour labels */
+.fallout-contour-label{background:none!important;border:none!important}
+.fallout-contour-label span{font-size:8px;font-weight:700;background:rgba(17,17,27,0.8);padding:1px 4px;border-radius:3px}
+
+/* Test tooltip */
+.test-tooltip{background:var(--surface0)!important;color:var(--text)!important;border:1px solid var(--surface1)!important;border-radius:6px!important;font-size:11px!important;box-shadow:var(--shadow-lg)!important;padding:6px 10px!important}
+
 /* Responsive */
 @media(max-width:768px){
   :root{--panel-w:100vw}

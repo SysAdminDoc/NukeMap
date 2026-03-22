@@ -4,7 +4,7 @@ const PRECACHE = [
   './', './index.html', './css/styles.css',
   './js/data.js', './js/physics.js', './js/search.js', './js/effects.js',
   './js/animation.js', './js/sound.js', './js/mushroom3d.js', './js/mirv.js',
-  './js/shelter.js', './js/compare.js', './js/heatmap.js', './js/extras.js', './js/advanced.js', './js/premium.js', './js/app.js'
+  './js/shelter.js', './js/compare.js', './js/heatmap.js', './js/extras.js', './js/advanced.js', './js/premium.js', './js/immersive.js', './js/app.js'
 ];
 
 self.addEventListener('install', e => {
