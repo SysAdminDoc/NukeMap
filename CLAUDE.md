@@ -1,18 +1,18 @@
-# NukeMap v3.0.0
+# NukeMap v3.1.0
 
 ## Overview
-Nuclear weapon effects simulator with 15 JS modules, animated blast waves, SVG mushroom cloud, MIRV simulation, sound effects, attack scenarios, missile flight calculator, nuclear winter estimates, shelter analysis, weapon comparison, population heatmap, immersive features (Geiger counter, seismic equivalent, escape time, GPS safety, shockwave ring, fallout contours, KML export, nuclear test database), and comprehensive search.
+Nuclear weapon effects simulator with 16 JS modules (~5000 lines), animated blast waves, SVG mushroom cloud, MIRV simulation, full WW3 simulation engine (418 verified targets, 708 warheads, 7 scenarios), sound effects, attack scenarios, missile flight calculator, nuclear winter estimates, shelter analysis, weapon comparison, population heatmap, and comprehensive immersive features.
 
 ## Tech Stack
-- HTML/CSS/JS (15 JS modules, ~4100 lines total)
+- HTML/CSS/JS (16 JS modules, ~5000+ lines total, ww3.js alone is 1070 lines)
 - Leaflet.js (maps), Web Audio API (sounds)
-- Service worker for offline, `build.py` for bundling
+- Service worker for offline, `build.py` for bundling, `build_targets.py` for target DB
 - Catppuccin Mocha dark theme
 
 ## File Structure
 ```
-index.html            App shell (~370 lines)
-css/styles.css        All styling (~440 lines)
+index.html            App shell (~385 lines)
+css/styles.css        All styling (~500 lines)
 js/
   data.js             Cities (250+), weapons (32), MIRV/shelter/world data
   physics.js          Glasstone & Dolan calcs + formatting
@@ -20,7 +20,7 @@ js/
   effects.js          Map rings, fallout, markers, tooltips
   animation.js        Blast wave expansion, fireball glow, camera shake
   sound.js            Web Audio API procedural explosion
-  mushroom3d.js       SVG mushroom cloud overlay (replaced Three.js)
+  mushroom3d.js       SVG mushroom cloud overlay
   mirv.js             MIRV patterns + staggered detonation
   shelter.js          Shelter survival analysis
   compare.js          Weapon comparison mode
@@ -29,71 +29,60 @@ js/
   advanced.js         Experience mode, attack scenarios, measurement tool, missile flight, yield chart, nuclear winter, facts
   premium.js          Altitude profile, zone casualties, EMP details, destruction stats, weapon specs, survival calc, draggable GZ, export PNG, delivery arc
   immersive.js        Geiger counter, casualty counter anim, size comparisons, seismic equivalent, escape time, GPS safety, shockwave ring, fallout contours, KML export, nuclear test DB
-  app.js              Main controller (~770 lines)
+  ww3.js              WW3 simulation engine (1070 lines) - 418 targets, 7 scenarios, missile arcs, phased escalation
+  app.js              Main controller (~810 lines)
 sw.js                 Service worker
 build.py              Offline bundler
+build_targets.py      Target DB compiler (JSON -> JS arrays)
+data/
+  us_targets.json     175 US targets (verified from FAS/BAS/NNSA)
+  russia_targets.json 103 Russian targets (verified from FAS/BAS/russianforces.org)
+  targets.json        74 NATO + 66 Chinese targets (verified from FAS/BAS/NTI)
+  compiled_targets.js Auto-generated JS arrays from above
 ```
 
-## All Features
-### Simulation
-- 10 effect rings (fireball, crater, radiation, 4 blast, 2 thermal, EMP)
-- 32 weapon presets grouped by country
-- Airburst/surface/custom burst + fission fraction
-- Fallout with wind direction/speed
-- Casualty estimation (zone-based population density model)
+## WW3 Simulation Engine
+### Target Database (418 verified targets)
+- **US (175)**: 7 ICBM bases/MAFs, 5 bomber bases, 2 SSBN bases, 13 C2, 11 nuclear facilities, 20 military bases, 17 infrastructure, 101 metro areas 500K+
+- **Russia (101)**: 12 ICBM silo regiments, 20 mobile ICBM garrisons, 3 sub bases, 2 bomber bases, 6 C2, 10 nuclear cities, 8 military, 38 cities 500K+
+- **NATO Europe (74)**: 7 nuclear sharing bases, 7 NATO HQs, 5 UK nuclear, 8 French nuclear, 17 NATO bases, 30 capitals + cities
+- **China (66)**: 8 ICBM silo fields, 5 mobile ICBM, 3 sub bases, 2 bomber, 8 nuclear facilities, 5 C2, 41 cities 2M+
 
-### Animations & Sound
-- Animated blast wave expansion (ease-out cubic, per-ring timing)
-- Fireball glow (white->orange->red color shift)
-- Camera shake (yield-proportional)
-- Procedural explosion sound (crack + boom + sub-bass + echo)
+### 7 Scenarios
+1. US vs Russia (Full Exchange) - ~495 warheads
+2. Russia vs NATO + UK/FR Retaliation - NATO attacked, UK Trident + French M51 fire back
+3. US vs China - bilateral exchange
+4. Counterforce Only (US-Russia) - military only, no cities
+5. Global Thermonuclear War - all 708 warheads, all sides
+6. Russian First Strike on US - surprise attack
+7. US First Strike on Russia - surprise attack
 
-### 3D
-- Three.js mushroom cloud (particle cap, stem, debris, inner glow, animated growth)
+### Features
+- Animated great-circle missile arcs with altitude bulge and antimeridian fix
+- Side-colored arcs (blue=US, red=Russia, yellow=China, green=UK, purple=France)
+- Launch site flash animations
+- Air raid siren at start (procedural Web Audio)
+- Phase transition rumble sounds
+- Rocket launch whoosh + explosion boom (throttled)
+- Screen flash + camera shake on impact
+- Real effect rings for city targets, fireball animation for all
+- Pulsing GZ markers (cities pulse, military static)
+- Nuclear winter darkening overlay (progressive)
+- Floating map HUD (casualties, warheads, megatonnage)
+- Map legend (arc colors + target types)
+- Speed control (1x / 2x / 5x / 10x)
+- End-of-simulation summary with long-term death estimates
+- Megatonnage tracking
 
-### Advanced Tools (Tools tab)
-- MIRV simulation (8 presets, 4 patterns: circle/triangle/grid/cross)
-- Weapon comparison (side-by-side table + overlaid rings)
-- "What Would I Experience?" (click mode: survival report at any distance)
-- 6 attack scenario presets (auto-deploy multi-warhead strikes)
-- Measurement tool (ruler between points)
-- Missile flight time calculator (ICBM/SLBM/IRBM/SRBM from 3 countries)
-- Yield comparison bar chart (logarithmic)
-- Nuclear winter estimates (Toon et al. soot model)
-- Radiation decay calculator (7:10 rule)
-- Custom overpressure table (12 psi levels)
-
-### Map Overlays (toggleable)
-- Ring labels on map
-- Distance reference rings
-- Distance from GZ indicator
-- Thermal flash gradient
-- Animated fallout particles
-- Population heatmap
-- Map layer switcher (dark/satellite/topo/OSM)
-- Shockwave ring animation (expanding + fading)
-- Fallout dose rate contour lines (5 levels)
-- Historic nuclear test sites (25 tests, color-coded by country)
-
-### Immersive Features
-- Geiger counter audio (hover near GZ, click rate scales with radiation intensity)
-- Casualty counter animation (ease-out quartic count-up)
-- City size comparisons (zone area vs landmarks: Vatican City, Manhattan, etc.)
-- Seismic equivalent (Richter magnitude + earthquake comparison)
-- Escape time calculator (walk/run/bike/car vs zone distances)
-- GPS "Am I Safe?" (browser geolocation check against last detonation)
-- KML export (effect rings for Google Earth)
-- Nuclear test database (25 historic tests plotted on map)
-
-### UI
-- 4 tabs: Weapon / Effects / Results / Tools
-- Screenshot mode (hide all UI)
-- 20 rotating educational facts banner
-- Shareable URLs
-- 12 quick target pills
-- Responsive design
+## Gotchas
+- SVG mushroom cloud bounds: ground level at 93% from SVG top, anchor to detonation lat
+- MSVC raw string 16380 char limit if ever porting to C++
+- Antimeridian: great circle paths must unwrap longitude to prevent straight lines
+- Performance: only city targets get full effect rings (blast/thermal/EMP); military gets fireball only
+- Sound throttling: explosion max 1/350ms, rocket max 1/200ms, flash max 1/600ms, shake max 1/500ms
 
 ## Version History
+- v3.1.0 - WW3 simulation: 418 targets, 7 scenarios, missile arcs, HUD, nuclear winter, speed control
 - v3.0.0e - Immersive features: Geiger counter, seismic, escape time, GPS safety, shockwave ring, fallout contours, KML export, nuclear test DB
 - v3.0.0d - Realistic SVG mushroom cloud with proper anatomy, per-detonation clouds
 - v3.0.0c - Attack scenarios, experience mode, measurement, missile flight, yield chart, nuclear winter, facts
