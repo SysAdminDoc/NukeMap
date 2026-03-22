@@ -82,7 +82,7 @@ data/
 - Sound throttling: explosion max 1/350ms, rocket max 1/200ms, flash max 1/600ms, shake max 1/500ms
 
 ## Version History
-- v3.2.0 - OG meta/favicon, loading overlay, undo button, total yield stat, right-click detonate, auto Effects tab, mobile responsive (480/768px), Hiroshima equivalents, detonation toasts, scale bar, fullscreen, coords copy, flash blindness ring (day/night), firestorm zone, nearby strategic targets panel, cumulative dose calculator, night mode toggle, enhanced timeline
+- v3.2.0 - OG meta/favicon, loading overlay, undo button, total yield stat, right-click detonate, auto Effects tab, mobile responsive (480/768px), Hiroshima equivalents, detonation toasts, scale bar, fullscreen, coords copy, flash blindness ring (day/night), firestorm zone, nearby strategic targets, dose calculator, night mode, 12 map styles + floating switcher, quick weapon bar, save/load scenarios, yield in dropdown, population per ring
 - v3.1.0 - WW3 simulation: 418 targets, 7 scenarios, missile arcs, HUD, nuclear winter, speed control
 - v3.0.0e - Immersive features: Geiger counter, seismic, escape time, GPS safety, shockwave ring, fallout contours, KML export, nuclear test DB
 - v3.0.0d - Realistic SVG mushroom cloud with proper anatomy, per-detonation clouds
