@@ -226,7 +226,10 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .ib-div{width:1px;height:24px;background:var(--surface1)}
 
 /* Coords */
-#coords{position:absolute;bottom:14px;right:14px;z-index:999;padding:3px 8px;border-radius:6px;background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);font-size:10px;color:var(--overlay1);font-variant-numeric:tabular-nums;font-family:'Segoe UI',monospace;user-select:none}
+#coords{position:absolute;bottom:14px;right:14px;z-index:999;padding:3px 8px;border-radius:6px;background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);font-size:10px;color:var(--overlay1);font-variant-numeric:tabular-nums;font-family:'Segoe UI',monospace;user-select:none;cursor:pointer;transition:all .2s}
+#coords:hover{color:var(--text);border-color:var(--blue)}
+#coords.copied{color:var(--green)!important;border-color:var(--green)!important}
+#coords.copied::after{content:'Copied!';position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--green);font-weight:700;white-space:nowrap}
 
 /* Badge */
 #offline-badge{position:absolute;top:12px;right:12px;z-index:1000;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);color:var(--overlay1);display:none}
@@ -358,7 +361,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .scenario-chip .sc-desc{font-size:9px;color:var(--overlay0);margin-top:1px}
 
 /* Fact banner */
-#fact-banner{position:absolute;top:50px;right:14px;z-index:998;max-width:350px;padding:6px 14px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);font-size:10px;color:var(--subtext0);display:none;text-align:left;line-height:1.4;box-shadow:var(--shadow-lg);cursor:pointer}
+#fact-banner{position:absolute;top:50px;left:var(--panel-w);margin-left:14px;z-index:998;max-width:380px;padding:6px 14px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);font-size:10px;color:var(--subtext0);display:none;text-align:left;line-height:1.4;box-shadow:var(--shadow-lg);cursor:pointer}
 #fact-banner.show{display:block;animation:factFade 0.5s ease-out}
 @keyframes factFade{0%{opacity:0;transform:translateX(10px)}100%{opacity:1;transform:translateX(0)}}
 .fact-label{font-size:9px;font-weight:700;color:var(--overlay0);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
@@ -526,10 +529,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .ms-btn.active{background:var(--surface1);color:var(--text);border-color:var(--blue)}
 
 /* Coords click-to-copy */
-#coords{cursor:pointer;transition:all .2s;user-select:none}
-#coords:hover{color:var(--text);border-color:var(--blue)}
-#coords.copied{color:var(--green)!important;border-color:var(--green)!important}
-#coords.copied::after{content:'Copied!';position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--green);font-weight:700;white-space:nowrap}
+/* coords click-to-copy interactions merged into main #coords above */
 
 /* Nearby strategic targets */
 .nearby-list{display:flex;flex-direction:column;gap:4px}
@@ -610,7 +610,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .conv-desc{color:var(--overlay0);font-size:9px;margin-left:auto}
 
 /* Blast wave arrival indicator */
-.blast-arrival-indicator{position:fixed;top:50px;left:var(--panel-w);margin-left:14px;z-index:1001;padding:5px 14px;border-radius:20px;background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--glass-border);font-size:11px;font-weight:700;display:none;font-variant-numeric:tabular-nums;box-shadow:var(--shadow-lg);white-space:nowrap}
+.blast-arrival-indicator{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:1001;padding:5px 14px;border-radius:20px;background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--glass-border);font-size:11px;font-weight:700;display:none;font-variant-numeric:tabular-nums;box-shadow:var(--shadow-lg);white-space:nowrap}
 .ba-time{color:var(--peach);font-size:13px}
 .ba-psi{color:var(--overlay1);margin-left:6px}
 .ba-sev{font-weight:800;font-size:10px;margin-left:6px;letter-spacing:0.5px}
@@ -699,7 +699,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
   #coords{display:none}
   #info-bar{bottom:calc(50vh + 6px);left:50%;max-width:95vw;font-size:11px;padding:5px 10px}
   #info-bar .ib-val{font-size:12px}
-  #fact-banner{top:auto;bottom:calc(50vh + 44px);right:8px;max-width:75vw;font-size:9px;padding:4px 10px}
+  #fact-banner{top:8px;left:8px;margin-left:0;max-width:75vw;font-size:9px;padding:4px 10px}
   .panel-header{padding:10px 14px 8px}
   .brand-icon{width:28px;height:28px;border-radius:8px}
   .brand-text{font-size:17px}

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nukemap-v3.2.1';
+const CACHE_NAME = 'nukemap-v3.3.0';
 const TILE_CACHE = 'nukemap-tiles-v3';
 const PRECACHE = [
   './', './index.html', './css/styles.css', './manifest.json',
