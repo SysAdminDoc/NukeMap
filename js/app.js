@@ -173,6 +173,7 @@ function triggerDetonation(lat, lng) {
   if ($('thermal-check').checked) NM.ThermalOverlay.draw(map, det.lat, det.lng, effects);
   if ($('falloutanim-check').checked && effects.fallout) NM.FalloutParticles.start(map, det.lat, det.lng, effects.fallout, windAngle);
   if ($('radoverlay-check').checked) NM.RadiationOverlay.draw(map, det.lat, det.lng, effects);
+  if ($('dmgheatmap-check').checked) NM.DamageHeatmap.draw(map, currentDets);
 
   // Show radiation decay & psi sections in Tools tab
   if (effects.isSurface) $('raddecay-section').style.display = '';
@@ -212,6 +213,14 @@ function triggerDetonation(lat, lng) {
 
   // Nearby strategic targets
   updateNearbyTargets(det);
+
+  // Ground-level experience report
+  $('ground-section').style.display = '';
+  $('ground-content').innerHTML = NM.GroundReport.generate(effects, Y);
+
+  // Cloud height comparison
+  $('cloudcompare-section').style.display = '';
+  $('cloudcompare-content').innerHTML = NM.CloudCompare.generate(effects);
 
   // Emergency guide
   $('guide-section').style.display = '';
@@ -595,6 +604,12 @@ function initControls() {
       const det = currentDets[currentDets.length - 1];
       NM.RadiationOverlay.draw(map, det.lat, det.lng, det.effects);
     } else NM.RadiationOverlay.clear(map);
+  });
+
+  // Damage heatmap
+  $('dmgheatmap-check').addEventListener('change', () => {
+    if ($('dmgheatmap-check').checked && currentDets.length) NM.DamageHeatmap.draw(map, currentDets);
+    else NM.DamageHeatmap.clear(map);
   });
 
   // Test timeline
@@ -1011,6 +1026,7 @@ function clearAll() {
   NM.FalloutTimelapse.clear(map);
   NM.BlastArrival.stop(map);
   NM.RadiationOverlay.clear(map);
+  NM.DamageHeatmap.clear(map);
   NM.TestTimeline.stop(map);
   $('fallout-timelapse').style.display = 'none';
   NM._lastDet = null;
@@ -1039,6 +1055,8 @@ function resetPanels() {
   $('sizecompare-section').style.display = 'none';
   $('escape-section').style.display = 'none';
   $('nearby-section').style.display = 'none';
+  $('ground-section').style.display = 'none';
+  $('cloudcompare-section').style.display = 'none';
   $('guide-section').style.display = 'none';
   $('dosecalc-section').style.display = 'none';
   $('legend-items').innerHTML = '<div style="color:var(--overlay0);font-size:12px;padding:10px 0">Detonate a weapon to see effects</div>';

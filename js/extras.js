@@ -421,6 +421,68 @@ NM.FalloutParticles = {
   }
 };
 
+// ---- MULTI-DETONATION DAMAGE HEATMAP ----
+NM.DamageHeatmap = {
+  layer: null,
+
+  draw(map, dets) {
+    this.clear(map);
+    if (!dets.length) return;
+
+    const DmgLayer = L.Layer.extend({
+      onAdd(map) {
+        this._map = map;
+        this._canvas = L.DomUtil.create('canvas', 'dmg-heatmap');
+        this._canvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:397;opacity:0.4;mix-blend-mode:screen';
+        map.getPanes().overlayPane.appendChild(this._canvas);
+        map.on('moveend zoomend resize', this._update, this);
+        this._update();
+      },
+      onRemove(map) {
+        L.DomUtil.remove(this._canvas);
+        map.off('moveend zoomend resize', this._update, this);
+      },
+      _update() {
+        const map = this._map, size = map.getSize();
+        this._canvas.width = size.x; this._canvas.height = size.y;
+        const ctx = this._canvas.getContext('2d');
+        ctx.clearRect(0, 0, size.x, size.y);
+
+        for (const d of dets) {
+          const e = d.effects;
+          const maxR = Math.max(e.psi1, e.thermal1, e.emp) || 1;
+          const center = map.latLngToContainerPoint([d.lat, d.lng]);
+          const edgePt = map.latLngToContainerPoint([d.lat + maxR / 111.32, d.lng]);
+          const pixelR = Math.abs(center.y - edgePt.y);
+          if (pixelR < 3) continue;
+
+          const grad = ctx.createRadialGradient(center.x, center.y, 0, center.x, center.y, pixelR);
+          const intensity = Math.min(1, 0.4 + Math.log10(Math.max(d.yieldKt, 0.1)) * 0.12);
+          grad.addColorStop(0, `rgba(243, 139, 168, ${intensity})`);
+          grad.addColorStop(0.15, `rgba(250, 179, 135, ${intensity * 0.8})`);
+          grad.addColorStop(0.35, `rgba(249, 226, 175, ${intensity * 0.5})`);
+          grad.addColorStop(0.6, `rgba(203, 166, 247, ${intensity * 0.25})`);
+          grad.addColorStop(1, 'rgba(203, 166, 247, 0)');
+
+          ctx.beginPath();
+          ctx.arc(center.x, center.y, pixelR, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+        }
+
+        const topLeft = map.containerPointToLayerPoint([0, 0]);
+        L.DomUtil.setPosition(this._canvas, topLeft);
+      }
+    });
+    this.layer = new DmgLayer();
+    this.layer.addTo(map);
+  },
+
+  clear(map) {
+    if (this.layer) { map.removeLayer(this.layer); this.layer = null; }
+  }
+};
+
 // ---- RADIATION ZONE OVERLAY (canvas gradient) ----
 NM.RadiationOverlay = {
   layer: null,

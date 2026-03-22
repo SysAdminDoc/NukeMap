@@ -492,6 +492,121 @@ NM.TestDB = {
   }
 };
 
+// ---- GROUND-LEVEL EXPERIENCE REPORT ----
+NM.GroundReport = {
+  generate(effects, yieldKt) {
+    const distances = [
+      {km: effects.fireball, label: 'Fireball Edge'},
+      {km: effects.psi20, label: '20 psi Zone'},
+      {km: effects.psi5, label: '5 psi Zone'},
+      {km: effects.thermal3, label: '3rd Degree Burn Zone'},
+      {km: effects.psi1, label: '1 psi Zone'},
+      {km: effects.thermal1, label: '1st Degree Burn Zone'},
+    ].filter(d => d.km > 0.01);
+
+    const reports = {
+      'Fireball Edge': {
+        see: 'You see nothing. The air itself becomes plasma at millions of degrees. Everything is vaporized instantly \u2014 buildings, vehicles, people reduced to their component atoms.',
+        hear: 'The sound has not yet arrived. You would not exist long enough to hear it.',
+        feel: 'Instantaneous vaporization. No pain \u2014 nerve conduction speed is far too slow.',
+        survive: 'Impossible. No material on Earth can survive these temperatures.'
+      },
+      '20 psi Zone': {
+        see: 'An impossibly bright flash turns everything white. Half a second later, a wall of debris and dust moving at 500+ mph obliterates everything in sight. Concrete buildings explode outward.',
+        hear: 'A crack like reality splitting open, followed by a roar louder than any jet engine. Your eardrums rupture instantly.',
+        feel: 'A crushing force hits from all directions. 500 mph winds tear clothing from your body. Internal organs rupture from overpressure.',
+        survive: 'Effectively impossible. Even deep basements are crushed.'
+      },
+      '5 psi Zone': {
+        see: 'Blinding white flash, then everything catches fire simultaneously. Windows explode inward as razor shrapnel. Buildings collapse in slow motion. A wall of fire and debris rushes toward you.',
+        hear: 'Thunder that never stops. Cracking, groaning, smashing as every structure fails.',
+        feel: '160 mph winds throw you across the room. Glass shards embedded in exposed skin. Intense heat on exposed surfaces.',
+        survive: 'About 50% fatality rate. Underground concrete shelters offer the best chance.'
+      },
+      '3rd Degree Burn Zone': {
+        see: 'The flash is brighter than looking directly at the sun. Everything combustible ignites \u2014 curtains, paper, clothing, dry leaves. Multiple fires start simultaneously.',
+        hear: 'A deep rolling thunder arrives seconds after the flash, lasting 10+ seconds.',
+        feel: 'Exposed skin chars instantly. Full-thickness burns. Clothing may ignite. Hair catches fire.',
+        survive: 'Being behind any solid wall or inside a building dramatically improves survival. Do NOT look at the flash.'
+      },
+      '1 psi Zone': {
+        see: 'A blinding flash on the horizon. Seconds later, every window in sight explodes inward simultaneously. Car alarms trigger. Power goes out. A mushroom cloud rises.',
+        hear: 'A sharp bang followed by sustained rumbling like distant thunder. Glass shattering everywhere.',
+        feel: 'A sudden blast of hot wind. Glass fragments hit you if you were near a window. The building sways.',
+        survive: 'High survival rate if away from windows. Interior rooms, below window level. The #1 cause of injury here is flying glass.'
+      },
+      '1st Degree Burn Zone': {
+        see: 'A flash bright enough to leave afterimages for minutes. You may be temporarily blinded. A mushroom cloud rises on the horizon.',
+        hear: 'A distant boom arrives 20+ seconds after the flash, like faraway thunder.',
+        feel: 'A brief pulse of heat on exposed skin, like opening an oven door. Sunburn-like reddening develops over minutes.',
+        survive: 'Very high survival rate. Take cover, do NOT look toward the blast. Monitor for fallout.'
+      },
+    };
+
+    let html = '<div class="ground-report">';
+    for (const d of distances) {
+      const r = reports[d.label];
+      if (!r) continue;
+      html += `<div class="gr-zone">
+        <div class="gr-header"><span class="gr-label">${d.label}</span><span class="gr-dist">${NM.fmtDist(d.km)} from GZ</span></div>
+        <div class="gr-row"><span class="gr-sense">See</span><span class="gr-desc">${r.see}</span></div>
+        <div class="gr-row"><span class="gr-sense">Hear</span><span class="gr-desc">${r.hear}</span></div>
+        <div class="gr-row"><span class="gr-sense">Feel</span><span class="gr-desc">${r.feel}</span></div>
+        <div class="gr-row gr-survive"><span class="gr-sense">Survive</span><span class="gr-desc">${r.survive}</span></div>
+      </div>`;
+    }
+    html += '</div>';
+    return html;
+  }
+};
+
+// ---- MUSHROOM CLOUD HEIGHT COMPARISON ----
+NM.CloudCompare = {
+  landmarks: [
+    {name: 'Empire State Building', km: 0.443},
+    {name: 'Burj Khalifa', km: 0.828},
+    {name: 'Commercial aircraft cruise', km: 10},
+    {name: 'Weather balloons', km: 30},
+    {name: 'Edge of space (Karman line)', km: 100},
+    {name: 'Low Earth orbit (ISS)', km: 408},
+  ],
+
+  generate(effects) {
+    const cloudH = effects.cloudTopH;
+    if (cloudH < 0.1) return '';
+
+    const maxH = Math.max(cloudH * 1.3, this.landmarks.find(l => l.km > cloudH)?.km || cloudH * 1.5);
+    const W = 260, H = 140;
+    const sy = (km) => H - 10 - (km / maxH) * (H - 20);
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" class="cloud-compare-svg">`;
+    svg += `<rect width="${W}" height="${H}" fill="var(--mantle)" rx="6"/>`;
+
+    // Landmarks
+    for (const lm of this.landmarks) {
+      if (lm.km > maxH) continue;
+      const y = sy(lm.km);
+      svg += `<line x1="30" y1="${y}" x2="${W-10}" y2="${y}" stroke="var(--surface1)" stroke-width="0.5" stroke-dasharray="3 4"/>`;
+      svg += `<text x="32" y="${y - 2}" fill="var(--overlay0)" font-size="6">${lm.name}</text>`;
+      svg += `<text x="${W-12}" y="${y - 2}" fill="var(--overlay0)" font-size="6" text-anchor="end">${lm.km >= 1 ? lm.km.toFixed(lm.km >= 10 ? 0 : 1) + ' km' : (lm.km * 1000).toFixed(0) + ' m'}</text>`;
+    }
+
+    // Cloud
+    const cloudY = sy(cloudH);
+    const capW = 30, capH = 12;
+    svg += `<rect x="${13}" y="${cloudY}" width="4" height="${sy(0) - cloudY}" fill="rgba(139,115,85,0.4)" rx="2"/>`;
+    svg += `<ellipse cx="15" cy="${cloudY}" rx="${capW/2}" ry="${capH/2}" fill="rgba(238,136,68,0.5)" stroke="#ee8844" stroke-width="1"/>`;
+    svg += `<text x="15" y="${cloudY - capH/2 - 3}" fill="var(--peach)" font-size="8" font-weight="700" text-anchor="middle">${cloudH.toFixed(1)} km</text>`;
+
+    // Ground
+    svg += `<line x1="5" y1="${sy(0)}" x2="${W-5}" y2="${sy(0)}" stroke="var(--surface2)" stroke-width="1"/>`;
+    svg += `<text x="8" y="${sy(0) + 9}" fill="var(--overlay0)" font-size="6">Ground</text>`;
+
+    svg += '</svg>';
+    return svg;
+  }
+};
+
 // ---- ANIMATED NUCLEAR TEST TIMELINE ----
 NM.TestTimeline = {
   layers: [], active: false, animId: null,

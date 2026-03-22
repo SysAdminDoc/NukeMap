@@ -227,6 +227,15 @@
           <div class="section-title">Nearby Strategic Targets</div>
           <div id="nearby-content"></div>
         </div>
+        <div class="section" id="ground-section" style="display:none">
+          <div class="section-title">Ground-Level Experience</div>
+          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">What you would see, hear, and feel at each distance from ground zero.</div>
+          <div id="ground-content"></div>
+        </div>
+        <div class="section" id="cloudcompare-section" style="display:none">
+          <div class="section-title">Mushroom Cloud Height</div>
+          <div id="cloudcompare-content"></div>
+        </div>
         <div class="section" id="guide-section" style="display:none">
           <div class="section-title">Emergency Action Guide</div>
           <div id="guide-content"></div>
@@ -422,6 +431,7 @@
           <label class="toggle-row"><input type="checkbox" id="draggable-check"/><span class="tg-slider"></span><span class="tg-label">Draggable ground zero</span></label>
           <label class="toggle-row"><input type="checkbox" id="blastwaveinfo-check"/><span class="tg-slider"></span><span class="tg-label">Blast wave arrival on hover</span></label>
           <label class="toggle-row"><input type="checkbox" id="radoverlay-check"/><span class="tg-slider"></span><span class="tg-label">Radiation intensity overlay</span></label>
+          <label class="toggle-row"><input type="checkbox" id="dmgheatmap-check"/><span class="tg-slider"></span><span class="tg-label">Aggregate damage heatmap</span></label>
         </div>
 
         <!-- Dose Calculator -->

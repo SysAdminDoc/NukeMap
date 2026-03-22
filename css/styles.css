@@ -629,6 +629,22 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .bldg-effects{margin:0;padding-left:16px;color:var(--subtext0);line-height:1.6}
 .bldg-effects li{margin-bottom:1px}
 
+/* Ground-level experience report */
+.ground-report{display:flex;flex-direction:column;gap:8px}
+.gr-zone{background:var(--surface0);border-radius:var(--radius-sm);border:1px solid var(--surface1);overflow:hidden}
+.gr-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--mantle);border-bottom:1px solid var(--surface1)}
+.gr-label{font-weight:700;color:var(--text);font-size:11px}
+.gr-dist{font-size:9px;color:var(--peach);font-weight:600;font-variant-numeric:tabular-nums}
+.gr-row{display:flex;gap:8px;padding:4px 10px;font-size:10px;border-bottom:1px solid rgba(69,71,90,0.15)}
+.gr-row:last-child{border-bottom:none}
+.gr-sense{min-width:42px;font-weight:700;color:var(--blue);font-size:9px;text-transform:uppercase;letter-spacing:0.5px;padding-top:1px}
+.gr-desc{color:var(--subtext0);line-height:1.5;flex:1}
+.gr-survive .gr-sense{color:var(--green)}
+.gr-survive .gr-desc{color:var(--subtext1);font-weight:500}
+
+/* Cloud height comparison SVG */
+.cloud-compare-svg{width:100%;height:auto;border:1px solid var(--surface1);border-radius:var(--radius-sm)}
+
 /* Test timeline year display */
 .test-timeline-year{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:1002;padding:8px 20px;border-radius:var(--radius);background:rgba(17,17,27,0.92);backdrop-filter:blur(16px);border:1px solid var(--glass-border);font-size:13px;font-weight:700;color:var(--text);box-shadow:var(--shadow-lg);white-space:nowrap;letter-spacing:0.5px}
 
