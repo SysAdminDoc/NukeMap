@@ -186,9 +186,9 @@ NM.WW3_TARGETS_CN = [
 // Launch origins (for missile arcs)
 NM.WW3_LAUNCHERS = {
   us_icbm: [{lat:47.506,lng:-111.183,name:'Malmstrom'},{lat:48.416,lng:-101.358,name:'Minot'},{lat:41.145,lng:-104.862,name:'Warren'}],
-  us_slbm: [{lat:58.0,lng:-30.0,name:'Atlantic SSBN'},{lat:35.0,lng:160.0,name:'Pacific SSBN'}],
+  us_slbm: [{lat:58.0,lng:-30.0,name:'Atlantic SSBN'},{lat:40.0,lng:-155.0,name:'Pacific SSBN'}],
   ru_icbm: [{lat:54.035,lng:36.013,name:'Kozelsk'},{lat:51.700,lng:45.537,name:'Tatishchevo'},{lat:51.049,lng:59.853,name:'Dombarovsky'},{lat:55.114,lng:89.634,name:'Uzhur'}],
-  ru_slbm: [{lat:72.0,lng:35.0,name:'Barents SSBN'},{lat:50.0,lng:155.0,name:'Pacific SSBN'}],
+  ru_slbm: [{lat:72.0,lng:35.0,name:'Barents SSBN'},{lat:55.0,lng:150.0,name:'Okhotsk SSBN'}],
   cn_icbm: [{lat:40.283,lng:97.033,name:'Yumen'},{lat:42.800,lng:93.500,name:'Hami'}],
 };
 
@@ -259,6 +259,7 @@ function gcInterpolate(lat1, lng1, lat2, lng2, steps) {
   ));
   if (d < 0.0001) return [[lat1, lng1], [lat2, lng2]];
   const pts = [];
+  let prevLng = null;
   for (let i = 0; i <= steps; i++) {
     const f = i / steps;
     const a = Math.sin((1 - f) * d) / Math.sin(d);
@@ -266,9 +267,43 @@ function gcInterpolate(lat1, lng1, lat2, lng2, steps) {
     const x = a * Math.cos(f1) * Math.cos(l1) + b * Math.cos(f2) * Math.cos(l2);
     const y = a * Math.cos(f1) * Math.sin(l1) + b * Math.cos(f2) * Math.sin(l2);
     const z = a * Math.sin(f1) + b * Math.sin(f2);
-    pts.push([toDeg(Math.atan2(z, Math.sqrt(x * x + y * y))), toDeg(Math.atan2(y, x))]);
+    let lng = toDeg(Math.atan2(y, x));
+    // Fix antimeridian wrapping: keep longitude continuous
+    if (prevLng !== null) {
+      while (lng - prevLng > 180) lng -= 360;
+      while (lng - prevLng < -180) lng += 360;
+    }
+    prevLng = lng;
+    pts.push([toDeg(Math.atan2(z, Math.sqrt(x * x + y * y))), lng]);
   }
   return pts;
+}
+
+// ---- PROCEDURAL ROCKET SOUND ----
+function playRocketSound(ctx) {
+  if (!ctx) return;
+  if (ctx.state === 'suspended') ctx.resume();
+  const now = ctx.currentTime;
+  // Whoosh: filtered rising noise
+  const dur = 0.6 + Math.random() * 0.3;
+  const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const t = i / ctx.sampleRate;
+    data[i] = (Math.random() * 2 - 1) * (0.3 + 0.7 * Math.min(1, t / 0.1)) * Math.exp(-t / (dur * 0.5));
+  }
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const flt = ctx.createBiquadFilter(); flt.type = 'bandpass';
+  flt.frequency.setValueAtTime(300, now);
+  flt.frequency.exponentialRampToValueAtTime(1200, now + dur * 0.4);
+  flt.frequency.exponentialRampToValueAtTime(400, now + dur);
+  flt.Q.value = 1.5;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.06, now);
+  gain.gain.linearRampToValueAtTime(0.12, now + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  src.connect(flt).connect(gain).connect(ctx.destination);
+  src.start(now);
 }
 
 function gcDistance(lat1, lng1, lat2, lng2) {
@@ -286,10 +321,13 @@ NM.WW3 = {
   markers: [],
   arcs: [],
   timers: [],
-  casualties: {deaths: 0, injuries: 0},
+  casualties: {deaths: 0, injuries: 0, warheadsLanded: 0},
   startTime: 0,
   statsInterval: null,
   _scenario: null,
+  _lastSoundTime: 0,   // throttle explosion sounds
+  _lastFlashTime: 0,    // throttle screen flashes
+  _lastShakeTime: 0,    // throttle camera shake
 
   start(map, scenarioId) {
     this.stop(map);
@@ -298,29 +336,32 @@ NM.WW3 = {
     this._scenario = scenario;
     this.active = true;
     this.paused = false;
-    this.casualties = {deaths: 0, injuries: 0};
+    this.casualties = {deaths: 0, injuries: 0, warheadsLanded: 0};
     this.startTime = performance.now();
+    this._lastSoundTime = 0;
+    this._lastFlashTime = 0;
+    this._lastShakeTime = 0;
 
     // Place all target markers first
     this._placeTargetMarkers(map, scenario);
 
-    // Zoom to fit
-    if (scenarioId === 'global' || scenarioId === 'us_ru_full') map.flyTo([35, 0], 3, {duration: 1.5});
-    else if (scenarioId === 'ru_nato') map.flyTo([52, 10], 4, {duration: 1.5});
-    else if (scenarioId === 'us_cn') map.flyTo([30, 140], 3, {duration: 1.5});
-    else if (scenarioId === 'counterforce_only') map.flyTo([50, -20], 3, {duration: 1.5});
+    // Set view ONCE - no flying, just snap to the right position and stay there
+    if (scenarioId === 'global' || scenarioId === 'us_ru_full') map.setView([40, 0], 3);
+    else if (scenarioId === 'ru_nato') map.setView([52, 10], 4);
+    else if (scenarioId === 'us_cn') map.setView([30, 100], 3);
+    else if (scenarioId === 'counterforce_only') map.setView([50, -20], 3);
 
     // Start phases
     for (const phase of scenario.phases) {
       const tid = setTimeout(() => {
         if (!this.active) return;
         this._executePhase(map, scenario, phase);
-      }, phase.delay + 2000); // +2s for zoom
+      }, phase.delay + 500);
       this.timers.push(tid);
     }
 
     // Live stats update
-    this.statsInterval = setInterval(() => this._updateStats(), 250);
+    this.statsInterval = setInterval(() => this._updateStats(), 200);
     this._updateStatus(scenario.phases[0].name);
   },
 
@@ -399,7 +440,7 @@ NM.WW3 = {
   _launchMissile(map, at, color) {
     const dist = gcDistance(at.launcher.lat, at.launcher.lng, at.tLat, at.tLng);
     const isSlbm = at.launcher.name.includes('SSBN') || at.launcher.name.includes('Atlantic') || at.launcher.name.includes('Pacific');
-    // Much slower: ICBM 10-14s, SLBM 7-10s so you can watch them fly
+    // ICBM 10-14s, SLBM 7-10s
     const flightMs = isSlbm
       ? 7000 + Math.min(dist / 2, 3000)
       : 10000 + Math.min(dist / 2, 4000);
@@ -414,43 +455,48 @@ NM.WW3 = {
       return [p[0] + alt, p[1]];
     });
 
-    // Glowing trail that persists behind the warhead
+    // Rocket launch sound (throttled: max 1 every 200ms)
+    const now = performance.now();
+    if (NM.Sound.enabled && NM.Sound.ctx && now - this._lastSoundTime > 200) {
+      this._lastSoundTime = now;
+      playRocketSound(NM.Sound.ctx);
+    }
+
+    // Glowing trail behind the warhead
     const trail = L.polyline([], {
       color, weight: 2, opacity: 0.7, className: 'ww3-arc'
     }).addTo(map);
     this.layers.push(trail);
 
-    // Bright warhead dot - bigger and glowing
-    const dot = L.circleMarker(pts[0], {
+    // Bright warhead dot
+    const dot = L.circleMarker(arcPts[0], {
       radius: 4, color: '#fff', fillColor: color, fillOpacity: 1, weight: 2, opacity: 1
     }).addTo(map);
     this.layers.push(dot);
 
     const start = performance.now();
-    const tick = (now) => {
+    const tick = (now2) => {
       if (!this.active) return;
-      const p = Math.min(1, (now - start) / flightMs);
-      // Ease-in-out for more realistic flight (accelerate, coast, descend)
+      const p = Math.min(1, (now2 - start) / flightMs);
+      // Ease-in-out for realistic flight
       const eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
       const idx = Math.floor(eased * steps);
       const pos = arcPts[Math.min(idx, steps)];
       dot.setLatLng(pos);
 
-      // Trail shows full path so far
+      // Trail shows path so far
       trail.setLatLngs(arcPts.slice(0, idx + 1));
-
-      // Fade trail as it lengthens
-      trail.setStyle({opacity: Math.max(0.2, 0.7 - p * 0.4), weight: Math.max(1, 2 - p)});
+      trail.setStyle({opacity: Math.max(0.15, 0.7 - p * 0.4), weight: Math.max(1, 2 - p)});
 
       if (p < 1) requestAnimationFrame(tick);
       else {
         // Impact
         map.removeLayer(dot);
-        // Fade out the trail over 3 seconds
+        // Fade trail
         const fadeStart = performance.now();
-        const fadeTick = (now2) => {
-          const fp = Math.min(1, (now2 - fadeStart) / 3000);
-          trail.setStyle({opacity: 0.3 * (1 - fp)});
+        const fadeTick = (now3) => {
+          const fp = Math.min(1, (now3 - fadeStart) / 3000);
+          trail.setStyle({opacity: 0.2 * (1 - fp)});
           if (fp < 1 && this.active) requestAnimationFrame(fadeTick);
           else { try { map.removeLayer(trail); } catch(e) {} }
         };
@@ -463,11 +509,13 @@ NM.WW3 = {
 
   _detonate(map, lat, lng, yieldKt, color) {
     if (!this.active) return;
+    const now = performance.now();
+    this.casualties.warheadsLanded++;
 
     // Calculate real effects
     const effects = NM.calcEffects(yieldKt, 'airburst', 0, 50);
 
-    // Draw actual effect rings (fireball, blast, thermal, etc.)
+    // Draw actual effect rings
     const det = {
       id: Date.now() + Math.random(), lat, lng, yieldKt, burstType: 'airburst',
       heightM: 0, fission: 50, effects, casualties: {deaths: 0, injuries: 0}, layers: []
@@ -475,7 +523,26 @@ NM.WW3 = {
     const ringLayers = NM.Effects.drawRings(map, det);
     ringLayers.forEach(l => this.layers.push(l));
 
-    // Animated flash expanding outward (white -> orange -> red)
+    // --- SCREEN FLASH (throttled: max 1 every 800ms) ---
+    if (now - this._lastFlashTime > 800) {
+      this._lastFlashTime = now;
+      NM.Animation.flash(Math.min(1, 0.3 + Math.log10(Math.max(yieldKt, 1)) * 0.15));
+    }
+
+    // --- CAMERA SHAKE (throttled: max 1 every 600ms) ---
+    if (now - this._lastShakeTime > 600) {
+      this._lastShakeTime = now;
+      const shakeMag = Math.min(5, 1.5 + Math.log10(Math.max(yieldKt, 1)) * 0.8);
+      NM.Animation.shake(map, shakeMag, 500);
+    }
+
+    // --- EXPLOSION SOUND (throttled: max 1 every 400ms) ---
+    if (NM.Sound.enabled && now - this._lastSoundTime > 400) {
+      this._lastSoundTime = now;
+      NM.Sound.detonate(yieldKt);
+    }
+
+    // Animated fireball expanding outward (white -> orange -> red)
     const flashR = Math.max(effects.fireball * 1000, 1000);
     const flash = L.circle([lat, lng], {
       radius: flashR * 0.3, color: '#fff', fillColor: '#fff', fillOpacity: 0.9,
@@ -483,21 +550,19 @@ NM.WW3 = {
     }).addTo(map);
     this.layers.push(flash);
 
-    const start = performance.now();
+    const flashStart = performance.now();
     const flashDur = 2000;
-    const tick = (now) => {
-      const p = Math.min(1, (now - start) / flashDur);
+    const flashTick = (now2) => {
+      const p = Math.min(1, (now2 - flashStart) / flashDur);
       flash.setRadius(flashR * (0.3 + p * 1.5));
       flash.setStyle({
         fillOpacity: Math.max(0, 0.9 * (1 - p * p)),
         fillColor: p < 0.15 ? '#fff' : p < 0.4 ? '#f9e2af' : p < 0.7 ? '#fab387' : '#f38ba8',
       });
-      if (p < 1 && this.active) requestAnimationFrame(tick);
-      else {
-        try { map.removeLayer(flash); } catch(e) {}
-      }
+      if (p < 1 && this.active) requestAnimationFrame(flashTick);
+      else { try { map.removeLayer(flash); } catch(e) {} }
     };
-    requestAnimationFrame(tick);
+    requestAnimationFrame(flashTick);
 
     // GZ marker
     const gzIcon = L.divIcon({
@@ -517,11 +582,12 @@ NM.WW3 = {
     const el = document.getElementById('ww3-stats');
     if (!el || !this.active) return;
     const elapsed = ((performance.now() - this.startTime) / 1000).toFixed(0);
+    const totalWh = this._scenario ? this.countWarheads(this._scenario.id) : 0;
     el.innerHTML = `
       <div class="ww3-stat"><span class="ww3-stat-val" style="color:var(--red)">${NM.fmtNum(this.casualties.deaths)}</span><span class="ww3-stat-lbl">Fatalities</span></div>
       <div class="ww3-stat"><span class="ww3-stat-val" style="color:var(--peach)">${NM.fmtNum(this.casualties.injuries)}</span><span class="ww3-stat-lbl">Injuries</span></div>
       <div class="ww3-stat"><span class="ww3-stat-val" style="color:var(--yellow)">${NM.fmtNum(this.casualties.deaths + this.casualties.injuries)}</span><span class="ww3-stat-lbl">Total</span></div>
-      <div class="ww3-stat"><span class="ww3-stat-val" style="color:var(--overlay1)">${elapsed}s</span><span class="ww3-stat-lbl">Elapsed</span></div>`;
+      <div class="ww3-stat"><span class="ww3-stat-val" style="color:var(--mauve)">${this.casualties.warheadsLanded}/${totalWh}</span><span class="ww3-stat-lbl">Warheads</span></div>`;
   },
 
   _updateStatus(text) {
@@ -540,7 +606,7 @@ NM.WW3 = {
     this.layers = [];
     this.markers = [];
     this.arcs = [];
-    this.casualties = {deaths: 0, injuries: 0};
+    this.casualties = {deaths: 0, injuries: 0, warheadsLanded: 0};
     this._scenario = null;
     const el = document.getElementById('ww3-stats');
     if (el) el.innerHTML = '';
