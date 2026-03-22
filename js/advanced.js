@@ -386,6 +386,35 @@ NM.Facts = [
   "The mushroom cloud from Tsar Bomba rose to 64 km \u2014 above 99.5% of Earth's atmosphere.",
 ];
 
+// ---- BUILDING DAMAGE AT PSI LEVELS ----
+NM.BuildingDamage = {
+  generate(yieldKt) {
+    const levels = [
+      {psi:0.5, r:NM.CustomPsi.calcRadius(yieldKt, 0.5), title:'0.5 psi', color:'var(--teal)',
+        items:['Windows crack and may shatter','Light objects displaced','Doors blown open','Minor plaster damage']},
+      {psi:1, r:NM.CustomPsi.calcRadius(yieldKt, 1), title:'1 psi', color:'var(--yellow)',
+        items:['All glass windows shatter into lethal shrapnel','Roof tiles and shingles torn off','Wood-frame walls crack','Interior partitions damaged','Power lines downed']},
+      {psi:3, r:NM.CustomPsi.calcRadius(yieldKt, 3), title:'3 psi', color:'var(--peach)',
+        items:['Wood-frame houses collapse','Brick veneer walls fail','Factory-type steel frames distorted','Telephone poles snapped','Vehicles overturned','Residential area fires widespread']},
+      {psi:5, r:NM.CustomPsi.calcRadius(yieldKt, 5), title:'5 psi', color:'var(--red)',
+        items:['Most commercial buildings destroyed','Highway bridges damaged','Underground pipes ruptured','Railroad tracks buckled','Firestorm probable in urban areas','Residential area: total destruction']},
+      {psi:10, r:NM.CustomPsi.calcRadius(yieldKt, 10), title:'10 psi', color:'var(--maroon)',
+        items:['Reinforced concrete severely damaged','Steel-frame buildings collapse','Underground shelters threatened','Vehicles thrown and crushed','No standing structures above ground']},
+      {psi:20, r:NM.CustomPsi.calcRadius(yieldKt, 20), title:'20 psi', color:'var(--red)',
+        items:['Reinforced concrete destroyed','Hardened military structures damaged','Everything above ground obliterated','Crater formation begins','Only deep underground bunkers survive']},
+    ];
+
+    let html = '<div class="bldg-list">';
+    for (const lv of levels) {
+      html += `<div class="bldg-item"><div class="bldg-header" style="color:${lv.color}"><span class="bldg-psi">${lv.title}</span><span class="bldg-dist">${NM.fmtR(lv.r)}</span></div><ul class="bldg-effects">`;
+      for (const item of lv.items) html += `<li>${item}</li>`;
+      html += '</ul></div>';
+    }
+    html += '</div>';
+    return html;
+  }
+};
+
 // ---- EMERGENCY ACTION GUIDE ----
 NM.EmergencyGuide = {
   generate(det) {

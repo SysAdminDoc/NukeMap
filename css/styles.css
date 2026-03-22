@@ -592,6 +592,15 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .ba-psi{color:var(--overlay1);margin-left:6px}
 .ba-sev{font-weight:800;font-size:10px;margin-left:6px;letter-spacing:0.5px}
 
+/* Building damage */
+.bldg-list{display:flex;flex-direction:column;gap:5px}
+.bldg-item{background:var(--surface0);border-radius:6px;border:1px solid var(--surface1);padding:7px 10px;font-size:10px}
+.bldg-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-weight:700}
+.bldg-psi{font-size:12px}
+.bldg-dist{font-size:9px;color:var(--overlay1);font-variant-numeric:tabular-nums;font-weight:600}
+.bldg-effects{margin:0;padding-left:16px;color:var(--subtext0);line-height:1.6}
+.bldg-effects li{margin-bottom:1px}
+
 /* Print styles */
 @media print{
   #panel,#info-bar,#coords,#offline-badge,#quick-weapons,#fullscreen-btn,#map-switcher,#fact-banner,#screenshot-hint,.leaflet-control-zoom,.leaflet-control-attribution,.leaflet-control-scale{display:none!important}

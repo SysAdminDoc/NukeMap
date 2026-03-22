@@ -213,6 +213,10 @@ function triggerDetonation(lat, lng) {
   $('conventional-section').style.display = '';
   $('conventional-content').innerHTML = NM.ConventionalCompare.generate(Y);
 
+  // Building damage
+  $('bldgdmg-section').style.display = '';
+  $('bldgdmg-content').innerHTML = NM.BuildingDamage.generate(Y);
+
   // Size comparisons
   $('sizecompare-section').style.display = '';
   $('sizecompare-content').innerHTML = NM.SizeCompare.generate(effects);
@@ -770,7 +774,7 @@ function initSearch() {
   inp.addEventListener('input', () => {
     const items = NM.searchLocations(inp.value); si = -1;
     if (!items.length) { res.classList.remove('active'); return; }
-    res.innerHTML = items.map((it, i) => `<div class="sr-item" data-idx="${i}"><div><div class="sr-name">${NM.esc(it.name)}</div><div class="sr-detail">${NM.esc(it.detail)}</div></div>${it.pop ? `<div class="sr-pop">${NM.fmtNum(it.pop)}</div>` : ''}</div>`).join('');
+    res.innerHTML = items.map((it, i) => `<div class="sr-item" data-idx="${i}"><div><div class="sr-name">${it.isTarget ? '<span style="color:var(--red);font-size:8px;margin-right:3px">&#9733;</span>' : ''}${NM.esc(it.name)}</div><div class="sr-detail">${NM.esc(it.detail)}</div></div>${it.pop ? `<div class="sr-pop">${NM.fmtNum(it.pop)}</div>` : ''}</div>`).join('');
     res.classList.add('active');
     res.querySelectorAll('.sr-item').forEach(el => el.addEventListener('click', () => { const it = items[+el.dataset.idx]; selectResult(it); }));
   });
@@ -964,6 +968,7 @@ function resetPanels() {
   $('weaponinfo-section').style.display = 'none';
   $('seismic-section').style.display = 'none';
   $('conventional-section').style.display = 'none';
+  $('bldgdmg-section').style.display = 'none';
   $('sizecompare-section').style.display = 'none';
   $('escape-section').style.display = 'none';
   $('nearby-section').style.display = 'none';
@@ -1140,6 +1145,14 @@ function init() {
   initMap();
   initControls();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+
+  // Auto-geolocation (center map on user's location if available)
+  if (navigator.geolocation && !new URLSearchParams(location.search).get('d')) {
+    navigator.geolocation.getCurrentPosition(
+      pos => { map.flyTo([pos.coords.latitude, pos.coords.longitude], 10, {duration: 1.5}); },
+      () => {}, {timeout: 5000, maximumAge: 300000}
+    );
+  }
 
   // Welcome overlay
   const wo = $('welcome-overlay');
