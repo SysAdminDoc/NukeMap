@@ -172,6 +172,7 @@ function triggerDetonation(lat, lng) {
   if ($('distfromgz-check').checked) NM.DistanceIndicator.start(map, det.lat, det.lng);
   if ($('thermal-check').checked) NM.ThermalOverlay.draw(map, det.lat, det.lng, effects);
   if ($('falloutanim-check').checked && effects.fallout) NM.FalloutParticles.start(map, det.lat, det.lng, effects.fallout, windAngle);
+  if ($('radoverlay-check').checked) NM.RadiationOverlay.draw(map, det.lat, det.lng, effects);
 
   // Show radiation decay & psi sections in Tools tab
   if (effects.isSurface) $('raddecay-section').style.display = '';
@@ -588,6 +589,18 @@ function initControls() {
     } else NM.FalloutContours.clear(map);
   });
 
+  // Radiation overlay
+  $('radoverlay-check').addEventListener('change', () => {
+    if ($('radoverlay-check').checked && currentDets.length) {
+      const det = currentDets[currentDets.length - 1];
+      NM.RadiationOverlay.draw(map, det.lat, det.lng, det.effects);
+    } else NM.RadiationOverlay.clear(map);
+  });
+
+  // Test timeline
+  $('test-timeline-btn').addEventListener('click', () => NM.TestTimeline.play(map));
+  $('test-timeline-stop').addEventListener('click', () => NM.TestTimeline.stop(map));
+
   // Blast wave arrival indicator
   $('blastwaveinfo-check').addEventListener('change', () => {
     if ($('blastwaveinfo-check').checked && currentDets.length) NM.BlastArrival.start(map);
@@ -885,10 +898,31 @@ function updateCrater(det) {
   const e = det.effects;
   if (e.craterR <= 0) { $('crater-section').style.display = 'none'; return; }
   $('crater-section').style.display = '';
-  $('crater-panel').innerHTML = [
+  const stats = [
     ['Crater radius', NM.fmtDist(e.craterR)], ['Crater depth', NM.fmtDist(e.craterDepth)],
     ['Lip height', '~' + NM.fmtR(e.craterDepth * 0.5)], ['Ejecta radius', '~' + NM.fmtR(e.craterR * 2)],
   ].map(([l, v]) => `<div class="cloud-row"><span class="cl">${l}</span><span class="cv">${v}</span></div>`).join('');
+
+  // SVG crater cross-section
+  const W = 280, H = 100;
+  const rPx = 120, dPx = 50;
+  const lipH = dPx * 0.35;
+  const ejectaR = rPx * 1.6;
+  const svg = `<svg viewBox="0 0 ${W} ${H}" class="crater-svg">
+    <rect x="0" y="0" width="${W}" height="${H}" fill="var(--mantle)" rx="6"/>
+    <line x1="10" y1="${H*0.55}" x2="${W-10}" y2="${H*0.55}" stroke="var(--surface1)" stroke-width="0.5" stroke-dasharray="4 4"/>
+    <text x="12" y="${H*0.55-3}" fill="var(--overlay0)" font-size="7">Ground level</text>
+    <path d="M${W/2 - ejectaR} ${H*0.55} Q${W/2 - rPx} ${H*0.55 - lipH} ${W/2 - rPx*0.8} ${H*0.55 + 2} Q${W/2} ${H*0.55 + dPx} ${W/2 + rPx*0.8} ${H*0.55 + 2} Q${W/2 + rPx} ${H*0.55 - lipH} ${W/2 + ejectaR} ${H*0.55}" fill="none" stroke="var(--surface2)" stroke-width="1.5"/>
+    <path d="M${W/2 - rPx*0.8} ${H*0.55 + 2} Q${W/2} ${H*0.55 + dPx} ${W/2 + rPx*0.8} ${H*0.55 + 2}" fill="rgba(88,91,112,0.3)" stroke="var(--overlay0)" stroke-width="1"/>
+    <line x1="${W/2 - rPx*0.8}" y1="${H*0.55 + 5}" x2="${W/2 + rPx*0.8}" y2="${H*0.55 + 5}" stroke="var(--peach)" stroke-width="0.8" stroke-dasharray="3 2"/>
+    <text x="${W/2}" y="${H*0.55 + 14}" fill="var(--peach)" font-size="7" text-anchor="middle">${NM.fmtR(e.craterR * 2)} diameter</text>
+    <line x1="${W/2 + 2}" y1="${H*0.55}" x2="${W/2 + 2}" y2="${H*0.55 + dPx - 3}" stroke="var(--red)" stroke-width="0.8" stroke-dasharray="3 2"/>
+    <text x="${W/2 + 8}" y="${H*0.55 + dPx/2 + 2}" fill="var(--red)" font-size="7">${NM.fmtR(e.craterDepth)}</text>
+    <text x="${W/2 - ejectaR + 5}" y="${H*0.55 - lipH - 3}" fill="var(--overlay0)" font-size="6">Lip</text>
+    <text x="${W/2 + rPx + 5}" y="${H*0.55 - 5}" fill="var(--overlay0)" font-size="6">Ejecta</text>
+  </svg>`;
+
+  $('crater-panel').innerHTML = stats + svg;
 }
 
 function updateShelter(det) {
@@ -976,6 +1010,8 @@ function clearAll() {
   NM.WW3.stop(map);
   NM.FalloutTimelapse.clear(map);
   NM.BlastArrival.stop(map);
+  NM.RadiationOverlay.clear(map);
+  NM.TestTimeline.stop(map);
   $('fallout-timelapse').style.display = 'none';
   NM._lastDet = null;
   updateDetsList(); updateStats(); resetPanels(); updateURL();

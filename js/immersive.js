@@ -492,6 +492,73 @@ NM.TestDB = {
   }
 };
 
+// ---- ANIMATED NUCLEAR TEST TIMELINE ----
+NM.TestTimeline = {
+  layers: [], active: false, animId: null,
+
+  play(map) {
+    this.stop(map);
+    this.active = true;
+    const tests = NM.TestDatabase.slice().sort((a, b) => a.year - b.year);
+    const countryColors = {US:'#89b4fa',USSR:'#f38ba8',UK:'#a6e3a1',FR:'#cba6f7',CN:'#fab387',IN:'#f9e2af',PK:'#94e2d5',DPRK:'#f5c2e7'};
+
+    // Show year counter on map
+    const yearEl = document.createElement('div');
+    yearEl.className = 'test-timeline-year';
+    yearEl.id = 'tt-year';
+    document.body.appendChild(yearEl);
+
+    let idx = 0;
+    const tick = () => {
+      if (!this.active || idx >= tests.length) {
+        yearEl.textContent = 'Timeline complete';
+        setTimeout(() => yearEl.remove(), 3000);
+        this.active = false;
+        return;
+      }
+      const t = tests[idx];
+      const color = countryColors[t.country] || '#cdd6f4';
+      const r = Math.max(4, Math.min(25, Math.log10(Math.max(t.kt, 0.1)) * 5));
+
+      // Animated expanding circle
+      const marker = L.circleMarker([t.lat, t.lng], {
+        radius: 2, color, fillColor: color, fillOpacity: 0.7, weight: 1.5, opacity: 0.8
+      }).addTo(map);
+      this.layers.push(marker);
+
+      // Animate expansion
+      let frame = 0;
+      const expand = () => {
+        frame++;
+        if (frame > 15) return;
+        marker.setRadius(2 + (r - 2) * (frame / 15));
+        marker.setStyle({fillOpacity: 0.7 - (frame / 15) * 0.4});
+        requestAnimationFrame(expand);
+      };
+      requestAnimationFrame(expand);
+
+      marker.bindTooltip(`<b>${t.name}</b><br>${t.country} ${t.year}<br>${NM.fmtYield(t.kt)}`, {className: 'test-tooltip'});
+
+      yearEl.innerHTML = `<span style="color:${color}">${t.country}</span> ${t.year} - ${t.name} (${NM.fmtYield(t.kt)})`;
+
+      idx++;
+      this.animId = setTimeout(tick, 350);
+    };
+
+    map.flyTo([20, 0], 2, {duration: 1});
+    setTimeout(tick, 1200);
+  },
+
+  stop(map) {
+    this.active = false;
+    if (this.animId) clearTimeout(this.animId);
+    this.layers.forEach(l => map.removeLayer(l));
+    this.layers = [];
+    const el = document.getElementById('tt-year');
+    if (el) el.remove();
+  }
+};
+
 // ---- CONVENTIONAL WEAPON EQUIVALENTS ----
 NM.ConventionalCompare = {
   weapons: [

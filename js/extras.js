@@ -421,6 +421,66 @@ NM.FalloutParticles = {
   }
 };
 
+// ---- RADIATION ZONE OVERLAY (canvas gradient) ----
+NM.RadiationOverlay = {
+  layer: null,
+
+  draw(map, lat, lng, effects) {
+    this.clear(map);
+    if (!effects.fallout && !effects.radiation) return;
+    const maxR = effects.fallout ? Math.max(effects.radiation, effects.fallout.heavy.length * 0.5) : effects.radiation;
+    if (maxR < 0.01) return;
+
+    const radR = effects.radiation;
+    const RadLayer = L.Layer.extend({
+      onAdd(map) {
+        this._map = map;
+        this._canvas = L.DomUtil.create('canvas', 'rad-overlay');
+        this._canvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:398;opacity:0.3';
+        map.getPanes().overlayPane.appendChild(this._canvas);
+        map.on('moveend zoomend resize', this._update, this);
+        this._update();
+      },
+      onRemove(map) {
+        L.DomUtil.remove(this._canvas);
+        map.off('moveend zoomend resize', this._update, this);
+      },
+      _update() {
+        const map = this._map, size = map.getSize();
+        this._canvas.width = size.x; this._canvas.height = size.y;
+        const ctx = this._canvas.getContext('2d');
+        ctx.clearRect(0, 0, size.x, size.y);
+        const center = map.latLngToContainerPoint([lat, lng]);
+        const edgePt = map.latLngToContainerPoint([lat + maxR / 111.32, lng]);
+        const pixelR = Math.abs(center.y - edgePt.y);
+        if (pixelR < 5) return;
+
+        const grad = ctx.createRadialGradient(center.x, center.y, 0, center.x, center.y, pixelR);
+        grad.addColorStop(0, 'rgba(166, 227, 161, 0.9)');    // bright green center
+        grad.addColorStop(0.15, 'rgba(249, 226, 175, 0.7)'); // yellow
+        grad.addColorStop(0.35, 'rgba(250, 179, 135, 0.5)'); // orange
+        grad.addColorStop(0.6, 'rgba(243, 139, 168, 0.25)'); // red
+        grad.addColorStop(0.85, 'rgba(203, 166, 247, 0.08)');// faint purple
+        grad.addColorStop(1, 'rgba(203, 166, 247, 0)');
+
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, pixelR, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        const topLeft = map.containerPointToLayerPoint([0, 0]);
+        L.DomUtil.setPosition(this._canvas, topLeft);
+      }
+    });
+    this.layer = new RadLayer();
+    this.layer.addTo(map);
+  },
+
+  clear(map) {
+    if (this.layer) { map.removeLayer(this.layer); this.layer = null; }
+  }
+};
+
 // ---- CUMULATIVE DOSE CALCULATOR ----
 NM.DoseCalc = {
   // Calculate cumulative dose for a person arriving at `arriveHr` hours after detonation
