@@ -8,7 +8,8 @@ let map, currentDets = [], windAngle = 0, multiMode = false, mirvMode = false, c
 
 // ---- MAP INIT ----
 function initMap() {
-  map = L.map('map', {center: [39.83, -98.58], zoom: 5, zoomControl: true, attributionControl: true});
+  map = L.map('map', {center: [39.83, -98.58], zoom: 5, zoomControl: true, attributionControl: true, zoomSnap: 0.5});
+  L.control.scale({position: 'bottomleft', imperial: true, metric: true, maxWidth: 200}).addTo(map);
   NM._map = map; // expose for mushroom3d positioning
   const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://osm.org">OSM</a> &copy; <a href="https://carto.com">CARTO</a>',
@@ -228,6 +229,9 @@ function triggerDetonation(lat, lng) {
   // Auto-switch to Effects tab after first detonation
   if (currentDets.length === 1) switchTab('effects');
 
+  // Detonation toast
+  showDetToast(det);
+
   // Zoom to fit
   const largest = [effects.emp, effects.thermal1, effects.psi1].filter(r => r > 0).sort((a, b) => b - a)[0];
   if (largest) {
@@ -330,6 +334,15 @@ function initControls() {
 
   // Panel toggle
   $('panel-toggle').addEventListener('click', () => $('panel').classList.toggle('collapsed'));
+
+  // Coords click-to-copy
+  $('coords').addEventListener('click', () => {
+    const t = $('coords').textContent;
+    if (t && t !== '--') { navigator.clipboard?.writeText(t); $('coords').classList.add('copied'); setTimeout(() => $('coords').classList.remove('copied'), 1200); }
+  });
+
+  // Fullscreen
+  if ($('fullscreen-btn')) $('fullscreen-btn').addEventListener('click', toggleFullscreen);
 
   // MIRV controls
   initMIRV();
@@ -739,16 +752,18 @@ function updateShelter(det) {
 
 function updateStats() {
   let td = 0, ti = 0, ty = 0; currentDets.forEach(d => { td += d.casualties.deaths; ti += d.casualties.injuries; ty += d.yieldKt; });
+  const hiro = ty / 15; // Hiroshima equivalents
   $('stat-deaths').textContent = NM.fmtNum(td);
   $('stat-injuries').textContent = NM.fmtNum(ti);
   $('stat-total').textContent = NM.fmtNum(td + ti);
   $('stat-yield').textContent = ty > 0 ? NM.fmtYield(ty) : '--';
-  $('stat-note').textContent = currentDets.length > 1 ? `Across ${currentDets.length} detonations` : currentDets.length === 1 ? 'Based on estimated population density' : 'Detonate a weapon to see estimates';
+  $('stat-note').textContent = currentDets.length > 1 ? `${currentDets.length} detonations | ${hiro >= 10 ? hiro.toFixed(0) : hiro.toFixed(1)}x Hiroshima` : currentDets.length === 1 ? (hiro >= 0.01 ? `${hiro >= 10 ? hiro.toFixed(0) : hiro.toFixed(1)}x Hiroshima equivalent` : 'Sub-tactical yield') : 'Detonate a weapon to see estimates';
 
   // Info bar
   const bar = $('info-bar');
   if (currentDets.length) {
-    bar.innerHTML = `<div class="ib-stat"><div class="ib-val" style="color:var(--red)">${NM.fmtNum(td)}</div><div class="ib-lbl">Fatalities</div></div><div class="ib-div"></div><div class="ib-stat"><div class="ib-val" style="color:var(--peach)">${NM.fmtNum(ti)}</div><div class="ib-lbl">Injuries</div></div><div class="ib-div"></div><div class="ib-stat"><div class="ib-val" style="color:var(--yellow)">${NM.fmtNum(td + ti)}</div><div class="ib-lbl">Total</div></div>`;
+    const hiroStr = hiro >= 10 ? hiro.toFixed(0) : hiro >= 0.1 ? hiro.toFixed(1) : hiro.toFixed(2);
+    bar.innerHTML = `<div class="ib-stat"><div class="ib-val" style="color:var(--red)">${NM.fmtNum(td)}</div><div class="ib-lbl">Fatalities</div></div><div class="ib-div"></div><div class="ib-stat"><div class="ib-val" style="color:var(--peach)">${NM.fmtNum(ti)}</div><div class="ib-lbl">Injuries</div></div><div class="ib-div"></div><div class="ib-stat"><div class="ib-val" style="color:var(--mauve)">${hiroStr}x</div><div class="ib-lbl">Hiroshimas</div></div><div class="ib-div"></div><div class="ib-stat"><div class="ib-val" style="color:var(--yellow)">${currentDets.length}</div><div class="ib-lbl">${currentDets.length === 1 ? 'Detonation' : 'Detonations'}</div></div>`;
     bar.classList.add('active');
   } else bar.classList.remove('active');
 }
@@ -832,6 +847,29 @@ function loadFromURL() {
 
 function showShareLink() { $('share-section').style.display = ''; $('share-input').value = location.href; switchTab('results'); }
 function copyShareLink() { $('share-input').select(); navigator.clipboard?.writeText($('share-input').value); $('share-copy').textContent = 'Copied!'; setTimeout(() => $('share-copy').textContent = 'Copy', 2000); }
+
+// ---- DETONATION TOAST ----
+function showDetToast(det) {
+  const nc = NM.findNearestCity(det.lat, det.lng);
+  const loc = nc && nc.dist < 50 ? nc.name : `${det.lat.toFixed(2)}, ${det.lng.toFixed(2)}`;
+  const hiro = det.yieldKt / 15;
+  const hiroStr = hiro >= 10 ? hiro.toFixed(0) + 'x Hiroshima' : hiro >= 1 ? hiro.toFixed(1) + 'x Hiroshima' : '';
+  const el = document.createElement('div');
+  el.className = 'det-toast';
+  el.innerHTML = `<span class="dt-yield">${NM.fmtYield(det.yieldKt)}</span> <span class="dt-loc">${NM.esc(loc)}</span>${hiroStr ? ` <span class="dt-hiro">${hiroStr}</span>` : ''}`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 500); }, 3000);
+}
+
+// ---- FULLSCREEN ----
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.() || document.documentElement.webkitRequestFullscreen?.();
+  } else {
+    document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+  }
+}
 
 // ---- INIT ----
 function init() {
