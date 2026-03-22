@@ -4,7 +4,7 @@
 Nuclear weapon effects simulator with 16 JS modules (~5000 lines), animated blast waves, SVG mushroom cloud, MIRV simulation, full WW3 simulation engine (418 verified targets, 708 warheads, 7 scenarios), sound effects, attack scenarios, missile flight calculator, nuclear winter estimates, shelter analysis, weapon comparison, population heatmap, and comprehensive immersive features.
 
 ## Tech Stack
-- HTML/CSS/JS (17 JS modules, ~7000 lines total, ww3.js alone is 1070 lines)
+- HTML/CSS/JS (17 JS modules + manifest, ~7100 lines total, ww3.js alone is 1070 lines)
 - Leaflet.js (maps), Web Audio API (sounds)
 - Service worker for offline, `build.py` for bundling, `build_targets.py` for target DB
 - Catppuccin Mocha dark theme
@@ -82,7 +82,7 @@ data/
 - Sound throttling: explosion max 1/350ms, rocket max 1/200ms, flash max 1/600ms, shake max 1/500ms
 
 ## Version History
-- v3.2.0 - Major UX overhaul: OG meta/favicon, loading overlay, welcome tutorial, undo button, total yield stat, right-click detonate, auto Effects tab, mobile responsive (480/768px), Hiroshima equivalents, detonation toasts, scale bar, fullscreen, coords copy, flash blindness (day/night), firestorm zone, nearby targets, dose calculator, night mode, 12 map styles + floating switcher, quick weapon bar, save/load scenarios, yield in dropdown, population per ring, emergency action guide, export JSON/report, 18 weapon spec cards
+- v3.2.0 - Major UX overhaul: OG meta/favicon/PWA manifest, loading overlay, welcome tutorial, undo button, yield stats/Hiroshima equivalents, right-click detonate, auto Effects tab, mobile responsive (480/768px), detonation toasts, scale bar, fullscreen, coords copy, flash blindness (day/night), firestorm zone, nearby targets, dose calculator, night mode, 12 map styles + floating switcher, quick weapon bar, save/load scenarios, population per ring, emergency guide, export JSON/report, 18 weapon specs, HEMP burst mode (continent-scale EMP), weapon encyclopedia + glossary, live yield preview circle, building damage descriptions, conventional weapon equivalents, blast wave arrival indicator, fallout time-lapse slider, strategic target search (418 targets), improved yield-proportional sound, auto-geolocation, print CSS
 - v3.1.0 - WW3 simulation: 418 targets, 7 scenarios, missile arcs, HUD, nuclear winter, speed control
 - v3.0.0e - Immersive features: Geiger counter, seismic, escape time, GPS safety, shockwave ring, fallout contours, KML export, nuclear test DB
 - v3.0.0d - Realistic SVG mushroom cloud with proper anatomy, per-detonation clouds
