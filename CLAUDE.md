@@ -1,18 +1,18 @@
 # NukeMap v3.0.0
 
 ## Overview
-Nuclear weapon effects simulator with 14 JS modules, animated blast waves, 3D mushroom cloud, MIRV simulation, sound effects, attack scenarios, missile flight calculator, nuclear winter estimates, shelter analysis, weapon comparison, population heatmap, and comprehensive search.
+Nuclear weapon effects simulator with 15 JS modules, animated blast waves, SVG mushroom cloud, MIRV simulation, sound effects, attack scenarios, missile flight calculator, nuclear winter estimates, shelter analysis, weapon comparison, population heatmap, immersive features (Geiger counter, seismic equivalent, escape time, GPS safety, shockwave ring, fallout contours, KML export, nuclear test database), and comprehensive search.
 
 ## Tech Stack
-- HTML/CSS/JS (14 JS modules, ~3500 lines total)
-- Leaflet.js (maps), Three.js (3D cloud), Web Audio API (sounds)
+- HTML/CSS/JS (15 JS modules, ~4100 lines total)
+- Leaflet.js (maps), Web Audio API (sounds)
 - Service worker for offline, `build.py` for bundling
 - Catppuccin Mocha dark theme
 
 ## File Structure
 ```
-index.html            App shell (~280 lines)
-css/styles.css        All styling (~350 lines)
+index.html            App shell (~370 lines)
+css/styles.css        All styling (~440 lines)
 js/
   data.js             Cities (250+), weapons (32), MIRV/shelter/world data
   physics.js          Glasstone & Dolan calcs + formatting
@@ -20,14 +20,16 @@ js/
   effects.js          Map rings, fallout, markers, tooltips
   animation.js        Blast wave expansion, fireball glow, camera shake
   sound.js            Web Audio API procedural explosion
-  mushroom3d.js       Three.js 3D mushroom cloud
+  mushroom3d.js       SVG mushroom cloud overlay (replaced Three.js)
   mirv.js             MIRV patterns + staggered detonation
   shelter.js          Shelter survival analysis
   compare.js          Weapon comparison mode
   heatmap.js          Population density canvas overlay
   extras.js           Ring labels, distance tools, thermal gradient, fallout particles, radiation decay, screenshot, overpressure table, layer switcher
   advanced.js         Experience mode, attack scenarios, measurement tool, missile flight, yield chart, nuclear winter, facts
-  app.js              Main controller (~640 lines)
+  premium.js          Altitude profile, zone casualties, EMP details, destruction stats, weapon specs, survival calc, draggable GZ, export PNG, delivery arc
+  immersive.js        Geiger counter, casualty counter anim, size comparisons, seismic equivalent, escape time, GPS safety, shockwave ring, fallout contours, KML export, nuclear test DB
+  app.js              Main controller (~770 lines)
 sw.js                 Service worker
 build.py              Offline bundler
 ```
@@ -69,6 +71,19 @@ build.py              Offline bundler
 - Animated fallout particles
 - Population heatmap
 - Map layer switcher (dark/satellite/topo/OSM)
+- Shockwave ring animation (expanding + fading)
+- Fallout dose rate contour lines (5 levels)
+- Historic nuclear test sites (25 tests, color-coded by country)
+
+### Immersive Features
+- Geiger counter audio (hover near GZ, click rate scales with radiation intensity)
+- Casualty counter animation (ease-out quartic count-up)
+- City size comparisons (zone area vs landmarks: Vatican City, Manhattan, etc.)
+- Seismic equivalent (Richter magnitude + earthquake comparison)
+- Escape time calculator (walk/run/bike/car vs zone distances)
+- GPS "Am I Safe?" (browser geolocation check against last detonation)
+- KML export (effect rings for Google Earth)
+- Nuclear test database (25 historic tests plotted on map)
 
 ### UI
 - 4 tabs: Weapon / Effects / Results / Tools
@@ -79,6 +94,8 @@ build.py              Offline bundler
 - Responsive design
 
 ## Version History
+- v3.0.0e - Immersive features: Geiger counter, seismic, escape time, GPS safety, shockwave ring, fallout contours, KML export, nuclear test DB
+- v3.0.0d - Realistic SVG mushroom cloud with proper anatomy, per-detonation clouds
 - v3.0.0c - Attack scenarios, experience mode, measurement, missile flight, yield chart, nuclear winter, facts
 - v3.0.0b - Ring labels, distance tools, layer switcher, thermal overlay, fallout particles, radiation decay, screenshot, PSI table
 - v3.0.0a - Multi-file rebuild with animations, 3D, MIRV, sound, shelter, comparison, heatmap
