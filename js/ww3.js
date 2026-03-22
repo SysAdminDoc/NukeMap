@@ -443,65 +443,95 @@ NM.WW3_TARGETS_CN = [
 // Launch origins (for missile arcs)
 NM.WW3_LAUNCHERS = {
   us_icbm: [{lat:47.506,lng:-111.183,name:'Malmstrom'},{lat:48.416,lng:-101.358,name:'Minot'},{lat:41.145,lng:-104.862,name:'Warren'}],
-  us_slbm: [{lat:58.0,lng:-30.0,name:'Atlantic SSBN'},{lat:40.0,lng:-155.0,name:'Pacific SSBN'}],
-  ru_icbm: [{lat:54.035,lng:36.013,name:'Kozelsk'},{lat:51.700,lng:45.537,name:'Tatishchevo'},{lat:51.049,lng:59.853,name:'Dombarovsky'},{lat:55.114,lng:89.634,name:'Uzhur'}],
-  ru_slbm: [{lat:72.0,lng:35.0,name:'Barents SSBN'},{lat:55.0,lng:150.0,name:'Okhotsk SSBN'}],
-  cn_icbm: [{lat:40.283,lng:97.033,name:'Yumen'},{lat:42.800,lng:93.500,name:'Hami'}],
+  us_slbm: [{lat:58.0,lng:-30.0,name:'Atlantic SSBN'},{lat:40.0,lng:-155.0,name:'Pacific SSBN'},{lat:32.0,lng:-65.0,name:'Atlantic Patrol'}],
+  ru_icbm: [{lat:54.035,lng:36.013,name:'Kozelsk'},{lat:51.700,lng:45.537,name:'Tatishchevo'},{lat:51.049,lng:59.853,name:'Dombarovsky'},{lat:55.114,lng:89.634,name:'Uzhur'},{lat:56.883,lng:40.517,name:'Teykovo'},{lat:57.863,lng:33.652,name:'Vypolzovo'}],
+  ru_slbm: [{lat:72.0,lng:35.0,name:'Barents SSBN'},{lat:55.0,lng:150.0,name:'Okhotsk SSBN'},{lat:68.0,lng:40.0,name:'White Sea SSBN'}],
+  cn_icbm: [{lat:40.283,lng:97.033,name:'Yumen'},{lat:42.800,lng:93.500,name:'Hami'},{lat:40.500,lng:107.000,name:'Hanggin Banner'}],
+  // NATO retaliatory launchers (UK Trident + French M51)
+  uk_slbm: [{lat:56.0,lng:-10.0,name:'UK Trident Patrol'},{lat:50.0,lng:-15.0,name:'UK Trident South'}],
+  fr_slbm: [{lat:46.0,lng:-8.0,name:'French SSBN Patrol'}],
+  fr_air: [{lat:43.521,lng:4.938,name:'Istres BA125'},{lat:48.636,lng:4.900,name:'Saint-Dizier BA113'}],
 };
 
 // Side colors for missile arcs
-const SIDE_COLORS = {us:'#89b4fa', ru:'#f38ba8', cn:'#f9e2af'};
+const SIDE_COLORS = {us:'#89b4fa', ru:'#f38ba8', cn:'#f9e2af', uk:'#a6e3a1', fr:'#cba6f7'};
 
 // ---- SCENARIO DEFINITIONS ----
 NM.WW3_SCENARIOS = [
   {
     id: 'us_ru_full', name: 'US vs Russia (Full Exchange)',
-    desc: 'Princeton Plan A-style escalation: counterforce then countervalue',
+    desc: 'Princeton Plan A-style escalation: counterforce then countervalue. ~495 warheads.',
     phases: [
-      {name:'Phase 1: Counterforce',delay:0,duration:20000,filter:t=>t.type!=='city'},
-      {name:'Phase 2: Countervalue',delay:35000,duration:25000,filter:t=>t.type==='city'},
+      {name:'Phase 1: Counterforce',delay:0,duration:25000,filter:t=>t.type!=='city'&&t.type!=='infra'},
+      {name:'Phase 2: Cities & Infrastructure',delay:40000,duration:30000,filter:t=>t.type==='city'||t.type==='infra'},
     ],
     targetSets: {us: NM.WW3_TARGETS_US, ru: NM.WW3_TARGETS_RU},
     launchSets: {us: ['us_icbm','us_slbm'], ru: ['ru_icbm','ru_slbm']},
+    zoom: [40, 0, 3],
   },
   {
-    id: 'ru_nato', name: 'Russia vs NATO Europe',
-    desc: 'Russian strike on NATO bases and European capitals',
+    id: 'ru_nato', name: 'Russia vs NATO + UK/FR Retaliation',
+    desc: 'Russian strike on NATO; UK Trident & French M51 fire back at Russia.',
     phases: [
-      {name:'Phase 1: NATO bases',delay:0,duration:18000,filter:t=>t.type!=='city'},
-      {name:'Phase 2: European cities',delay:30000,duration:20000,filter:t=>t.type==='city'},
+      {name:'Phase 1: Russian strike on NATO',delay:0,duration:20000,filter:t=>t.type!=='city'},
+      {name:'Phase 2: UK/FR retaliation on Russia',delay:25000,duration:15000,filter:t=>t.type!=='city'},
+      {name:'Phase 3: All cities',delay:42000,duration:25000,filter:t=>t.type==='city'},
     ],
-    targetSets: {nato: NM.WW3_TARGETS_NATO},
-    launchSets: {ru: ['ru_icbm','ru_slbm']},
+    targetSets: {nato: NM.WW3_TARGETS_NATO, ru: NM.WW3_TARGETS_RU},
+    launchSets: {ru: ['ru_icbm','ru_slbm'], uk: ['uk_slbm'], fr: ['fr_slbm','fr_air']},
+    zoom: [52, 10, 3],
   },
   {
     id: 'us_cn', name: 'US vs China',
-    desc: 'US counterforce strike on Chinese nuclear assets + cities',
+    desc: 'Bilateral exchange: US strikes Chinese nuclear forces + cities, China retaliates.',
     phases: [
-      {name:'Phase 1: Chinese nuclear forces',delay:0,duration:18000,filter:t=>t.type!=='city'},
-      {name:'Phase 2: Chinese cities',delay:30000,duration:20000,filter:t=>t.type==='city'},
+      {name:'Phase 1: Counterforce',delay:0,duration:20000,filter:t=>t.type!=='city'},
+      {name:'Phase 2: Countervalue',delay:32000,duration:22000,filter:t=>t.type==='city'},
     ],
-    targetSets: {cn: NM.WW3_TARGETS_CN},
-    launchSets: {us: ['us_icbm','us_slbm']},
+    targetSets: {us: NM.WW3_TARGETS_US, cn: NM.WW3_TARGETS_CN},
+    launchSets: {us: ['us_icbm','us_slbm'], cn: ['cn_icbm']},
+    zoom: [30, 160, 3],
   },
   {
     id: 'counterforce_only', name: 'Counterforce Only (US-Russia)',
-    desc: 'Military targets only - no cities struck',
+    desc: 'Military/nuclear targets only - no cities struck. "Limited" exchange.',
     phases: [
-      {name:'Counterforce exchange',delay:0,duration:25000,filter:t=>t.type!=='city'},
+      {name:'Counterforce exchange',delay:0,duration:30000,filter:t=>t.type!=='city'&&t.type!=='infra'},
     ],
     targetSets: {us: NM.WW3_TARGETS_US, ru: NM.WW3_TARGETS_RU},
     launchSets: {us: ['us_icbm','us_slbm'], ru: ['ru_icbm','ru_slbm']},
+    zoom: [50, -20, 3],
   },
   {
     id: 'global', name: 'Global Thermonuclear War',
-    desc: 'All nuclear powers launch everything. Worst case.',
+    desc: 'US + NATO + UK + France vs Russia + China. Every warhead flies. ~708 total.',
     phases: [
-      {name:'Phase 1: Counterforce',delay:0,duration:25000,filter:t=>t.type!=='city'},
-      {name:'Phase 2: All cities',delay:40000,duration:30000,filter:t=>t.type==='city'},
+      {name:'Phase 1: Counterforce',delay:0,duration:30000,filter:t=>t.type!=='city'&&t.type!=='infra'},
+      {name:'Phase 2: All cities & infrastructure',delay:45000,duration:35000,filter:t=>t.type==='city'||t.type==='infra'},
     ],
     targetSets: {us: NM.WW3_TARGETS_US, ru: NM.WW3_TARGETS_RU, nato: NM.WW3_TARGETS_NATO, cn: NM.WW3_TARGETS_CN},
-    launchSets: {us: ['us_icbm','us_slbm'], ru: ['ru_icbm','ru_slbm'], cn: ['cn_icbm']},
+    launchSets: {us: ['us_icbm','us_slbm'], ru: ['ru_icbm','ru_slbm'], cn: ['cn_icbm'], uk: ['uk_slbm'], fr: ['fr_slbm','fr_air']},
+    zoom: [35, 0, 3],
+  },
+  {
+    id: 'first_strike_ru', name: 'Russian First Strike on US',
+    desc: 'Russia launches surprise counterforce strike. US has no time to launch on warning.',
+    phases: [
+      {name:'Russian first strike',delay:0,duration:25000,filter:()=>true},
+    ],
+    targetSets: {us: NM.WW3_TARGETS_US},
+    launchSets: {ru: ['ru_icbm','ru_slbm']},
+    zoom: [39, -98, 4],
+  },
+  {
+    id: 'first_strike_us', name: 'US First Strike on Russia',
+    desc: 'US launches surprise counterforce strike on Russian nuclear forces.',
+    phases: [
+      {name:'US first strike',delay:0,duration:25000,filter:()=>true},
+    ],
+    targetSets: {ru: NM.WW3_TARGETS_RU},
+    launchSets: {us: ['us_icbm','us_slbm']},
+    zoom: [55, 50, 3],
   },
 ];
 
@@ -614,7 +644,7 @@ NM.WW3 = {
   layers: [],
   markers: [],
   timers: [],
-  casualties: {deaths: 0, injuries: 0, warheadsLanded: 0},
+  casualties: {deaths: 0, injuries: 0, warheadsLanded: 0, megatons: 0},
   startTime: 0,
   statsInterval: null,
   _scenario: null,
@@ -623,7 +653,7 @@ NM.WW3 = {
   _lastShakeTime: 0,
   _hudEl: null,
   _winterEl: null,
-  _sirenOsc: null,
+  speed: 1, // speed multiplier (1x, 2x, 5x)
 
   start(map, scenarioId) {
     this.stop(map);
@@ -631,20 +661,22 @@ NM.WW3 = {
     if (!scenario) return;
     this._scenario = scenario;
     this.active = true;
-    this.casualties = {deaths: 0, injuries: 0, warheadsLanded: 0};
+    this.casualties = {deaths: 0, injuries: 0, warheadsLanded: 0, megatons: 0};
     this.startTime = performance.now();
     this._lastSoundTime = 0;
     this._lastFlashTime = 0;
     this._lastShakeTime = 0;
 
+    // Read speed from UI
+    const speedEl = document.getElementById('ww3-speed');
+    this.speed = speedEl ? +speedEl.value : 1;
+
     // Place target markers
     this._placeTargetMarkers(map, scenario);
 
-    // Set view ONCE
-    if (scenarioId === 'global' || scenarioId === 'us_ru_full') map.setView([40, 0], 3);
-    else if (scenarioId === 'ru_nato') map.setView([52, 10], 4);
-    else if (scenarioId === 'us_cn') map.setView([30, 100], 3);
-    else if (scenarioId === 'counterforce_only') map.setView([50, -20], 3);
+    // Set view from scenario
+    const z = scenario.zoom || [35, 0, 3];
+    map.setView([z[0], z[1]], z[2]);
 
     // Create HUD overlay on map
     this._createHUD();
@@ -652,32 +684,36 @@ NM.WW3 = {
     // Create nuclear winter overlay
     this._createWinterOverlay();
 
-    // Air raid siren (3 seconds)
+    // Create map legend
+    this._createLegend();
+
+    // Air raid siren
+    const sirenDur = 3 / this.speed;
     if (NM.Sound.enabled && NM.Sound.ctx) {
       NM.Sound.resume();
-      playAirRaidSiren(NM.Sound.ctx, 3);
+      playAirRaidSiren(NM.Sound.ctx, Math.max(1, sirenDur));
     }
 
     // Start phases after siren
+    const sirenMs = sirenDur * 1000;
     for (const phase of scenario.phases) {
       const tid = setTimeout(() => {
         if (!this.active) return;
-        // Phase transition rumble sound
         if (NM.Sound.enabled && NM.Sound.ctx && phase.delay > 0) playPhaseRumble(NM.Sound.ctx);
         this._executePhase(map, scenario, phase);
-      }, phase.delay + 3000); // +3s for siren
+      }, (phase.delay / this.speed) + sirenMs);
       this.timers.push(tid);
     }
 
     // Schedule end summary
     const lastPhase = scenario.phases[scenario.phases.length - 1];
-    const endTime = lastPhase.delay + lastPhase.duration + 20000 + 3000; // flight time buffer
+    const endTime = (lastPhase.delay + lastPhase.duration + 18000) / this.speed + sirenMs;
     this.timers.push(setTimeout(() => { if (this.active) this._showSummary(); }, endTime));
 
     // Live stats update
     this.statsInterval = setInterval(() => this._updateHUD(), 200);
     this._updateStatus('Air raid sirens sounding...');
-    this.timers.push(setTimeout(() => { if (this.active) this._updateStatus(scenario.phases[0].name); }, 3000));
+    this.timers.push(setTimeout(() => { if (this.active) this._updateStatus(scenario.phases[0].name); }, sirenMs));
   },
 
   _createHUD() {
@@ -705,6 +741,29 @@ NM.WW3 = {
     this._winterEl = el;
   },
 
+  _createLegend() {
+    let leg = document.getElementById('ww3-legend');
+    if (!leg) {
+      leg = document.createElement('div');
+      leg.id = 'ww3-legend';
+      document.body.appendChild(leg);
+    }
+    const scenario = this._scenario;
+    const sides = Object.keys(scenario.launchSets);
+    const sideNames = {us:'US',ru:'Russia',cn:'China',uk:'UK',fr:'France'};
+    leg.innerHTML = '<div class="ww3-leg-title">Missile Arcs</div>' +
+      sides.map(s => `<div class="ww3-leg-row"><span class="ww3-leg-dot" style="background:${SIDE_COLORS[s]||'#cdd6f4'}"></span>${sideNames[s]||s}</div>`).join('') +
+      '<div class="ww3-leg-title" style="margin-top:4px">Targets</div>' +
+      '<div class="ww3-leg-row"><span class="ww3-leg-dot" style="background:#f38ba8"></span>ICBM</div>' +
+      '<div class="ww3-leg-row"><span class="ww3-leg-dot" style="background:#89b4fa"></span>Submarine</div>' +
+      '<div class="ww3-leg-row"><span class="ww3-leg-dot" style="background:#cba6f7"></span>Bomber</div>' +
+      '<div class="ww3-leg-row"><span class="ww3-leg-dot" style="background:#f9e2af"></span>Command</div>' +
+      '<div class="ww3-leg-row"><span class="ww3-leg-dot" style="background:#fab387"></span>Nuclear</div>' +
+      '<div class="ww3-leg-row"><span class="ww3-leg-dot" style="background:#94e2d5"></span>Military</div>' +
+      '<div class="ww3-leg-row"><span class="ww3-leg-dot" style="background:#f5c2e7"></span>City</div>';
+    leg.style.display = 'block';
+  },
+
   _placeTargetMarkers(map, scenario) {
     const typeIcons = {icbm:'#f38ba8',sub:'#89b4fa',bomber:'#cba6f7',c2:'#f9e2af',nuclear:'#fab387',military:'#94e2d5',city:'#f5c2e7'};
     for (const [, targets] of Object.entries(scenario.targetSets)) {
@@ -728,12 +787,20 @@ NM.WW3 = {
     const allTargets = [];
     for (const [side, targets] of Object.entries(scenario.targetSets)) {
       const filtered = targets.filter(phase.filter);
+      // Determine who attacks this target set - enemies of the target's country
       let attackerKeys;
-      if (side === 'us') attackerKeys = scenario.launchSets.ru ? ['ru'] : (scenario.launchSets.cn ? ['cn'] : []);
-      else if (side === 'ru') attackerKeys = scenario.launchSets.us ? ['us'] : [];
-      else if (side === 'nato') attackerKeys = scenario.launchSets.ru ? ['ru'] : [];
-      else if (side === 'cn') attackerKeys = scenario.launchSets.us ? ['us'] : [];
-      else attackerKeys = Object.keys(scenario.launchSets);
+      if (side === 'us') {
+        attackerKeys = ['ru','cn'].filter(k => scenario.launchSets[k]);
+      } else if (side === 'ru') {
+        attackerKeys = ['us','uk','fr'].filter(k => scenario.launchSets[k]);
+      } else if (side === 'nato') {
+        attackerKeys = ['ru'].filter(k => scenario.launchSets[k]);
+      } else if (side === 'cn') {
+        attackerKeys = ['us'].filter(k => scenario.launchSets[k]);
+      } else {
+        attackerKeys = Object.keys(scenario.launchSets);
+      }
+      if (!attackerKeys.length) continue;
 
       for (const t of filtered) {
         const attackerKey = attackerKeys[Math.floor(Math.random() * attackerKeys.length)];
@@ -762,9 +829,9 @@ NM.WW3 = {
       [allTargets[i], allTargets[j]] = [allTargets[j], allTargets[i]];
     }
 
-    const launchWindow = phase.duration * 0.4;
+    const launchWindow = (phase.duration * 0.4) / this.speed;
     allTargets.forEach((at, i) => {
-      const delay = (i / allTargets.length) * launchWindow + Math.random() * 600;
+      const delay = (i / allTargets.length) * launchWindow + Math.random() * (600 / this.speed);
       const tid = setTimeout(() => {
         if (!this.active) return;
         this._launchMissile(map, at);
@@ -777,7 +844,7 @@ NM.WW3 = {
     const color = SIDE_COLORS[at.attackerKey] || '#cdd6f4';
     const dist = gcDistance(at.launcher.lat, at.launcher.lng, at.tLat, at.tLng);
     const isSlbm = at.launcher.name.includes('SSBN') || at.launcher.name.includes('Atlantic') || at.launcher.name.includes('Okhotsk');
-    const flightMs = isSlbm ? 7000 + Math.min(dist / 2, 3000) : 10000 + Math.min(dist / 2, 4000);
+    const flightMs = (isSlbm ? 7000 + Math.min(dist / 2, 3000) : 10000 + Math.min(dist / 2, 4000)) / this.speed;
     const steps = 60;
     const pts = gcInterpolate(at.launcher.lat, at.launcher.lng, at.tLat, at.tLng, steps);
     const bulgeFactor = Math.min(4, dist / 3000);
@@ -904,10 +971,11 @@ NM.WW3 = {
       this._winterEl.style.opacity = String(darkness);
     }
 
-    // Casualties
+    // Casualties + megatonnage
     const cas = NM.estimateCasualties(lat, lng, effects);
     this.casualties.deaths += cas.deaths;
     this.casualties.injuries += cas.injuries;
+    this.casualties.megatons += yieldKt / 1000;
   },
 
   _updateHUD() {
@@ -926,7 +994,7 @@ NM.WW3 = {
       <div class="ww3-hud-sep"></div>
       <div class="ww3-hud-item"><span class="ww3-hud-val" style="color:#cba6f7">${this.casualties.warheadsLanded}<span style="opacity:0.5">/${totalWh}</span></span><span class="ww3-hud-lbl">Warheads</span></div>
       <div class="ww3-hud-sep"></div>
-      <div class="ww3-hud-item"><span class="ww3-hud-val" style="color:#94e2d5">T+${simMin}m</span><span class="ww3-hud-lbl">Sim Time</span></div>`;
+      <div class="ww3-hud-item"><span class="ww3-hud-val" style="color:#94e2d5">${this.casualties.megatons.toFixed(0)} MT</span><span class="ww3-hud-lbl">Yield</span></div>`;
 
     // Also update panel stats
     const el = document.getElementById('ww3-stats');
@@ -946,14 +1014,19 @@ NM.WW3 = {
     const c = this.casualties;
     const totalWh = this._scenario ? this.countWarheads(this._scenario.id) : 0;
     const el = document.getElementById('ww3-stats');
+    // Long-term estimate: 3-5x immediate for total deaths over months/years
+    const longTermLow = c.deaths * 3;
+    const longTermHigh = c.deaths * 5;
     if (el) {
       el.innerHTML = `<div class="ww3-summary">
         <div class="ww3-sum-title">SIMULATION COMPLETE</div>
         <div class="ww3-sum-row"><span>Warheads detonated</span><span style="color:var(--mauve)">${c.warheadsLanded} of ${totalWh}</span></div>
+        <div class="ww3-sum-row"><span>Total yield</span><span style="color:var(--teal)">${c.megatons.toFixed(0)} megatons</span></div>
         <div class="ww3-sum-row"><span>Immediate fatalities</span><span style="color:var(--red)">${NM.fmtNum(c.deaths)}</span></div>
         <div class="ww3-sum-row"><span>Immediate injuries</span><span style="color:var(--peach)">${NM.fmtNum(c.injuries)}</span></div>
-        <div class="ww3-sum-row"><span>Total casualties</span><span style="color:var(--yellow)">${NM.fmtNum(c.deaths + c.injuries)}</span></div>
-        <div class="ww3-sum-note">Excludes fallout, firestorms, nuclear winter, infrastructure collapse, and long-term radiation deaths which could multiply this figure several times over.</div>
+        <div class="ww3-sum-row"><span>Total immediate</span><span style="color:var(--yellow)">${NM.fmtNum(c.deaths + c.injuries)}</span></div>
+        <div class="ww3-sum-row" style="border-top:1px solid var(--surface1);padding-top:4px;margin-top:2px"><span>Est. long-term deaths</span><span style="color:var(--red);opacity:0.7">${NM.fmtNum(longTermLow)} - ${NM.fmtNum(longTermHigh)}</span></div>
+        <div class="ww3-sum-note">Long-term estimate includes fallout, firestorms, nuclear winter (Toon et al.), infrastructure collapse, medical system failure, and radiation-induced cancers. Based on peer-reviewed models from Princeton SGS, ICAN, and Bulletin of the Atomic Scientists.</div>
       </div>`;
     }
     if (this.statsInterval) { clearInterval(this.statsInterval); this.statsInterval = null; }
@@ -968,11 +1041,14 @@ NM.WW3 = {
     this.markers.forEach(m => { try { map.removeLayer(m); } catch(e) {} });
     this.layers = [];
     this.markers = [];
-    this.casualties = {deaths: 0, injuries: 0, warheadsLanded: 0};
+    this.casualties = {deaths: 0, injuries: 0, warheadsLanded: 0, megatons: 0};
     this._scenario = null;
     // Remove HUD
     const hud = document.getElementById('ww3-hud');
     if (hud) hud.style.display = 'none';
+    // Remove legend
+    const leg = document.getElementById('ww3-legend');
+    if (leg) leg.style.display = 'none';
     // Remove winter overlay
     const winter = document.getElementById('ww3-winter');
     if (winter) { winter.style.opacity = '0'; winter.style.display = 'none'; }

@@ -455,6 +455,12 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 /* Warhead dot pulse */
 .ww3-warhead{filter:drop-shadow(0 0 4px rgba(255,255,255,0.6))}
 
+/* WW3 Map Legend */
+#ww3-legend{position:fixed;bottom:50px;right:14px;z-index:1001;display:none;padding:8px 12px;border-radius:var(--radius-sm);background:rgba(17,17,27,0.92);backdrop-filter:blur(16px);border:1px solid rgba(69,71,90,0.5);font-size:9px;color:var(--subtext0);box-shadow:var(--shadow-lg)}
+.ww3-leg-title{font-size:8px;font-weight:700;color:var(--overlay0);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.ww3-leg-row{display:flex;align-items:center;gap:6px;padding:1px 0;font-weight:500}
+.ww3-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
 /* WW3 end summary */
 .ww3-summary{background:var(--surface0);border:1px solid var(--surface1);border-radius:var(--radius-sm);padding:10px;font-size:11px}
 .ww3-sum-title{text-align:center;font-size:12px;font-weight:900;color:var(--red);letter-spacing:2px;margin-bottom:8px;text-transform:uppercase}
