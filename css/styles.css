@@ -191,6 +191,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .det-name{flex:1;color:var(--subtext1);font-weight:500}.det-yield{color:var(--peach);font-weight:700;font-size:9px}
 .det-remove{width:16px;height:16px;border-radius:4px;border:none;background:transparent;color:var(--overlay0);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .det-remove:hover{background:var(--red);color:var(--crust)}
+.det-badge{font-size:7px;font-weight:800;color:var(--teal);background:rgba(148,226,213,0.15);padding:1px 4px;border-radius:3px;letter-spacing:0.5px}
 
 /* Compare */
 .compare-table{width:100%;border-collapse:collapse;font-size:10px;margin-top:6px}
@@ -591,6 +592,30 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .ba-time{color:var(--peach);font-size:13px}
 .ba-psi{color:var(--overlay1);margin-left:6px}
 .ba-sev{font-weight:800;font-size:10px;margin-left:6px;letter-spacing:0.5px}
+
+/* HEMP info */
+.hemp-info{padding:6px 8px;background:rgba(148,226,213,0.06);border:1px solid rgba(148,226,213,0.15);border-radius:6px;margin-top:6px}
+
+/* Encyclopedia */
+.enc-country{margin-bottom:10px}
+.enc-country-name{font-size:10px;font-weight:700;color:var(--overlay0);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.enc-country-name::after{content:'';flex:1;height:1px;background:var(--surface1)}
+.enc-weapon{display:flex;align-items:center;gap:8px;padding:5px 8px;margin-bottom:2px;background:var(--surface0);border-radius:5px;border:1px solid var(--surface1);cursor:pointer;transition:all .12s;font-size:10px}
+.enc-weapon:hover{background:var(--surface1);border-color:var(--surface2)}
+.enc-weapon.enc-selected{border-color:var(--peach);background:rgba(250,179,135,0.08)}
+.enc-w-name{flex:1;font-weight:600;color:var(--text)}
+.enc-w-yield{color:var(--peach);font-weight:700;font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
+.enc-w-year{color:var(--overlay0);font-size:9px;min-width:30px;text-align:right}
+.enc-w-desc{font-size:9px;color:var(--overlay0);margin-top:2px;grid-column:1/-1}
+
+/* Glossary */
+.glossary-list{display:flex;flex-direction:column;gap:3px}
+.gloss-item{padding:5px 8px;background:var(--surface0);border-radius:5px;font-size:10px}
+.gloss-term{font-weight:700;color:var(--blue);margin-right:6px}
+.gloss-def{color:var(--subtext0);line-height:1.4}
+
+/* Yield preview circle */
+.yield-preview-ring{pointer-events:none!important;z-index:399}
 
 /* Building damage */
 .bldg-list{display:flex;flex-direction:column;gap:5px}

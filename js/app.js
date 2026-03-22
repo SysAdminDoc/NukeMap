@@ -96,11 +96,25 @@ function onMapClick(lat, lng) {
 // ---- DETONATION ----
 function triggerDetonation(lat, lng) {
   const Y = getYield();
-  const burst = getBurst();
+  let burst = getBurst();
+  const isHEMP = burst === 'hemp';
+  if (isHEMP) burst = 'airburst'; // HEMP uses airburst physics but overrides effects
   const hM = burst === 'custom' ? (+$('burst-height').value || 0) : 0;
   const fission = +$('fission-pct').value || 50;
-  const effects = NM.calcEffects(Y, burst, hM, fission);
-  const cas = NM.estimateCasualties(lat, lng, effects);
+  const effects = NM.calcEffects(Y, isHEMP ? 'airburst' : burst, hM, fission);
+
+  // HEMP override: no blast/thermal at ground level, massive EMP
+  if (isHEMP) {
+    effects.fireball = 0; effects.psi200 = 0; effects.psi20 = 0; effects.psi5 = 0;
+    effects.psi3 = 0; effects.psi1 = 0; effects.thermal3 = 0; effects.thermal2 = 0;
+    effects.thermal1 = 0; effects.radiation = 0; effects.craterR = 0; effects.craterDepth = 0;
+    effects.firestormR = 0; effects.flashBlindDay = 0; effects.flashBlindNight = 0;
+    effects.fallout = null;
+    effects.emp = Math.min(2200, 40 * Math.pow(Y, 0.25)); // continent-scale EMP
+    effects.burstHeight = 400000; // 400 km
+    effects.isSurface = false;
+  }
+  const cas = isHEMP ? {deaths: 0, injuries: 0, density: 0} : NM.estimateCasualties(lat, lng, effects);
 
   // Single mode: clear previous
   if (!multiMode) {
@@ -110,8 +124,8 @@ function triggerDetonation(lat, lng) {
   }
 
   const det = {
-    id: Date.now(), lat, lng, yieldKt: Y, burstType: burst, heightM: hM, fission, effects, casualties: cas, layers: [],
-    weapon: $('weapon-select').selectedOptions[0]?.textContent || 'Custom'
+    id: Date.now(), lat, lng, yieldKt: Y, burstType: isHEMP ? 'hemp' : burst, heightM: hM, fission, effects, casualties: cas, layers: [],
+    weapon: $('weapon-select').selectedOptions[0]?.textContent || 'Custom', isHEMP
   };
 
   // Draw static effect rings
@@ -304,8 +318,23 @@ function initControls() {
   }
   sel.addEventListener('change', () => setYield(NM.WEAPONS[sel.value].yield_kt));
 
-  // Yield slider
-  $('yield-slider').addEventListener('input', () => { const kt = NM.sliderToYield(+$('yield-slider').value); updateYieldUI(kt); syncYieldInput(kt); });
+  // Yield slider with live preview
+  let yieldPreviewRing = null;
+  $('yield-slider').addEventListener('input', () => {
+    const kt = NM.sliderToYield(+$('yield-slider').value);
+    updateYieldUI(kt); syncYieldInput(kt);
+    // Show preview circle at map center
+    const c = map.getCenter();
+    const previewR = 0.59 * Math.pow(kt, 1/3); // 5 psi radius
+    if (yieldPreviewRing) map.removeLayer(yieldPreviewRing);
+    yieldPreviewRing = L.circle([c.lat, c.lng], {
+      radius: previewR * 1000, color: '#cba6f7', weight: 1.5, opacity: 0.4,
+      fill: false, dashArray: '6 6', className: 'yield-preview-ring', interactive: false
+    }).addTo(map);
+  });
+  $('yield-slider').addEventListener('change', () => {
+    if (yieldPreviewRing) { map.removeLayer(yieldPreviewRing); yieldPreviewRing = null; }
+  });
 
   // Direct yield input
   const syncFromInput = () => {
@@ -327,6 +356,7 @@ function initControls() {
     b.classList.add('active');
     $('height-row').style.display = b.dataset.burst === 'custom' ? '' : 'none';
     $('wind-wrap').style.display = b.dataset.burst === 'surface' ? '' : 'none';
+    $('hemp-info').style.display = b.dataset.burst === 'hemp' ? '' : 'none';
   }));
 
   // Detonate / Undo / Clear / Share
@@ -654,6 +684,7 @@ function initControls() {
     renderSavedList();
   });
   renderSavedList();
+  initEncyclopedia();
 
   // Rotating facts banner
   let factIdx = Math.floor(Math.random() * NM.Facts.length);
@@ -796,7 +827,7 @@ function updateDetsList() {
     const nc = NM.findNearestCity(d.lat, d.lng);
     const nm = nc && nc.dist < 50 ? nc.name : `${d.lat.toFixed(2)}, ${d.lng.toFixed(2)}`;
     const el = document.createElement('div'); el.className = 'det-item';
-    el.innerHTML = `<span class="det-idx">${i + 1}</span><span class="det-name">${NM.esc(nm)}</span><span class="det-yield">${NM.fmtYield(d.yieldKt)}</span><button class="det-remove" data-i="${i}">&times;</button>`;
+    el.innerHTML = `<span class="det-idx">${i + 1}</span><span class="det-name">${NM.esc(nm)}</span>${d.isHEMP ? '<span class="det-badge">HEMP</span>' : ''}<span class="det-yield">${NM.fmtYield(d.yieldKt)}</span><button class="det-remove" data-i="${i}">&times;</button>`;
     el.querySelector('.det-remove').addEventListener('click', e => { e.stopPropagation(); removeDet(i); });
     el.addEventListener('click', e => { if (!e.target.classList.contains('det-remove')) map.flyTo([d.lat, d.lng], map.getZoom(), {duration: 0.6}); });
     list.appendChild(el);
@@ -1002,6 +1033,46 @@ function loadFromURL() {
 
 function showShareLink() { $('share-section').style.display = ''; $('share-input').value = location.href; switchTab('results'); }
 function copyShareLink() { $('share-input').select(); navigator.clipboard?.writeText($('share-input').value); $('share-copy').textContent = 'Copied!'; setTimeout(() => $('share-copy').textContent = 'Copy', 2000); }
+
+// ---- WEAPON ENCYCLOPEDIA ----
+function initEncyclopedia() {
+  const list = $('encyclopedia-list'); if (!list) return;
+  const groups = {};
+  const countryOrder = ['US','RU','CN','UK','FR','IN','PK','KP','IL'];
+  const countryNames = {US:'United States',RU:'Russia',CN:'China',UK:'United Kingdom',FR:'France',IN:'India',PK:'Pakistan',KP:'North Korea',IL:'Israel'};
+  NM.WEAPONS.forEach((w, i) => {
+    if (!w.country) return;
+    if (!groups[w.country]) groups[w.country] = [];
+    groups[w.country].push({...w, idx: i});
+  });
+
+  let html = '';
+  for (const code of countryOrder) {
+    const ws = groups[code];
+    if (!ws) continue;
+    html += `<div class="enc-country"><div class="enc-country-name">${countryNames[code] || code} (${ws.length})</div>`;
+    for (const w of ws) {
+      html += `<div class="enc-weapon" data-idx="${w.idx}" data-yield="${w.yield_kt}">
+        <span class="enc-w-name">${NM.esc(w.name)}</span>
+        <span class="enc-w-year">${w.year || ''}</span>
+        <span class="enc-w-yield">${NM.fmtYield(w.yield_kt)}</span>
+      </div>`;
+    }
+    html += '</div>';
+  }
+  list.innerHTML = html;
+
+  list.querySelectorAll('.enc-weapon').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = +el.dataset.idx;
+      $('weapon-select').value = idx;
+      setYield(NM.WEAPONS[idx].yield_kt);
+      switchTab('weapon');
+      list.querySelectorAll('.enc-weapon').forEach(e => e.classList.remove('enc-selected'));
+      el.classList.add('enc-selected');
+    });
+  });
+}
 
 // ---- EXPORT JSON ----
 function exportJSON() {

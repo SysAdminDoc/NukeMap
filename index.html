@@ -82,6 +82,7 @@
         <button class="tab" data-tab="effects">Effects</button>
         <button class="tab" data-tab="results">Results</button>
         <button class="tab" data-tab="tools">Tools</button>
+        <button class="tab" data-tab="encyclopedia">Info</button>
       </div>
 
       <!-- ===== WEAPON TAB ===== -->
@@ -109,6 +110,11 @@
             <button class="burst-btn active" data-burst="airburst">Airburst</button>
             <button class="burst-btn" data-burst="surface">Surface</button>
             <button class="burst-btn" data-burst="custom">Custom</button>
+            <button class="burst-btn" data-burst="hemp">HEMP</button>
+          </div>
+          <div class="hemp-info" id="hemp-info" style="display:none">
+            <div style="font-size:9px;color:var(--teal);font-weight:600;margin-bottom:3px">High-Altitude EMP (HEMP)</div>
+            <div style="font-size:9px;color:var(--overlay0);line-height:1.4">Detonation at 400 km altitude. No blast/thermal damage at ground level. Generates massive EMP covering ~2,200 km radius (~continent-scale). Gamma rays interact with upper atmosphere to produce E1/E2/E3 electromagnetic pulses.</div>
           </div>
           <div class="compact-row" id="height-row" style="display:none">
             <label>Height</label><input type="number" class="compact-input" id="burst-height" value="0" min="0"/><span class="unit">m</span>
@@ -473,6 +479,31 @@
           <button class="export-btn" id="export-kml" style="background:var(--mauve);margin-bottom:5px">Export to Google Earth (KML)</button>
           <button class="export-btn" id="export-json" style="background:var(--teal);margin-bottom:5px">Export Data as JSON</button>
           <button class="export-btn" id="export-report" style="background:var(--green)">Generate Summary Report</button>
+        </div>
+      </div>
+
+      <!-- ===== ENCYCLOPEDIA TAB ===== -->
+      <div class="tab-content" id="tab-encyclopedia">
+        <div class="section">
+          <div class="section-title">Weapon Arsenal</div>
+          <div style="font-size:10px;color:var(--overlay0);margin-bottom:8px">Browse all weapons by country. Click to select.</div>
+          <div id="encyclopedia-list"></div>
+        </div>
+        <div class="section">
+          <div class="section-title">Nuclear Glossary</div>
+          <div class="glossary-list">
+            <div class="gloss-item"><span class="gloss-term">Yield</span><span class="gloss-def">Total energy released, measured in kilotons (kT) or megatons (MT) of TNT equivalent.</span></div>
+            <div class="gloss-item"><span class="gloss-term">Airburst</span><span class="gloss-def">Detonation at optimal altitude to maximize blast damage. No crater, minimal fallout.</span></div>
+            <div class="gloss-item"><span class="gloss-term">Surface Burst</span><span class="gloss-def">Detonation at ground level. Creates crater, produces heavy radioactive fallout.</span></div>
+            <div class="gloss-item"><span class="gloss-term">HEMP</span><span class="gloss-def">High-altitude Electromagnetic Pulse. Detonation at 30-400+ km altitude creates continent-scale EMP with no blast damage at ground level.</span></div>
+            <div class="gloss-item"><span class="gloss-term">MIRV</span><span class="gloss-def">Multiple Independently-targetable Reentry Vehicle. Single missile carries multiple warheads aimed at different targets.</span></div>
+            <div class="gloss-item"><span class="gloss-term">Overpressure (psi)</span><span class="gloss-def">Air pressure above normal atmospheric. 5 psi collapses most buildings. 20 psi destroys reinforced concrete.</span></div>
+            <div class="gloss-item"><span class="gloss-term">Fallout</span><span class="gloss-def">Radioactive debris carried downwind after surface burst. Most dangerous in first 48 hours (7:10 decay rule).</span></div>
+            <div class="gloss-item"><span class="gloss-term">Firestorm</span><span class="gloss-def">Self-sustaining fire with hurricane-force inward winds. Consumes all oxygen in the area. Occurred at Hiroshima.</span></div>
+            <div class="gloss-item"><span class="gloss-term">Fission</span><span class="gloss-def">Splitting heavy atoms (U-235, Pu-239). Powers all nuclear weapons. Pure fission weapons: up to ~500 kT.</span></div>
+            <div class="gloss-item"><span class="gloss-term">Thermonuclear</span><span class="gloss-def">Two-stage design using fission primary to ignite fusion secondary. No theoretical yield limit. Most modern weapons.</span></div>
+            <div class="gloss-item"><span class="gloss-term">CEP</span><span class="gloss-def">Circular Error Probable. Radius within which 50% of warheads land. Modern ICBMs: ~100-200m. GPS-guided bombs: ~30m.</span></div>
+          </div>
         </div>
       </div>
     </div>
