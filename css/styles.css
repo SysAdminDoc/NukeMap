@@ -434,11 +434,34 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 /* WW3 Simulation */
 .btn-ww3-launch{flex:2;padding:8px;border-radius:6px;border:none;background:linear-gradient(135deg,#f38ba8,#fab387);color:var(--crust);font-size:11px;font-weight:800;cursor:pointer;letter-spacing:0.5px;transition:all .2s;text-transform:uppercase}
 .btn-ww3-launch:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(243,139,168,0.3)}
-#ww3-stats{display:flex;flex-wrap:wrap;gap:6px}
-.ww3-stat{flex:1;min-width:70px;padding:6px 8px;background:var(--surface0);border-radius:6px;border:1px solid var(--surface1);text-align:center}
-.ww3-stat-val{display:block;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
-.ww3-stat-lbl{font-size:8px;color:var(--overlay0);text-transform:uppercase;letter-spacing:0.5px}
+#ww3-stats{display:flex;flex-wrap:wrap;gap:4px}
 .ww3-arc{pointer-events:none}
+
+/* WW3 HUD overlay on map */
+#ww3-hud{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:1001;display:none;align-items:center;gap:0;padding:6px 14px;border-radius:var(--radius);background:rgba(17,17,27,0.92);backdrop-filter:blur(20px);border:1px solid rgba(243,139,168,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 60px rgba(243,139,168,0.08);font-family:'Segoe UI',system-ui,sans-serif}
+.ww3-hud-item{text-align:center;padding:0 10px}
+.ww3-hud-val{display:block;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+.ww3-hud-lbl{font-size:7px;color:rgba(166,173,200,0.6);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.ww3-hud-sep{width:1px;height:28px;background:rgba(69,71,90,0.5)}
+
+/* Nuclear winter darkening overlay */
+#ww3-winter{position:absolute;inset:0;z-index:400;background:rgba(0,0,0,0.7);pointer-events:none;transition:opacity 2s ease;display:none;mix-blend-mode:multiply}
+
+/* GZ impact markers */
+.ww3-gz{border-radius:50%;background:rgba(243,139,168,0.5);border:1px solid rgba(243,139,168,0.8);box-shadow:0 0 6px rgba(243,139,168,0.3)}
+.ww3-gz-city{animation:ww3-gz-pulse 2s ease-out infinite}
+@keyframes ww3-gz-pulse{0%{box-shadow:0 0 4px rgba(243,139,168,0.6)}50%{box-shadow:0 0 12px rgba(243,139,168,0.9),0 0 20px rgba(243,139,168,0.3)}100%{box-shadow:0 0 4px rgba(243,139,168,0.6)}}
+
+/* Warhead dot pulse */
+.ww3-warhead{filter:drop-shadow(0 0 4px rgba(255,255,255,0.6))}
+
+/* WW3 end summary */
+.ww3-summary{background:var(--surface0);border:1px solid var(--surface1);border-radius:var(--radius-sm);padding:10px;font-size:11px}
+.ww3-sum-title{text-align:center;font-size:12px;font-weight:900;color:var(--red);letter-spacing:2px;margin-bottom:8px;text-transform:uppercase}
+.ww3-sum-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(69,71,90,0.2);font-weight:600}
+.ww3-sum-row:last-of-type{border-bottom:none}
+.ww3-sum-row span:first-child{color:var(--subtext0)}
+.ww3-sum-note{font-size:9px;color:var(--overlay0);margin-top:8px;font-style:italic;line-height:1.4;text-align:center}
 
 /* Responsive */
 @media(max-width:768px){
