@@ -508,8 +508,15 @@ function initControls() {
     if (!ww3Sel.value) return;
     clearAll();
     NM.WW3.start(map, ww3Sel.value);
+    $('ww3-pause').style.display = '';
+    $('ww3-pause').textContent = 'Pause';
   });
-  $('ww3-stop').addEventListener('click', () => NM.WW3.stop(map));
+  $('ww3-stop').addEventListener('click', () => { NM.WW3.stop(map); $('ww3-pause').style.display = 'none'; });
+  $('ww3-pause').addEventListener('click', () => {
+    if (!NM.WW3.active) return;
+    NM.WW3.paused = !NM.WW3.paused;
+    $('ww3-pause').textContent = NM.WW3.paused ? 'Resume' : 'Pause';
+  });
 
   // Rotating facts banner
   let factIdx = Math.floor(Math.random() * NM.Facts.length);

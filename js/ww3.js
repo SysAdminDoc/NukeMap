@@ -687,6 +687,17 @@ NM.WW3 = {
     // Create map legend
     this._createLegend();
 
+    // Create DEFCON indicator
+    let defcon = document.getElementById('ww3-defcon');
+    if (!defcon) { defcon = document.createElement('div'); defcon.id = 'ww3-defcon'; document.body.appendChild(defcon); }
+    defcon.style.display = 'block'; defcon.textContent = 'DEFCON 3';
+    this._defcon = 3;
+
+    // Create impact toast container
+    let toasts = document.getElementById('ww3-toasts');
+    if (!toasts) { toasts = document.createElement('div'); toasts.id = 'ww3-toasts'; document.body.appendChild(toasts); }
+    toasts.innerHTML = '';
+
     // Air raid siren
     const sirenDur = 3 / this.speed;
     if (NM.Sound.enabled && NM.Sound.ctx) {
@@ -838,12 +849,42 @@ NM.WW3 = {
       }, delay);
       this.timers.push(tid);
     });
+    // Update DEFCON based on phase
+    const phaseIdx = scenario.phases.indexOf(phase);
+    const defcon = Math.max(1, 5 - phaseIdx * 2 - (scenario.phases.length > 1 ? 0 : 2));
+    this._setDefcon(defcon);
+  },
+
+  _setDefcon(level) {
+    this._defcon = level;
+    const el = document.getElementById('ww3-defcon');
+    if (!el) return;
+    const colors = {1:'#f38ba8',2:'#fab387',3:'#f9e2af',4:'#89b4fa',5:'#a6e3a1'};
+    el.style.color = colors[level] || '#cdd6f4';
+    el.textContent = 'DEFCON ' + level;
+    el.style.display = 'block';
+    // Flash it
+    el.classList.remove('ww3-defcon-flash');
+    void el.offsetWidth;
+    el.classList.add('ww3-defcon-flash');
+  },
+
+  _showImpactToast(name, isCity) {
+    if (!isCity) return;
+    const container = document.getElementById('ww3-toasts');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'ww3-toast';
+    toast.textContent = name.toUpperCase() + ' HIT';
+    container.appendChild(toast);
+    // Remove after animation
+    setTimeout(() => { try { container.removeChild(toast); } catch(e) {} }, 3500);
   },
 
   _launchMissile(map, at) {
     const color = SIDE_COLORS[at.attackerKey] || '#cdd6f4';
     const dist = gcDistance(at.launcher.lat, at.launcher.lng, at.tLat, at.tLng);
-    const isSlbm = at.launcher.name.includes('SSBN') || at.launcher.name.includes('Atlantic') || at.launcher.name.includes('Okhotsk');
+    const isSlbm = at.launcher.name.includes('SSBN') || at.launcher.name.includes('Atlantic') || at.launcher.name.includes('Okhotsk') || at.launcher.name.includes('Trident') || at.launcher.name.includes('French');
     const flightMs = (isSlbm ? 7000 + Math.min(dist / 2, 3000) : 10000 + Math.min(dist / 2, 4000)) / this.speed;
     const steps = 60;
     const pts = gcInterpolate(at.launcher.lat, at.launcher.lng, at.tLat, at.tLng, steps);
@@ -877,9 +918,12 @@ NM.WW3 = {
     }).addTo(map);
     this.layers.push(dot);
 
-    const start = performance.now();
+    let start = performance.now();
+    let pausedAt = 0;
     const tick = (now2) => {
       if (!this.active) return;
+      if (this.paused) { if (!pausedAt) pausedAt = now2; requestAnimationFrame(tick); return; }
+      if (pausedAt) { start += now2 - pausedAt; pausedAt = 0; }
       const p = Math.min(1, (now2 - start) / flightMs);
       const eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
       const idx = Math.floor(eased * steps);
@@ -899,13 +943,13 @@ NM.WW3 = {
           else { try { map.removeLayer(trail); } catch(e) {} }
         };
         requestAnimationFrame(ft);
-        this._detonate(map, at.tLat, at.tLng, at.yieldKt, at.target.type === 'city');
+        this._detonate(map, at.tLat, at.tLng, at.yieldKt, at.target.type === 'city', at.target.name);
       }
     };
     requestAnimationFrame(tick);
   },
 
-  _detonate(map, lat, lng, yieldKt, isCity) {
+  _detonate(map, lat, lng, yieldKt, isCity, targetName) {
     if (!this.active) return;
     const now = performance.now();
     this.casualties.warheadsLanded++;
@@ -964,6 +1008,18 @@ NM.WW3 = {
     });
     this.layers.push(L.marker([lat, lng], {icon: gzIcon, interactive: false}).addTo(map));
 
+    // City burn scar (persistent dark circle showing destroyed area)
+    if (isCity) {
+      const burnR = Math.max(effects.psi5 * 1000, 2000);
+      const burnScar = L.circle([lat, lng], {
+        radius: burnR, color: 'transparent', fillColor: '#1e1e2e', fillOpacity: 0.35, weight: 0
+      }).addTo(map);
+      this.layers.push(burnScar);
+    }
+
+    // Impact toast for cities
+    if (targetName) this._showImpactToast(targetName, isCity);
+
     // Nuclear winter darkening
     if (this._winterEl) {
       const totalWh = this._scenario ? this.countWarheads(this._scenario.id) : 400;
@@ -1017,11 +1073,12 @@ NM.WW3 = {
     // Long-term estimate: 3-5x immediate for total deaths over months/years
     const longTermLow = c.deaths * 3;
     const longTermHigh = c.deaths * 5;
+    const hiroshimaEquiv = Math.round(c.megatons * 1000 / 15); // 15kT = Hiroshima
     if (el) {
       el.innerHTML = `<div class="ww3-summary">
         <div class="ww3-sum-title">SIMULATION COMPLETE</div>
         <div class="ww3-sum-row"><span>Warheads detonated</span><span style="color:var(--mauve)">${c.warheadsLanded} of ${totalWh}</span></div>
-        <div class="ww3-sum-row"><span>Total yield</span><span style="color:var(--teal)">${c.megatons.toFixed(0)} megatons</span></div>
+        <div class="ww3-sum-row"><span>Total yield</span><span style="color:var(--teal)">${c.megatons.toFixed(0)} MT (${NM.fmtNum(hiroshimaEquiv)} Hiroshimas)</span></div>
         <div class="ww3-sum-row"><span>Immediate fatalities</span><span style="color:var(--red)">${NM.fmtNum(c.deaths)}</span></div>
         <div class="ww3-sum-row"><span>Immediate injuries</span><span style="color:var(--peach)">${NM.fmtNum(c.injuries)}</span></div>
         <div class="ww3-sum-row"><span>Total immediate</span><span style="color:var(--yellow)">${NM.fmtNum(c.deaths + c.injuries)}</span></div>
@@ -1029,6 +1086,8 @@ NM.WW3 = {
         <div class="ww3-sum-note">Long-term estimate includes fallout, firestorms, nuclear winter (Toon et al.), infrastructure collapse, medical system failure, and radiation-induced cancers. Based on peer-reviewed models from Princeton SGS, ICAN, and Bulletin of the Atomic Scientists.</div>
       </div>`;
     }
+    // Set DEFCON 1
+    this._setDefcon(1);
     if (this.statsInterval) { clearInterval(this.statsInterval); this.statsInterval = null; }
   },
 
@@ -1049,6 +1108,12 @@ NM.WW3 = {
     // Remove legend
     const leg = document.getElementById('ww3-legend');
     if (leg) leg.style.display = 'none';
+    // Remove DEFCON
+    const defcon = document.getElementById('ww3-defcon');
+    if (defcon) defcon.style.display = 'none';
+    // Remove toasts
+    const toasts = document.getElementById('ww3-toasts');
+    if (toasts) toasts.innerHTML = '';
     // Remove winter overlay
     const winter = document.getElementById('ww3-winter');
     if (winter) { winter.style.opacity = '0'; winter.style.display = 'none'; }
