@@ -324,6 +324,18 @@ function initControls() {
   }
   sel.addEventListener('change', () => setYield(NM.WEAPONS[sel.value].yield_kt));
 
+  // Weapon filter
+  $('weapon-filter').addEventListener('input', () => {
+    const q = $('weapon-filter').value.toLowerCase();
+    sel.querySelectorAll('option').forEach(o => {
+      o.hidden = q && !o.textContent.toLowerCase().includes(q);
+    });
+    sel.querySelectorAll('optgroup').forEach(g => {
+      const visible = [...g.querySelectorAll('option')].some(o => !o.hidden);
+      g.hidden = !visible;
+    });
+  });
+
   // Yield slider with live preview
   let yieldPreviewRing = null;
   $('yield-slider').addEventListener('input', () => {
@@ -691,13 +703,21 @@ function initControls() {
     $('ww3-pause').textContent = NM.WW3.paused ? 'Resume' : 'Pause';
   });
 
-  // Collapsible sections in Effects tab
-  document.querySelectorAll('#tab-effects .section-title, #tab-encyclopedia .section-title').forEach(title => {
+  // Collapsible sections in Effects/Encyclopedia tabs
+  const alwaysOpen = new Set(['legend-section','cloud-section','timeline-section','shelter-section']);
+  document.querySelectorAll('#tab-effects .section, #tab-encyclopedia .section').forEach(sec => {
+    const title = sec.querySelector('.section-title');
+    if (!title) return;
     title.classList.add('collapsible');
     title.addEventListener('click', () => {
       title.classList.toggle('collapsed');
-      title.closest('.section').classList.toggle('sec-collapsed');
+      sec.classList.toggle('sec-collapsed');
     });
+    // Auto-collapse secondary sections
+    if (!alwaysOpen.has(sec.id)) {
+      title.classList.add('collapsed');
+      sec.classList.add('sec-collapsed');
+    }
   });
 
   // WW3 quick-launch button
@@ -879,7 +899,8 @@ function updateDetsList() {
     const nc = NM.findNearestCity(d.lat, d.lng);
     const nm = nc && nc.dist < 50 ? nc.name : `${d.lat.toFixed(2)}, ${d.lng.toFixed(2)}`;
     const el = document.createElement('div'); el.className = 'det-item';
-    el.innerHTML = `<span class="det-idx">${i + 1}</span><span class="det-name">${NM.esc(nm)}</span>${d.isHEMP ? '<span class="det-badge">HEMP</span>' : ''}<span class="det-yield">${NM.fmtYield(d.yieldKt)}</span><button class="det-remove" data-i="${i}">&times;</button>`;
+    const wShort = d.weapon ? d.weapon.split('(')[0].trim() : '';
+    el.innerHTML = `<span class="det-idx">${i + 1}</span><div class="det-info"><span class="det-name">${NM.esc(nm)}</span><span class="det-weapon">${NM.esc(wShort)}</span></div>${d.isHEMP ? '<span class="det-badge">HEMP</span>' : ''}<span class="det-yield">${NM.fmtYield(d.yieldKt)}</span><button class="det-remove" data-i="${i}">&times;</button>`;
     el.querySelector('.det-remove').addEventListener('click', e => { e.stopPropagation(); removeDet(i); });
     el.addEventListener('click', e => { if (!e.target.classList.contains('det-remove')) map.flyTo([d.lat, d.lng], map.getZoom(), {duration: 0.6}); });
     list.appendChild(el);
@@ -1321,6 +1342,11 @@ function init() {
   initMap();
   initControls();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+
+  // Lazy-load ZIP code database (1.5MB) after app is interactive
+  setTimeout(() => {
+    const s = document.createElement('script'); s.src = 'js/zipcodes.js'; document.body.appendChild(s);
+  }, 2000);
 
   // Welcome overlay
   const wo = $('welcome-overlay');

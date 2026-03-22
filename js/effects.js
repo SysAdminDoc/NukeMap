@@ -23,6 +23,18 @@ NM.Effects = {
     if (e.craterR > 0) rings.push({id:'crater',r:e.craterR,color:'#585b70',fo:0.5,bo:0.7,dashed:true});
 
     const layers = [];
+
+    // Burn scar (dark destruction zone at 5 psi)
+    if (e.psi5 > 0.01) {
+      const scar = L.circle([lat, lng], {
+        radius: e.psi5 * 1000, color: 'transparent', weight: 0,
+        fillColor: '#000', fillOpacity: 0.25, interactive: false, className: 'burn-scar'
+      });
+      scar._effectId = '_scar';
+      scar.addTo(map);
+      layers.push(scar);
+    }
+
     for (const ring of rings) {
       if (ring.r < 0.0005) continue;
       const circ = L.circle([lat, lng], {

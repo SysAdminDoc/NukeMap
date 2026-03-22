@@ -56,6 +56,8 @@ NM.QUICK_TARGETS = [
   {name:'Chicago',lat:41.8781,lng:-87.6298},{name:'Tokyo',lat:35.6762,lng:139.65},
   {name:'Paris',lat:48.8566,lng:2.3522},{name:'Tehran',lat:35.6892,lng:51.389},
   {name:'Pyongyang',lat:39.0392,lng:125.763},{name:'Pentagon',lat:38.8719,lng:-77.056},
+  {name:'Seoul',lat:37.5665,lng:126.978},{name:'Tel Aviv',lat:32.0853,lng:34.782},
+  {name:'Berlin',lat:52.52,lng:13.405},{name:'Mumbai',lat:19.076,lng:72.878},
 ];
 
 NM.EFFECTS_DEF = [
