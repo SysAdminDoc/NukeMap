@@ -213,7 +213,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .mirv-status{font-size:10px;color:var(--overlay0);margin-bottom:6px;padding:4px 0}
 
 /* Info bar */
-#info-bar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:1000;background:var(--glass);backdrop-filter:blur(20px) saturate(1.5);border:1px solid var(--glass-border);border-radius:var(--radius);padding:8px 16px;display:none;box-shadow:var(--shadow-lg)}
+#info-bar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:1000;background:var(--glass);backdrop-filter:blur(20px) saturate(1.5);border:1px solid var(--glass-border);border-radius:var(--radius);padding:8px 16px;display:none;box-shadow:var(--shadow-lg);max-width:calc(100vw - var(--panel-w) - 30px)}
 #info-bar.active{display:flex;align-items:center;gap:14px}
 .ib-stat{text-align:center}.ib-val{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}.ib-lbl{font-size:8px;color:var(--overlay0);text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
 .ib-div{width:1px;height:24px;background:var(--surface1)}
@@ -343,9 +343,9 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .scenario-chip .sc-desc{font-size:9px;color:var(--overlay0);margin-top:1px}
 
 /* Fact banner */
-#fact-banner{position:absolute;bottom:50px;left:var(--panel-w);margin-left:14px;z-index:999;max-width:420px;padding:6px 14px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);font-size:10px;color:var(--subtext0);display:none;text-align:center;line-height:1.4;box-shadow:var(--shadow-lg);cursor:pointer}
+#fact-banner{position:absolute;top:50px;right:14px;z-index:998;max-width:350px;padding:6px 14px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);font-size:10px;color:var(--subtext0);display:none;text-align:left;line-height:1.4;box-shadow:var(--shadow-lg);cursor:pointer}
 #fact-banner.show{display:block;animation:factFade 0.5s ease-out}
-@keyframes factFade{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes factFade{0%{opacity:0;transform:translateX(10px)}100%{opacity:1;transform:translateX(0)}}
 .fact-label{font-size:9px;font-weight:700;color:var(--overlay0);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
 
 /* Draggable GZ */
@@ -540,8 +540,12 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .dose-row span:last-child{font-weight:600;font-variant-numeric:tabular-nums}
 .dose-note{font-size:9px;color:var(--overlay0);margin-top:6px;font-style:italic;text-align:center}
 
+/* WW3 quick launch button */
+#ww3-quick-btn{position:absolute;bottom:14px;right:14px;z-index:1000;padding:8px 16px;border-radius:var(--radius-sm);border:none;background:linear-gradient(135deg,#f38ba8,#fab387);color:var(--crust);font-size:12px;font-weight:900;cursor:pointer;letter-spacing:2px;box-shadow:0 4px 16px rgba(243,139,168,0.3);transition:all .2s;text-transform:uppercase}
+#ww3-quick-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(243,139,168,0.4)}
+
 /* Quick weapon bar */
-#quick-weapons{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);z-index:999;display:flex;gap:3px;padding:4px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(20px) saturate(1.5);border:1px solid var(--glass-border);box-shadow:var(--shadow-lg)}
+#quick-weapons{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:999;display:flex;gap:3px;padding:4px;border-radius:var(--radius);background:var(--glass);backdrop-filter:blur(20px) saturate(1.5);border:1px solid var(--glass-border);box-shadow:var(--shadow-lg);max-width:calc(100vw - var(--panel-w) - 30px)}
 .qw-chip{padding:4px 10px;border-radius:6px;background:transparent;border:1px solid var(--surface1);color:var(--subtext0);font-size:9px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.2}
 .qw-chip:hover{background:var(--surface0);color:var(--text);border-color:var(--surface2)}
 .qw-chip.qw-active{background:var(--surface1);color:var(--peach);border-color:var(--peach)}
@@ -678,9 +682,9 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
   #panel.collapsed{transform:translateY(calc(100% - 44px))}
   #panel-toggle{top:-38px;right:12px;left:auto;border-radius:var(--radius-sm) var(--radius-sm) 0 0;width:44px;height:34px;border-bottom:none}
   #coords{display:none}
-  #info-bar{bottom:auto;top:50px;font-size:12px;padding:6px 12px}
-  #info-bar .ib-val{font-size:13px}
-  #fact-banner{bottom:calc(50vh + 50px);left:8px;margin-left:0;max-width:85vw;font-size:9px;padding:5px 10px}
+  #info-bar{bottom:calc(50vh + 6px);left:50%;max-width:95vw;font-size:11px;padding:5px 10px}
+  #info-bar .ib-val{font-size:12px}
+  #fact-banner{top:auto;bottom:calc(50vh + 44px);right:8px;max-width:75vw;font-size:9px;padding:4px 10px}
   .panel-header{padding:10px 14px 8px}
   .brand-icon{width:28px;height:28px;border-radius:8px}
   .brand-text{font-size:17px}
@@ -705,9 +709,10 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
   #map-switcher{top:8px;right:78px}
   .ms-toggle{width:28px;height:28px}
   .ms-panel{right:0}
+  #ww3-quick-btn{bottom:calc(50vh + 6px);right:8px;padding:6px 12px;font-size:10px}
   .det-toast{top:auto;bottom:calc(50vh + 10px);font-size:11px;padding:6px 14px}
   .dt-yield{font-size:12px}
-  #quick-weapons{bottom:calc(50vh + 8px);gap:2px;padding:3px}
+  #quick-weapons{bottom:calc(50vh + 32px);left:50%;max-width:95vw;gap:2px;padding:3px}
   .qw-chip{padding:3px 7px}
   .qw-name{font-size:8px}
   .qw-yield{font-size:7px}

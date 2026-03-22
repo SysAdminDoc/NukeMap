@@ -375,6 +375,14 @@ function initControls() {
   $('clear-btn').addEventListener('click', clearAll);
   $('share-btn').addEventListener('click', showShareLink);
   $('share-copy').addEventListener('click', copyShareLink);
+  $('share-text').addEventListener('click', () => {
+    const text = getShareText();
+    if (text) { navigator.clipboard?.writeText(text); $('share-text').textContent = 'Copied!'; setTimeout(() => $('share-text').textContent = 'Copy Summary', 2000); }
+  });
+  $('share-native').addEventListener('click', () => {
+    const text = getShareText();
+    if (text && navigator.share) navigator.share({title: 'NukeMap Simulation', text, url: location.href}).catch(() => {});
+  });
 
   // Multi-detonation toggle
   $('multi-check').addEventListener('change', () => { multiMode = $('multi-check').checked; });
@@ -433,23 +441,24 @@ function initControls() {
   });
 
   // Floating map switcher
-  $('ms-toggle').addEventListener('click', () => {
-    $('ms-toggle').classList.toggle('open');
-    $('ms-panel').classList.toggle('open');
+  $('ms-toggle').addEventListener('click', e => {
+    e.stopPropagation();
+    const isOpen = $('ms-panel').classList.contains('open');
+    $('ms-toggle').classList.toggle('open', !isOpen);
+    $('ms-panel').classList.toggle('open', !isOpen);
   });
+  $('ms-panel').addEventListener('click', e => e.stopPropagation());
   document.querySelectorAll('.ms-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
       NM.LayerSwitcher.switchTo(btn.dataset.layer);
       $('ms-toggle').classList.remove('open');
       $('ms-panel').classList.remove('open');
     });
   });
-  // Close panel on outside click
-  document.addEventListener('click', e => {
-    if (!e.target.closest('#map-switcher')) {
-      $('ms-toggle').classList.remove('open');
-      $('ms-panel').classList.remove('open');
-    }
+  document.addEventListener('click', () => {
+    $('ms-toggle').classList.remove('open');
+    $('ms-panel').classList.remove('open');
   });
 
   // Ring labels toggle
@@ -684,6 +693,16 @@ function initControls() {
     if (!NM.WW3.active) return;
     NM.WW3.paused = !NM.WW3.paused;
     $('ww3-pause').textContent = NM.WW3.paused ? 'Resume' : 'Pause';
+  });
+
+  // WW3 quick-launch button
+  $('ww3-quick-btn').addEventListener('click', () => {
+    switchTab('tools');
+    // Scroll WW3 section into view
+    const ww3Sec = $('ww3-scenario')?.closest('.section');
+    if (ww3Sec) ww3Sec.scrollIntoView({behavior: 'smooth', block: 'start'});
+    // If panel is collapsed, open it
+    $('panel').classList.remove('collapsed');
   });
 
   // Quick weapon bar
@@ -1085,8 +1104,26 @@ function loadFromURL() {
   });
 }
 
-function showShareLink() { $('share-section').style.display = ''; $('share-input').value = location.href; switchTab('results'); }
-function copyShareLink() { $('share-input').select(); navigator.clipboard?.writeText($('share-input').value); $('share-copy').textContent = 'Copied!'; setTimeout(() => $('share-copy').textContent = 'Copy', 2000); }
+function showShareLink() {
+  $('share-section').style.display = ''; $('share-input').value = location.href; switchTab('results');
+  // Show native share button if Web Share API available
+  if (navigator.share) $('share-native').style.display = '';
+}
+function copyShareLink() { $('share-input').select(); navigator.clipboard?.writeText($('share-input').value); $('share-copy').textContent = 'Copied!'; setTimeout(() => $('share-copy').textContent = 'Copy Link', 2000); }
+function getShareText() {
+  if (!currentDets.length) return '';
+  let td = 0, ti = 0, ty = 0;
+  currentDets.forEach(d => { td += d.casualties.deaths; ti += d.casualties.injuries; ty += d.yieldKt; });
+  const hiro = (ty / 15);
+  const nc = NM.findNearestCity(currentDets[0].lat, currentDets[0].lng);
+  const loc = nc && nc.dist < 50 ? nc.name : `${currentDets[0].lat.toFixed(2)}, ${currentDets[0].lng.toFixed(2)}`;
+  let text = `NukeMap: ${NM.fmtYield(ty)} (${hiro >= 10 ? hiro.toFixed(0) : hiro.toFixed(1)}x Hiroshima)`;
+  if (currentDets.length === 1) text += ` on ${loc}`;
+  else text += ` across ${currentDets.length} targets`;
+  text += ` | ${NM.fmtNum(td)} killed, ${NM.fmtNum(ti)} injured`;
+  text += `\n${location.href}`;
+  return text;
+}
 
 // ---- WEAPON ENCYCLOPEDIA ----
 function initEncyclopedia() {
