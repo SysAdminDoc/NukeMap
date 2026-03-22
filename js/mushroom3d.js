@@ -3,13 +3,13 @@ window.NM = window.NM || {};
 
 NM.Mushroom3D = {
   active: false,
-  overlay: null,
+  overlays: [],    // all active cloud overlays
   currentDet: null,
 
   init() { /* no-op, no Three.js needed */ },
 
-  show(det) {
-    this.hide();
+  show(det, keepExisting) {
+    if (!keepExisting) this.hideAll();
     this.currentDet = det;
     const map = NM._map;
     if (!map) return;
@@ -39,11 +39,12 @@ NM.Mushroom3D = {
     svgEl.innerHTML = svgStr;
     const svgNode = svgEl.firstElementChild;
 
-    this.overlay = L.svgOverlay(svgNode, bounds, {
+    const overlay = L.svgOverlay(svgNode, bounds, {
       interactive: false,
       className: 'mushroom-overlay'
     }).addTo(map);
 
+    this.overlays.push(overlay);
     this.active = true;
 
     // Animate: reveal from bottom up using the SVG clip-path
@@ -214,22 +215,30 @@ NM.Mushroom3D = {
     return wisps;
   },
 
-  hide() {
+  hide() { this.hideAll(); },
+
+  hideAll() {
     this.active = false;
     const map = NM._map;
-    if (this.overlay && map) {
-      map.removeLayer(this.overlay);
-      this.overlay = null;
-    }
+    if (map) this.overlays.forEach(o => map.removeLayer(o));
+    this.overlays = [];
     this.currentDet = null;
   },
 
-  cleanup() { this.hide(); },
+  // Remove a specific overlay by index (for removing individual detonations)
+  removeAt(idx) {
+    const map = NM._map;
+    if (map && this.overlays[idx]) map.removeLayer(this.overlays[idx]);
+    this.overlays.splice(idx, 1);
+    if (!this.overlays.length) this.active = false;
+  },
+
+  cleanup() { this.hideAll(); },
 
   onMapMove() { /* SVG overlay auto-tracks with Leaflet, no manual reposition needed */ },
 
-  toggle(det) {
-    if (this.active) this.hide();
-    else if (det) this.show(det);
+  toggle(det, keepExisting) {
+    if (this.active && !keepExisting) this.hideAll();
+    else if (det) this.show(det, keepExisting);
   }
 };

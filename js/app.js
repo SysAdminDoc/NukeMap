@@ -124,7 +124,7 @@ function triggerDetonation(lat, lng) {
 
   // 3D mushroom cloud
   if ($('cloud-toggle')?.checked) {
-    setTimeout(() => NM.Mushroom3D.show(det), 500);
+    setTimeout(() => NM.Mushroom3D.show(det, multiMode), 500);
   }
 
   // Update all UI panels
@@ -672,6 +672,7 @@ function toggleEffect(eid, vis) { currentDets.forEach(d => d.layers.forEach(l =>
 
 function removeDet(i) {
   const d = currentDets[i]; if (d) d.layers.forEach(l => map.removeLayer(l));
+  NM.Mushroom3D.removeAt(i);
   currentDets.splice(i, 1); updateDetsList(); updateStats();
   if (!currentDets.length) resetPanels();
   else { const last = currentDets[currentDets.length - 1]; updateLegend(last); updateCloud(last); updateTimeline(last); updateCrater(last); updateShelter(last); }
