@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Convert researched target JSON files into ww3.js target arrays."""
 import json, re
 

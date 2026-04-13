@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 NukeMap Build Script - Bundles all files into a single offline HTML.
 Usage: python build.py
