@@ -343,25 +343,23 @@ NM.DeliveryArc = {
 
 // ---- EXPORT MAP AS PNG ----
 NM.ExportPNG = {
-  async capture() {
-    // Use html2canvas-like approach with the map container
+  async capture(hiDpi) {
+    const scale = hiDpi ? 4 : 2;
     const mapEl = document.getElementById('map');
     try {
       // Try using the canvas renderer directly if available
       const leafletCanvas = mapEl.querySelector('canvas');
-      if (leafletCanvas) {
+      if (leafletCanvas && !hiDpi) {
         const dataURL = leafletCanvas.toDataURL('image/png');
         this.download(dataURL, 'nukemap-export.png');
         return;
       }
-      // Fallback: capture the map tiles + overlays
-      // Create a temporary canvas
       const canvas = document.createElement('canvas');
       const rect = mapEl.getBoundingClientRect();
-      canvas.width = rect.width * 2; // 2x for DPI
-      canvas.height = rect.height * 2;
+      canvas.width = rect.width * scale;
+      canvas.height = rect.height * scale;
       const ctx = canvas.getContext('2d');
-      ctx.scale(2, 2);
+      ctx.scale(scale, scale);
       ctx.fillStyle = '#11111b';
       ctx.fillRect(0, 0, rect.width, rect.height);
 
@@ -395,10 +393,31 @@ NM.ExportPNG = {
         });
       }
 
-      this.download(canvas.toDataURL('image/png'), 'nukemap-export.png');
+      this.download(canvas.toDataURL('image/png'), hiDpi ? 'nukemap-export-hd.png' : 'nukemap-export.png');
     } catch(e) {
       console.error('Export failed:', e);
     }
+  },
+
+  exportSVG() {
+    const mapEl = document.getElementById('map');
+    const svgs = mapEl.querySelectorAll('svg.leaflet-zoom-animated');
+    if (!svgs.length) return;
+    const rect = mapEl.getBoundingClientRect();
+    let combined = `<svg xmlns="http://www.w3.org/2000/svg" width="${rect.width}" height="${rect.height}" viewBox="0 0 ${rect.width} ${rect.height}">`;
+    combined += `<rect width="100%" height="100%" fill="#11111b"/>`;
+    for (const svg of svgs) {
+      const sr = svg.getBoundingClientRect();
+      const x = sr.left - rect.left, y = sr.top - rect.top;
+      combined += `<g transform="translate(${x},${y})">`;
+      for (const child of svg.children) combined += new XMLSerializer().serializeToString(child);
+      combined += '</g>';
+    }
+    combined += '</svg>';
+    const blob = new Blob([combined], {type: 'image/svg+xml'});
+    const url = URL.createObjectURL(blob);
+    this.download(url, 'nukemap-export.svg');
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   },
 
   download(dataURL, filename) {

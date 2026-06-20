@@ -612,6 +612,8 @@ function initControls() {
 
   // Export PNG + KML + JSON + Report
   $('export-png').addEventListener('click', () => NM.ExportPNG.capture());
+  $('export-png-hd').addEventListener('click', () => NM.ExportPNG.capture(true));
+  $('export-svg').addEventListener('click', () => NM.ExportPNG.exportSVG());
   $('export-kml').addEventListener('click', () => { if (currentDets.length) NM.KMLExport.download(currentDets); });
   $('export-json').addEventListener('click', () => { if (currentDets.length) exportJSON(); });
   $('export-report').addEventListener('click', () => { if (currentDets.length) exportReport(); });
