@@ -35,7 +35,7 @@ def build():
 
     # Read local files
     css = read('css/styles.css')
-    js_files = ['data.js','physics.js','search.js','effects.js','animation.js','sound.js',
+    js_files = ['zipcodes.js','data.js','physics.js','search.js','effects.js','animation.js','sound.js',
                 'mushroom3d.js','mirv.js','shelter.js','compare.js','heatmap.js',
                 'extras.js','advanced.js','premium.js','immersive.js','ww3.js','app.js']
     js_all = '\n'.join(read(f'js/{f}') for f in js_files)

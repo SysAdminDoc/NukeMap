@@ -9,7 +9,7 @@ NM._nightMode = false;
 
 // ---- MAP INIT ----
 function initMap() {
-  map = L.map('map', {center: [39.83, -98.58], zoom: 5, zoomControl: true, attributionControl: true, zoomSnap: 0.5});
+  map = L.map('map', {center: [39.83, -98.58], zoom: 5, zoomControl: true, attributionControl: true, zoomSnap: 0.5, preferCanvas: true});
   L.control.scale({position: 'bottomleft', imperial: true, metric: true, maxWidth: 200}).addTo(map);
   NM._map = map; // expose for mushroom3d positioning
   const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {

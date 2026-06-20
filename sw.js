@@ -1,5 +1,6 @@
-const CACHE_NAME = 'nukemap-v3.3.0';
+const CACHE_NAME = 'nukemap-v3.3.2';
 const TILE_CACHE = 'nukemap-tiles-v3';
+const MAX_TILE_ENTRIES = 2000;
 const PRECACHE = [
   './', './index.html', './css/styles.css', './manifest.json',
   './js/zipcodes.js', './js/data.js', './js/physics.js', './js/search.js', './js/effects.js',
@@ -24,7 +25,17 @@ self.addEventListener('fetch', e => {
 
   if (isTile) {
     e.respondWith(caches.open(TILE_CACHE).then(cache =>
-      cache.match(e.request).then(r => r || fetch(e.request).then(resp => { if (resp.ok) cache.put(e.request, resp.clone()); return resp; }).catch(() => new Response('', {status: 404})))
+      cache.match(e.request).then(r => r || fetch(e.request).then(resp => {
+        if (resp.ok) {
+          cache.put(e.request, resp.clone());
+          cache.keys().then(keys => {
+            if (keys.length > MAX_TILE_ENTRIES) {
+              for (let i = 0; i < keys.length - MAX_TILE_ENTRIES; i++) cache.delete(keys[i]);
+            }
+          });
+        }
+        return resp;
+      }).catch(() => new Response('', {status: 404})))
     ));
   } else if (isCDN) {
     e.respondWith(caches.open(CACHE_NAME).then(cache =>
