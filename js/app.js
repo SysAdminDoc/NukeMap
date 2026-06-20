@@ -1032,7 +1032,27 @@ function updateNearbyTargets(det) {
 }
 
 function updateStats() {
-  let td = 0, ti = 0, ty = 0; currentDets.forEach(d => { td += d.casualties.deaths; ti += d.casualties.injuries; ty += d.yieldKt; });
+  let td = 0, ti = 0, ty = 0;
+  currentDets.forEach((d, i) => {
+    let overlapFrac = 0;
+    if (i > 0) {
+      const rKm = Math.max(d.effects.psi1, d.effects.thermal1);
+      for (let j = 0; j < i; j++) {
+        const dist = NM.haversine(d.lat, d.lng, currentDets[j].lat, currentDets[j].lng);
+        const rPrev = Math.max(currentDets[j].effects.psi1, currentDets[j].effects.thermal1);
+        const combined = rKm + rPrev;
+        if (dist < combined && combined > 0) {
+          const overlap = Math.max(0, 1 - dist / combined);
+          overlapFrac = Math.max(overlapFrac, overlap * 0.7);
+        }
+      }
+    }
+    const dedup = 1 - overlapFrac;
+    td += d.casualties.deaths * dedup;
+    ti += d.casualties.injuries * dedup;
+    ty += d.yieldKt;
+  });
+  td = Math.round(td); ti = Math.round(ti);
   const hiro = ty / 15; // Hiroshima equivalents
   $('stat-deaths').textContent = NM.fmtNum(td);
   $('stat-injuries').textContent = NM.fmtNum(ti);
