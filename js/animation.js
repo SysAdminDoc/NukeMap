@@ -125,25 +125,26 @@ NM.Animation = {
     requestAnimationFrame(tick);
   },
 
-  // Full detonation sequence
+  _announce(msg) {
+    let el = document.getElementById('a11y-announce');
+    if (!el) { el = document.createElement('div'); el.id = 'a11y-announce'; el.setAttribute('role', 'log'); el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-atomic', 'false'); el.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)'; document.body.appendChild(el); }
+    const span = document.createElement('span');
+    span.textContent = msg;
+    el.appendChild(span);
+    setTimeout(() => { try { el.removeChild(span); } catch(e) {} }, 8000);
+  },
+
   detonateSequence(map, lat, lng, effects, yieldKt) {
     const intensity = Math.min(1, 0.3 + Math.log10(Math.max(yieldKt, 0.01)) * 0.15);
     const shakeMag = Math.min(8, 2 + Math.log10(Math.max(yieldKt, 0.1)) * 1.5);
     const animDuration = Math.min(5000, 2000 + Math.log10(Math.max(yieldKt, 1)) * 800);
 
-    // 1. Flash
+    this._announce(`Detonation: ${NM.fmtYield(yieldKt)} nuclear weapon. Fireball radius ${NM.fmtR(effects.fireball)}. Blast wave expanding to ${NM.fmtR(effects.psi1)}.`);
+
     this.flash(intensity);
-
-    // 2. Fireball glow (immediate)
     this.fireballGlow(map, lat, lng, effects.fireball, animDuration * 0.6);
-
-    // 3. Camera shake (slight delay)
     setTimeout(() => this.shake(map, shakeMag, animDuration * 0.4), 100);
-
-    // 4. Blast wave expansion
     setTimeout(() => this.blastWave(map, lat, lng, effects, animDuration), 200);
-
-    // 5. Sound
     if (NM.Sound) NM.Sound.detonate(yieldKt);
   },
 
