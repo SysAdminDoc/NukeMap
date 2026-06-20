@@ -104,10 +104,11 @@ function triggerDetonation(lat, lng) {
   const Y = getYield();
   let burst = getBurst();
   const isHEMP = burst === 'hemp';
-  if (isHEMP) burst = 'airburst'; // HEMP uses airburst physics but overrides effects
+  const isWater = burst === 'water';
+  if (isHEMP) burst = 'airburst';
   const hM = burst === 'custom' ? (+$('burst-height').value || 0) : 0;
   const fission = +$('fission-pct').value || 50;
-  const effects = NM.calcEffects(Y, isHEMP ? 'airburst' : burst, hM, fission);
+  const effects = NM.calcEffects(Y, isHEMP ? 'airburst' : (isWater ? 'water' : burst), hM, fission);
 
   // HEMP override: no blast/thermal at ground level, massive EMP
   if (isHEMP) {
@@ -116,13 +117,21 @@ function triggerDetonation(lat, lng) {
     effects.thermal1 = 0; effects.radiation = 0; effects.craterR = 0; effects.craterDepth = 0;
     effects.firestormR = 0; effects.flashBlindDay = 0; effects.flashBlindNight = 0;
     effects.fallout = null;
-    effects.emp = Math.min(2200, 40 * Math.pow(Y, 0.25)); // continent-scale EMP
-    effects.burstHeight = 400000; // 400 km
+    effects.emp = Math.min(2200, 40 * Math.pow(Y, 0.25));
+    effects.burstHeight = 400000;
     effects.isSurface = false;
   }
-  const cas = isHEMP ? {deaths: 0, injuries: 0, density: 0} : NM.estimateCasualties(lat, lng, effects);
+  // Water burst: reduced blast (absorbed by water), heavy radioactive base surge
+  if (isWater) {
+    effects.psi200 *= 0.3; effects.psi20 *= 0.5; effects.psi5 *= 0.6;
+    effects.psi3 *= 0.65; effects.psi1 *= 0.7;
+    effects.thermal3 *= 0.4; effects.thermal2 *= 0.5; effects.thermal1 *= 0.6;
+    effects.firestormR = 0;
+    effects.craterR = 0; effects.craterDepth = 0;
+    effects.isSurface = true;
+  }
+  const cas = (isHEMP) ? {deaths: 0, injuries: 0, density: 0} : NM.estimateCasualties(lat, lng, effects);
 
-  // Single mode: clear previous
   if (!multiMode) {
     currentDets.forEach(d => d.layers.forEach(l => map.removeLayer(l)));
     currentDets = [];
@@ -130,8 +139,8 @@ function triggerDetonation(lat, lng) {
   }
 
   const det = {
-    id: Date.now(), lat, lng, yieldKt: Y, burstType: isHEMP ? 'hemp' : burst, heightM: hM, fission, effects, casualties: cas, layers: [],
-    weapon: $('weapon-select').selectedOptions[0]?.textContent || 'Custom', isHEMP
+    id: Date.now(), lat, lng, yieldKt: Y, burstType: isHEMP ? 'hemp' : (isWater ? 'water' : burst), heightM: hM, fission, effects, casualties: cas, layers: [],
+    weapon: $('weapon-select').selectedOptions[0]?.textContent || 'Custom', isHEMP, isWater
   };
 
   // Draw static effect rings
@@ -381,8 +390,9 @@ function initControls() {
     document.querySelectorAll('.burst-btn').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     $('height-row').style.display = b.dataset.burst === 'custom' ? '' : 'none';
-    $('wind-wrap').style.display = b.dataset.burst === 'surface' ? '' : 'none';
+    $('wind-wrap').style.display = (b.dataset.burst === 'surface' || b.dataset.burst === 'water') ? '' : 'none';
     $('hemp-info').style.display = b.dataset.burst === 'hemp' ? '' : 'none';
+    $('water-info').style.display = b.dataset.burst === 'water' ? '' : 'none';
   }));
 
   // Detonate / Undo / Clear / Share
@@ -941,7 +951,7 @@ function updateDetsList() {
     const nm = nc && nc.dist < 50 ? nc.name : `${d.lat.toFixed(2)}, ${d.lng.toFixed(2)}`;
     const el = document.createElement('div'); el.className = 'det-item';
     const wShort = d.weapon ? d.weapon.split('(')[0].trim() : '';
-    el.innerHTML = `<span class="det-idx">${i + 1}</span><div class="det-info"><span class="det-name">${NM.esc(nm)}</span><span class="det-weapon">${NM.esc(wShort)}</span></div>${d.isHEMP ? '<span class="det-badge">HEMP</span>' : ''}<span class="det-yield">${NM.fmtYield(d.yieldKt)}</span><button class="det-remove" data-i="${i}">&times;</button>`;
+    el.innerHTML = `<span class="det-idx">${i + 1}</span><div class="det-info"><span class="det-name">${NM.esc(nm)}</span><span class="det-weapon">${NM.esc(wShort)}</span></div>${d.isHEMP ? '<span class="det-badge">HEMP</span>' : ''}${d.isWater ? '<span class="det-badge" style="background:var(--blue)">WATER</span>' : ''}<span class="det-yield">${NM.fmtYield(d.yieldKt)}</span><button class="det-remove" data-i="${i}">&times;</button>`;
     el.querySelector('.det-remove').addEventListener('click', e => { e.stopPropagation(); removeDet(i); });
     el.addEventListener('click', e => { if (!e.target.classList.contains('det-remove')) map.flyTo([d.lat, d.lng], map.getZoom(), {duration: 0.6}); });
     list.appendChild(el);

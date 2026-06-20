@@ -115,10 +115,15 @@
             <button class="burst-btn" data-burst="surface">Surface</button>
             <button class="burst-btn" data-burst="custom">Custom</button>
             <button class="burst-btn" data-burst="hemp">HEMP</button>
+            <button class="burst-btn" data-burst="water">Water</button>
           </div>
           <div class="hemp-info" id="hemp-info" style="display:none">
             <div style="font-size:9px;color:var(--teal);font-weight:600;margin-bottom:3px">High-Altitude EMP (HEMP)</div>
             <div style="font-size:9px;color:var(--overlay0);line-height:1.4">Detonation at 400 km altitude. No blast/thermal damage at ground level. Generates massive EMP covering ~2,200 km radius (~continent-scale). Gamma rays interact with upper atmosphere to produce E1/E2/E3 electromagnetic pulses.</div>
+          </div>
+          <div class="hemp-info" id="water-info" style="display:none">
+            <div style="font-size:9px;color:var(--blue);font-weight:600;margin-bottom:3px">Underwater / Water Surface Burst</div>
+            <div style="font-size:9px;color:var(--overlay0);line-height:1.4">Detonation at or below the water surface. Generates a radioactive base surge (mist cloud) instead of a normal mushroom cloud. Produces tsunami-like surface waves. Reduced blast/thermal effects vs air burst but massive radioactive contamination of surrounding water. Based on Baker test (Bikini Atoll, 1946).</div>
           </div>
           <div class="compact-row" id="height-row" style="display:none">
             <label>Height</label><input type="number" class="compact-input" id="burst-height" value="0" min="0"/><span class="unit">m</span>

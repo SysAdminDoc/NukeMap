@@ -27,6 +27,8 @@ NM.CITATIONS = {
   flashBlind:{ref:'G&D Ch.12 §12.40–12.44', note:'Temporary flash blindness. Day: 2.1·Y^0.4 km. Night (scotopic): 55·Y^0.25 km.'},
   firestorm: {ref:'G&D Ch.7 §7.58–7.60', note:'Firestorm zone ≈ 85% of 3rd-degree thermal radius. Requires >8 cal/cm² + urban fuel load.'},
   surfaceFactor: {ref:'NWFAQ §5.2; HSAJ §3', note:'Surface burst blast radii ≈ 0.8× airburst (enhanced ground coupling, no Mach stem).'},
+  baseSurge: {ref:'G&D Ch.6 §6.43–6.50', note:'Water burst base surge: radioactive mist cloud. Radius ≈ 0.34·Y^0.4 km. Height ≈ 0.06·Y^0.4 km.'},
+  waveHeight: {ref:'G&D Ch.6 §6.50–6.57', note:'Water surface wave at 1 km ≈ 10·Y^0.54 meters. Decays as ~1/distance. Shallow-water enhanced.'},
   optHeight: {ref:'G&D Ch.3 §3.73', note:'Optimal burst height for max 5-psi radius ≈ 0.22·Y^(1/3) km.'},
   mortality: {ref:'Harney 2009; Nuclear Radius Pro', note:'Bayesian combined mortality: P(death)=1-(1-Pb)(1-Pt)(1-Pr). Indoor PF=0.4, indoor fraction=80%.'},
 };
@@ -66,7 +68,11 @@ NM.calcEffects = function(Y, burstType, heightM, fissionFrac) {
     flashBlindDay:  2.1 * Math.pow(Y, 0.4),   // km - temporary blindness in daylight
     flashBlindNight: 55 * Math.pow(Y, 0.25),  // km - temporary blindness at night (much larger)
     firestormR: 0.68 * Math.pow(Y, 0.41) * 0.85, // km - firestorm probability zone (inside 3rd degree burns)
-    burstHeight: h, optimalHeight: optH, isSurface, yieldKt: Y
+    burstHeight: h, optimalHeight: optH, isSurface, yieldKt: Y,
+    isWater: burstType === 'water',
+    baseSurge: burstType === 'water' ? 0.34 * Math.pow(Y, 0.4) : 0,  // G&D Ch.6 §6.43: base surge radius
+    baseSurgeH: burstType === 'water' ? 0.06 * Math.pow(Y, 0.4) : 0, // G&D Ch.6: base surge cloud height km
+    waveHeight: burstType === 'water' ? 10 * Math.pow(Y, 0.54) : 0,  // G&D Ch.6 §6.50: wave height meters at 1km
   };
 };
 

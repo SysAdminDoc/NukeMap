@@ -21,6 +21,7 @@ NM.Effects = {
       {id:'fireball',r:e.fireball,color:'#f5e0dc',fo:0.45,bo:0.75,dash:null},
     ];
     if (e.craterR > 0) rings.push({id:'crater',r:e.craterR,color:'#585b70',fo:0.5,bo:0.7,dash:'6 6'});
+    if (e.baseSurge > 0) rings.push({id:'basesurge',r:e.baseSurge,color:'#89dceb',fo:0.30,bo:0.65,dash:'3 3 8 3'});
 
     const layers = [];
 
