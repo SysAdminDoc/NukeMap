@@ -602,6 +602,8 @@ function initControls() {
   $('export-kml').addEventListener('click', () => { if (currentDets.length) NM.KMLExport.download(currentDets); });
   $('export-json').addEventListener('click', () => { if (currentDets.length) exportJSON(); });
   $('export-report').addEventListener('click', () => { if (currentDets.length) exportReport(); });
+  $('export-csv').addEventListener('click', () => { if (currentDets.length) exportCSV(); });
+  $('import-csv').addEventListener('change', (e) => { if (e.target.files[0]) { importCSV(e.target.files[0]); e.target.value = ''; } });
 
   // GPS check
   $('gps-check').addEventListener('click', () => NM.GPSSafe.check(map));
@@ -1227,6 +1229,43 @@ function exportJSON() {
   const blob = new Blob([JSON.stringify({version:'3.2.0', generated: new Date().toISOString(), detonations: data}, null, 2)], {type:'application/json'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nukemap-data.json';
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
+}
+
+// ---- EXPORT CSV ----
+function exportCSV() {
+  const header = 'lat,lng,yield_kt,burst_type,weapon,deaths,injuries,fireball_km,psi5_km,psi1_km,thermal3_km,emp_km';
+  const rows = currentDets.map(d =>
+    [d.lat.toFixed(4), d.lng.toFixed(4), d.yieldKt, d.burstType, '"'+d.weapon.replace(/"/g,'""')+'"',
+     d.casualties.deaths, d.casualties.injuries,
+     d.effects.fireball.toFixed(3), d.effects.psi5.toFixed(3), d.effects.psi1.toFixed(3),
+     d.effects.thermal3.toFixed(3), d.effects.emp.toFixed(3)].join(',')
+  );
+  const csv = header + '\n' + rows.join('\n');
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nukemap-data.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
+}
+
+// ---- IMPORT CSV ----
+function importCSV(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const lines = e.target.result.trim().split('\n');
+    if (lines.length < 2) return;
+    clearAll();
+    multiMode = true; $('multi-check').checked = true;
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].match(/(".*?"|[^,]+)/g);
+      if (!cols || cols.length < 4) continue;
+      const lat = +cols[0], lng = +cols[1], kt = +cols[2];
+      const burst = (cols[3] || 'airburst').replace(/"/g, '');
+      if (isNaN(lat) || isNaN(lng) || isNaN(kt)) continue;
+      setYield(kt);
+      document.querySelectorAll('.burst-btn').forEach(b => b.classList.toggle('active', b.dataset.burst === burst));
+      triggerDetonation(lat, lng);
+    }
+  };
+  reader.readAsText(file);
 }
 
 // ---- SUMMARY REPORT ----
