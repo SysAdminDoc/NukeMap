@@ -20,6 +20,8 @@ NM.calcEffects = function(Y, burstType, heightM, fissionFrac) {
     thermal2:  0.87 * Math.pow(Y, 0.41),
     thermal1:  1.18 * Math.pow(Y, 0.41),
     radiation: 1.15 * Math.pow(Y, 0.19),
+    neutronRad: Math.min(2.5, 0.7 * Math.pow(Y, 0.19)),
+    gammaRad: Math.min(3.0, 1.0 * Math.pow(Y, 0.19)),
     emp:       Math.min(2.5 * Math.pow(Y, 0.33), 500),
     craterR:   isSurface ? 0.038*Math.pow(Y,1/3.4) : 0,
     craterDepth: isSurface ? 0.013*Math.pow(Y,1/3.4) : 0,
@@ -41,6 +43,7 @@ NM.calcEffects = function(Y, burstType, heightM, fissionFrac) {
 NM.calcTimeline = function(Y, e) {
   const items = [
     {time:'0 ms', desc:'Detonation. X-ray pulse heats air to millions of degrees.'},
+    {time:'0.01 ms', desc:'Prompt neutron/gamma pulse. Lethal radiation (500+ rem) to '+NM.fmtR(e.neutronRad)+' (neutrons) and '+NM.fmtR(e.gammaRad)+' (gamma). Travels at speed of light.'},
     {time:'0.1 ms', desc:'Thermal flash. Temporary blindness to '+NM.fmtR(e.flashBlindDay)+' (day) or '+NM.fmtR(e.flashBlindNight)+' (night).'},
     {time: (0.0013*Math.pow(Y,0.4)*1000).toFixed(0)+' ms', desc:'Fireball reaches max size ('+NM.fmtR(e.fireball)+' radius). Surface temperature ~10,000,000\u00B0C.'},
     {time: NM.fmtTime(e.psi5/0.34), desc:'Blast wave at 5 psi ('+NM.fmtR(e.psi5)+'). Buildings destroyed. 160 mph winds.'},
