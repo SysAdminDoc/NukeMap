@@ -443,13 +443,13 @@ NM.WW3_TARGETS_CN = [
 // Launch origins (for missile arcs)
 NM.WW3_LAUNCHERS = {
   us_icbm: [{lat:47.506,lng:-111.183,name:'Malmstrom'},{lat:48.416,lng:-101.358,name:'Minot'},{lat:41.145,lng:-104.862,name:'Warren'}],
-  us_slbm: [{lat:58.0,lng:-30.0,name:'Atlantic SSBN'},{lat:40.0,lng:-155.0,name:'Pacific SSBN'},{lat:32.0,lng:-65.0,name:'Atlantic Patrol'}],
+  us_slbm: [{lat:58.0,lng:-30.0,name:'Atlantic SSBN Patrol'},{lat:40.0,lng:-155.0,name:'Pacific SSBN Patrol'},{lat:32.0,lng:-65.0,name:'Atlantic Bastion'},{lat:20.0,lng:-160.0,name:'Pacific Bastion'}],
   ru_icbm: [{lat:54.035,lng:36.013,name:'Kozelsk'},{lat:51.700,lng:45.537,name:'Tatishchevo'},{lat:51.049,lng:59.853,name:'Dombarovsky'},{lat:55.114,lng:89.634,name:'Uzhur'},{lat:56.883,lng:40.517,name:'Teykovo'},{lat:57.863,lng:33.652,name:'Vypolzovo'}],
-  ru_slbm: [{lat:72.0,lng:35.0,name:'Barents SSBN'},{lat:55.0,lng:150.0,name:'Okhotsk SSBN'},{lat:68.0,lng:40.0,name:'White Sea SSBN'}],
+  ru_slbm: [{lat:72.0,lng:35.0,name:'Barents Bastion SSBN'},{lat:55.0,lng:150.0,name:'Okhotsk Bastion SSBN'},{lat:68.0,lng:40.0,name:'White Sea SSBN'},{lat:78.0,lng:50.0,name:'Arctic Bastion SSBN'}],
   cn_icbm: [{lat:40.283,lng:97.033,name:'Yumen'},{lat:42.800,lng:93.500,name:'Hami'},{lat:40.500,lng:107.000,name:'Hanggin Banner'}],
-  // NATO retaliatory launchers (UK Trident + French M51)
+  cn_slbm: [{lat:18.0,lng:110.0,name:'South China Sea SSBN'},{lat:25.0,lng:121.0,name:'East China Sea SSBN'}],
   uk_slbm: [{lat:56.0,lng:-10.0,name:'UK Trident Patrol'},{lat:50.0,lng:-15.0,name:'UK Trident South'}],
-  fr_slbm: [{lat:46.0,lng:-8.0,name:'French SSBN Patrol'}],
+  fr_slbm: [{lat:46.0,lng:-8.0,name:'French SSBN Patrol'},{lat:42.0,lng:-12.0,name:'French SSBN Atlantic'}],
   fr_air: [{lat:43.521,lng:4.938,name:'Istres BA125'},{lat:48.636,lng:4.900,name:'Saint-Dizier BA113'}],
 };
 
@@ -489,7 +489,7 @@ NM.WW3_SCENARIOS = [
       {name:'Phase 2: Countervalue',delay:32000,duration:22000,filter:t=>t.type==='city'},
     ],
     targetSets: {us: NM.WW3_TARGETS_US, cn: NM.WW3_TARGETS_CN},
-    launchSets: {us: ['us_icbm','us_slbm'], cn: ['cn_icbm']},
+    launchSets: {us: ['us_icbm','us_slbm'], cn: ['cn_icbm','cn_slbm']},
     zoom: [30, 160, 3],
   },
   {
@@ -510,7 +510,7 @@ NM.WW3_SCENARIOS = [
       {name:'Phase 2: All cities & infrastructure',delay:45000,duration:35000,filter:t=>t.type==='city'||t.type==='infra'},
     ],
     targetSets: {us: NM.WW3_TARGETS_US, ru: NM.WW3_TARGETS_RU, nato: NM.WW3_TARGETS_NATO, cn: NM.WW3_TARGETS_CN},
-    launchSets: {us: ['us_icbm','us_slbm'], ru: ['ru_icbm','ru_slbm'], cn: ['cn_icbm'], uk: ['uk_slbm'], fr: ['fr_slbm','fr_air']},
+    launchSets: {us: ['us_icbm','us_slbm'], ru: ['ru_icbm','ru_slbm'], cn: ['cn_icbm','cn_slbm'], uk: ['uk_slbm'], fr: ['fr_slbm','fr_air']},
     zoom: [35, 0, 3],
   },
   {
