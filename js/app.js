@@ -17,9 +17,13 @@ function initMap() {
     subdomains: 'abcd', maxZoom: 19
   });
 
-  // Offline canvas tiles
+  // Offline canvas tiles with cache
+  const _tileCache = new Map();
   const Offline = L.TileLayer.extend({
     createTile(coords) {
+      const key = `${coords.x},${coords.y},${coords.z}`;
+      const cached = _tileCache.get(key);
+      if (cached) { const clone = document.createElement('canvas'); clone.width = cached.width; clone.height = cached.height; clone.getContext('2d').drawImage(cached, 0, 0); return clone; }
       const c = document.createElement('canvas'), s = this.getTileSize(); c.width = s.x; c.height = s.y;
       const ctx = c.getContext('2d'), z = coords.z;
       ctx.fillStyle = '#11111b'; ctx.fillRect(0, 0, s.x, s.y);
@@ -29,6 +33,8 @@ function initMap() {
       for (let lng = -180; lng <= 180; lng += gs) { const x = (this._l2x(lng, z) - coords.x) * s.x; if (x > -s.x && x < s.x * 2) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, s.y); ctx.stroke(); } }
       ctx.strokeStyle = 'rgba(137,180,250,0.35)'; ctx.lineWidth = 1; ctx.fillStyle = 'rgba(49,50,68,0.5)';
       for (const sh of Object.values(NM.WORLD)) { ctx.beginPath(); let f = true; for (const [lng, lat] of sh) { const px = (this._l2x(lng, z) - coords.x) * s.x, py = (this._l2y(lat, z) - coords.y) * s.y; f ? (ctx.moveTo(px, py), f = false) : ctx.lineTo(px, py); } ctx.closePath(); ctx.fill(); ctx.stroke(); }
+      if (_tileCache.size > 500) _tileCache.clear();
+      _tileCache.set(key, c);
       return c;
     },
     _l2y(lat, z) { const n = Math.pow(2, z), r = lat * Math.PI / 180; return n * (1 - (Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI)) / 2; },
@@ -1320,6 +1326,8 @@ function showDetToast(det) {
   const hiroStr = hiro >= 10 ? hiro.toFixed(0) + 'x Hiroshima' : hiro >= 1 ? hiro.toFixed(1) + 'x Hiroshima' : '';
   const el = document.createElement('div');
   el.className = 'det-toast';
+  el.setAttribute('role', 'alert');
+  el.setAttribute('aria-live', 'assertive');
   el.innerHTML = `<span class="dt-yield">${NM.fmtYield(det.yieldKt)}</span> <span class="dt-loc">${NM.esc(loc)}</span>${hiroStr ? ` <span class="dt-hiro">${hiroStr}</span>` : ''}`;
   document.body.appendChild(el);
   requestAnimationFrame(() => el.classList.add('show'));
