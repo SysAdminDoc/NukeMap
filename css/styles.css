@@ -739,9 +739,18 @@ body.has-results #quick-weapons{bottom:104px}
 
 /* Print styles */
 @media print{
-  #panel,#info-bar,#coords,#offline-badge,#quick-weapons,#fullscreen-btn,#map-switcher,#fact-banner,#screenshot-hint,.leaflet-control-zoom,.leaflet-control-attribution,.leaflet-control-scale{display:none!important}
-  #map{position:relative!important;height:100vh!important}
-  body{overflow:visible!important}
+  #coords,#offline-badge,#quick-weapons,#fullscreen-btn,#map-switcher,#fact-banner,#screenshot-hint,#ww3-quick-btn,#map-dpad,.leaflet-control-zoom{display:none!important}
+  #map{position:relative!important;height:50vh!important;page-break-after:always}
+  body{overflow:visible!important;height:auto!important}
+  html{overflow:visible!important;height:auto!important}
+  #panel{position:relative!important;width:100%!important;height:auto!important;transform:none!important;border:none!important;box-shadow:none!important;background:#fff!important;color:#000!important}
+  #panel .panel-content{opacity:1!important;pointer-events:auto!important}
+  #panel-toggle{display:none!important}
+  .stat-grid{display:flex!important;gap:16px;flex-wrap:wrap}
+  .stat-card{background:#f5f5f5!important;border:1px solid #ccc!important;color:#000!important;padding:8px 12px}
+  .stat-value{color:#000!important}.stat-label{color:#333!important}
+  #info-bar{position:relative!important;left:0!important;transform:none!important;background:#f5f5f5!important;border:1px solid #ccc!important;color:#000!important;display:flex!important;margin:8px 0}
+  .tab-content:not(.active){display:none!important}
 }
 
 /* Emergency guide */
@@ -796,6 +805,10 @@ body.has-results #quick-weapons{bottom:104px}
 #undo-btn:hover{border-color:var(--peach);color:var(--peach)}
 
 /* Responsive */
+@media(max-width:800px){
+  #info-bar{left:50%;max-width:calc(100vw - 34px)}
+  #det-counter{left:14px;margin-left:0}
+}
 @media(max-width:768px){
   :root{--panel-w:100vw}
   #panel{height:52vh;top:auto;width:100%;border-right:none;border-top:1px solid var(--glass-border);border-radius:var(--radius) var(--radius) 0 0;box-shadow:0 -12px 42px rgba(0,0,0,.38)}
