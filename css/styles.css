@@ -10,6 +10,15 @@
   --shadow-lg:0 18px 55px rgba(0,0,0,0.42);--shadow-sm:0 4px 16px rgba(0,0,0,0.22);
   --control-bg:rgba(49,50,68,0.82);--control-border:rgba(127,132,156,0.28);--control-hover:rgba(69,71,90,0.75);
 }
+:root.high-contrast{
+  --base:#000;--mantle:#000;--crust:#000;--surface0:#1a1a1a;--surface1:#333;--surface2:#4d4d4d;
+  --overlay0:#999;--overlay1:#b3b3b3;--text:#fff;--subtext0:#ccc;--subtext1:#e6e6e6;
+  --red:#ff4d6a;--maroon:#ff7088;--peach:#ffaa44;--yellow:#ffd700;--green:#44ff44;--teal:#00e6cc;
+  --blue:#44aaff;--lavender:#aaaaff;--mauve:#cc88ff;--pink:#ff88cc;--flamingo:#ffaaaa;--rosewater:#ffcccc;
+  --sky:#44ddff;
+  --glass:rgba(0,0,0,0.95);--glass-border:rgba(255,255,255,0.3);--glass-hover:rgba(26,26,26,0.98);
+  --control-bg:rgba(26,26,26,0.95);--control-border:rgba(255,255,255,0.35);--control-hover:rgba(51,51,51,0.9);
+}
 html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--crust);color:var(--text);font-size:14px;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;letter-spacing:0}
 button{touch-action:manipulation}
@@ -742,6 +751,16 @@ body.has-results #quick-weapons{bottom:104px}
 .dpad-btn:hover,.dpad-btn:active{background:var(--glass-hover);color:var(--text)}
 .dpad-up{top:0;left:33px}.dpad-down{bottom:0;left:33px}.dpad-left{top:33px;left:0}.dpad-right{top:33px;right:0}
 @media(max-width:768px){#map-dpad{display:block}}
+
+/* Historic test cards */
+.hist-card{padding:10px;background:var(--surface0);border:1px solid var(--surface1);border-radius:6px;margin-bottom:6px;transition:border-color .15s}
+.hist-card:hover{border-color:var(--blue)}
+.hist-header{display:flex;gap:8px;align-items:baseline;margin-bottom:4px}
+.hist-name{font-size:12px;font-weight:700;color:var(--text)}.hist-year{font-size:10px;color:var(--overlay1)}.hist-yield{font-size:10px;color:var(--peach);margin-left:auto;font-weight:600}
+.hist-desc{font-size:10px;color:var(--subtext0);margin-bottom:4px}
+.hist-context{font-size:10px;color:var(--subtext1);line-height:1.5;margin-bottom:3px}
+.hist-physics{font-size:10px;color:var(--blue);line-height:1.5;margin-bottom:3px}
+.hist-source{font-size:9px;color:var(--overlay0);font-style:italic}
 
 /* Cumulative impact */
 .cum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:10px}

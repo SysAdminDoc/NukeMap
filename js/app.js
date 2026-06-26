@@ -706,6 +706,25 @@ function initControls() {
     if (currentDets.length) { updateLegend(currentDets[currentDets.length - 1]); }
   });
 
+  // High contrast theme (WCAG AAA)
+  const hcCheck = $('hc-check');
+  if (localStorage.getItem('nukemap-hc') === '1') { hcCheck.checked = true; document.documentElement.classList.add('high-contrast'); }
+  hcCheck.addEventListener('change', () => {
+    document.documentElement.classList.toggle('high-contrast', hcCheck.checked);
+    localStorage.setItem('nukemap-hc', hcCheck.checked ? '1' : '0');
+  });
+
+  // Educator mode: suppress animations/sound, show citations in tooltips
+  NM._educatorMode = false;
+  const eduCheck = $('educator-check');
+  if (localStorage.getItem('nukemap-edu') === '1') { eduCheck.checked = true; NM._educatorMode = true; NM.Sound.enabled = false; }
+  eduCheck.addEventListener('change', () => {
+    NM._educatorMode = eduCheck.checked;
+    NM.Sound.enabled = !eduCheck.checked;
+    NM.Animation._reducedMotion = eduCheck.checked || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    localStorage.setItem('nukemap-edu', eduCheck.checked ? '1' : '0');
+  });
+
   // Dose calculator
   $('dose-calc').addEventListener('click', () => {
     if (!currentDets.length) return;
@@ -818,6 +837,7 @@ function initControls() {
   });
   renderSavedList();
   initEncyclopedia();
+  initHistoricTests();
   initMethodology();
 
   // D-pad pan controls (WCAG 2.5.7)
@@ -1361,6 +1381,33 @@ function initEncyclopedia() {
       switchTab('weapon');
       list.querySelectorAll('.enc-weapon').forEach(e => e.classList.remove('enc-selected'));
       el.classList.add('enc-selected');
+    });
+  });
+}
+
+// ---- HISTORIC TESTS WITH CONTEXT CARDS ----
+function initHistoricTests() {
+  const el = $('historic-tests-list'); if (!el || !NM.HISTORICAL) return;
+  let html = '';
+  for (const h of NM.HISTORICAL) {
+    html += `<div class="hist-card" data-lat="${h.lat}" data-lng="${h.lng}" data-yield="${h.yield_kt}" data-burst="${h.burst}">
+      <div class="hist-header"><span class="hist-name">${NM.esc(h.name)}</span><span class="hist-year">${h.year}</span><span class="hist-yield">${NM.fmtYield(h.yield_kt)}</span></div>
+      <div class="hist-desc">${NM.esc(h.desc)}</div>
+      ${h.context ? `<div class="hist-context">${NM.esc(h.context)}</div>` : ''}
+      ${h.physics ? `<div class="hist-physics"><b>Physics:</b> ${NM.esc(h.physics)}</div>` : ''}
+      ${h.source ? `<div class="hist-source">${NM.esc(h.source)}</div>` : ''}
+    </div>`;
+  }
+  el.innerHTML = html;
+  el.querySelectorAll('.hist-card').forEach(card => {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', () => {
+      setYield(+card.dataset.yield);
+      const burst = card.dataset.burst;
+      document.querySelectorAll('.burst-btn').forEach(b => b.classList.toggle('active', b.dataset.burst === burst));
+      map.setView([+card.dataset.lat, +card.dataset.lng], 8);
+      triggerDetonation(+card.dataset.lat, +card.dataset.lng);
+      switchTab('effects');
     });
   });
 }
