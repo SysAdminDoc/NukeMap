@@ -79,7 +79,10 @@ function initMap() {
       for (let lng = -180; lng <= 180; lng += gs) { const x = (this._l2x(lng, z) - coords.x) * s.x; if (x > -s.x && x < s.x * 2) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, s.y); ctx.stroke(); } }
       ctx.strokeStyle = 'rgba(137,180,250,0.35)'; ctx.lineWidth = 1; ctx.fillStyle = 'rgba(49,50,68,0.5)';
       for (const sh of Object.values(NM.WORLD)) { ctx.beginPath(); let f = true; for (const [lng, lat] of sh) { const px = (this._l2x(lng, z) - coords.x) * s.x, py = (this._l2y(lat, z) - coords.y) * s.y; f ? (ctx.moveTo(px, py), f = false) : ctx.lineTo(px, py); } ctx.closePath(); ctx.fill(); ctx.stroke(); }
-      if (_tileCache.size > 500) _tileCache.clear();
+      if (_tileCache.size >= 500) {
+        const iter = _tileCache.keys();
+        for (let i = 0; i < 100; i++) _tileCache.delete(iter.next().value);
+      }
       _tileCache.set(key, c);
       return c;
     },
@@ -782,6 +785,14 @@ function initControls() {
   });
   renderSavedList();
   initEncyclopedia();
+  initMethodology();
+
+  // D-pad pan controls (WCAG 2.5.7)
+  document.querySelectorAll('.dpad-btn').forEach(btn => {
+    const panAmount = 100;
+    const dirs = {up:[0,-panAmount], down:[0,panAmount], left:[-panAmount,0], right:[panAmount,0]};
+    btn.addEventListener('click', () => { const d = dirs[btn.dataset.dir]; if (d) map.panBy(d, {animate: true}); });
+  });
 
   // Rotating facts banner
   let factIdx = Math.floor(Math.random() * NM.Facts.length);
@@ -1280,6 +1291,26 @@ function initEncyclopedia() {
       el.classList.add('enc-selected');
     });
   });
+}
+
+// ---- PHYSICS METHODOLOGY ----
+function initMethodology() {
+  const el = $('methodology-list'); if (!el || !NM.CITATIONS) return;
+  const labels = {
+    fireball:'Fireball Radius', psi200:'200 psi', psi20:'20 psi', psi5:'5 psi', psi3:'3 psi', psi1:'1 psi',
+    thermal3:'3rd° Burns', thermal2:'2nd° Burns', thermal1:'1st° Burns',
+    radiation:'500 rem Radiation', neutronRad:'Neutron Radiation', gammaRad:'Gamma Radiation',
+    emp:'EMP Radius', craterR:'Crater Radius', craterD:'Crater Depth',
+    cloudTop:'Cloud Top Height', fallout:'Fallout Scaling', flashBlind:'Flash Blindness',
+    firestorm:'Firestorm Zone', surfaceFactor:'Surface Burst Factor', baseSurge:'Base Surge',
+    waveHeight:'Wave Height', optHeight:'Optimal Burst Height', mortality:'Casualty Model',
+  };
+  let html = '';
+  for (const [key, cite] of Object.entries(NM.CITATIONS)) {
+    const name = labels[key] || key;
+    html += `<div class="meth-item"><div class="meth-name">${NM.esc(name)}</div><div class="meth-ref">${NM.esc(cite.ref)}</div><div class="meth-note">${NM.esc(cite.note)}</div></div>`;
+  }
+  el.innerHTML = html;
 }
 
 // ---- EXPORT JSON ----

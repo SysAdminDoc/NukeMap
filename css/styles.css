@@ -732,6 +732,19 @@ body.has-results #quick-weapons{bottom:104px}
 .gi-title{font-size:11px;font-weight:700;color:var(--text);margin-bottom:3px}
 .gi-body{font-size:10px;color:var(--subtext0);line-height:1.5}
 
+/* D-pad pan controls (WCAG 2.5.7 — non-drag alternative, mobile only) */
+#map-dpad{display:none;position:fixed;bottom:16px;right:16px;z-index:999;width:96px;height:96px}
+.dpad-btn{position:absolute;width:30px;height:30px;border-radius:6px;background:var(--glass);backdrop-filter:blur(8px);border:1px solid var(--glass-border);color:var(--subtext0);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+.dpad-btn:hover,.dpad-btn:active{background:var(--glass-hover);color:var(--text)}
+.dpad-up{top:0;left:33px}.dpad-down{bottom:0;left:33px}.dpad-left{top:33px;left:0}.dpad-right{top:33px;right:0}
+@media(max-width:768px){#map-dpad{display:block}}
+
+/* Methodology */
+.meth-item{padding:8px 10px;background:var(--surface0);border-radius:6px;border:1px solid var(--surface1);margin-bottom:6px}
+.meth-name{font-size:11px;font-weight:700;color:var(--peach);margin-bottom:2px}
+.meth-ref{font-size:10px;color:var(--blue);font-weight:600;margin-bottom:2px}
+.meth-note{font-size:10px;color:var(--subtext0);line-height:1.5}
+
 /* Loading overlay */
 #loading-overlay{position:fixed;inset:0;z-index:10000;background:var(--crust);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.5s ease}
 #loading-overlay.hidden{opacity:0;pointer-events:none}
