@@ -97,6 +97,43 @@ NM.calcTimeline = function(Y, e) {
   return items;
 };
 
+NM.zoneProbs = function(effects) {
+  return [
+    {name: 'Fireball', r: effects.fireball, color: '#f5e0dc', pB: 1.0, pT: 1.0, pR: 1.0, pInjB: 0, pInjT: 0},
+    {name: '200 psi', r: effects.psi200 || 0, color: '#89dceb', pB: 0.98, pT: 0.9, pR: 0.8, pInjB: 0.02, pInjT: 0.05},
+    {name: '20 psi', r: effects.psi20, color: '#89b4fa', pB: 0.85, pT: 0.6, pR: 0.3, pInjB: 0.12, pInjT: 0.15},
+    {name: '5 psi', r: effects.psi5, color: '#cba6f7', pB: 0.40, pT: 0.3, pR: 0.05, pInjB: 0.45, pInjT: 0.20},
+    {name: '3rd° Burns', r: Math.max(effects.thermal3, effects.psi3), color: '#fab387', pB: 0.15, pT: 0.25, pR: 0.02, pInjB: 0.35, pInjT: 0.30},
+    {name: '1 psi', r: effects.psi1, color: '#f9e2af', pB: 0.02, pT: 0.05, pR: 0.0, pInjB: 0.20, pInjT: 0.15},
+    {name: '1st° Burns', r: effects.thermal1, color: '#f5c2e7', pB: 0.0, pT: 0.01, pR: 0.0, pInjB: 0.05, pInjT: 0.10},
+  ];
+};
+
+NM.calcZoneMortality = function(effects, density) {
+  const shieldF = density > 5000 ? 0.65 : density > 1000 ? 0.75 : density > 200 ? 0.85 : 1.0;
+  const indoorFrac = 0.8, indoorPF = 0.4;
+  const zones = NM.zoneProbs(effects);
+  let deaths = 0, injuries = 0, prevA = 0;
+  const perZone = [];
+  for (const z of zones) {
+    if (z.r < 0.001) { perZone.push({zone: z, deaths: 0, injuries: 0}); continue; }
+    const a = Math.PI * z.r * z.r, ring = Math.max(0, a - prevA);
+    const pop = ring * density;
+    const outPop = pop * (1 - indoorFrac);
+    const outDeath = 1 - (1 - z.pB) * (1 - z.pT) * (1 - z.pR);
+    const outInj = Math.min(1 - outDeath, z.pInjB + z.pInjT);
+    const inPop = pop * indoorFrac;
+    const inDeath = 1 - (1 - z.pB) * (1 - z.pT * indoorPF) * (1 - z.pR * indoorPF);
+    const inInj = Math.min(1 - inDeath, z.pInjB + z.pInjT * indoorPF);
+    const zd = Math.round((outPop * outDeath + inPop * inDeath) * shieldF);
+    const zi = Math.round((outPop * outInj + inPop * inInj) * shieldF);
+    deaths += zd; injuries += zi;
+    perZone.push({zone: z, deaths: zd, injuries: zi});
+    prevA = a;
+  }
+  return {deaths, injuries, perZone};
+};
+
 NM.estimateCasualties = function(lat, lng, effects) {
   const nc = NM.findNearestCity(lat, lng);
   let density = 40;
@@ -106,48 +143,8 @@ NM.estimateCasualties = function(lat, lng, effects) {
     else if(d<15&&p>1e5)density=3000;else if(d<25&&p>1e5)density=1500;else if(d<40&&p>5e4)density=500;
     else if(d<60&&p>1e4)density=200;else if(d<100)density=80;
   }
-  // Urban shielding factor: dense areas have buildings that reduce exposure (Harney 2009)
-  const shieldF = density > 5000 ? 0.65 : density > 1000 ? 0.75 : density > 200 ? 0.85 : 1.0;
-  // Indoor fraction (~80% indoors) with protection factor reducing thermal/radiation
-  const indoorFrac = 0.8, indoorPF = 0.4;
-
-  const radii = [
-    {r: effects.fireball, label: 'fireball'},
-    {r: effects.psi200 || 0, label: 'psi200'},
-    {r: effects.psi20, label: 'psi20'},
-    {r: effects.psi5, label: 'psi5'},
-    {r: Math.max(effects.thermal3, effects.psi3), label: 'psi3_thermal3'},
-    {r: effects.psi1, label: 'psi1'},
-    {r: effects.thermal1, label: 'thermal1'},
-  ];
-  // Combined mortality: P(death) = 1 - (1-Pblast)(1-Pthermal)(1-Pradiation) per zone
-  const zoneProbs = [
-    {r: effects.fireball,                       pBlast: 1.0,  pTherm: 1.0,  pRad: 1.0,  pInjB: 0,    pInjT: 0},
-    {r: effects.psi200 || 0,                    pBlast: 0.98, pTherm: 0.9,  pRad: 0.8,  pInjB: 0.02, pInjT: 0.05},
-    {r: effects.psi20,                          pBlast: 0.85, pTherm: 0.6,  pRad: 0.3,  pInjB: 0.12, pInjT: 0.15},
-    {r: effects.psi5,                           pBlast: 0.40, pTherm: 0.3,  pRad: 0.05, pInjB: 0.45, pInjT: 0.20},
-    {r: Math.max(effects.thermal3, effects.psi3), pBlast: 0.15, pTherm: 0.25, pRad: 0.02, pInjB: 0.35, pInjT: 0.30},
-    {r: effects.psi1,                           pBlast: 0.02, pTherm: 0.05, pRad: 0.0,  pInjB: 0.20, pInjT: 0.15},
-    {r: effects.thermal1,                       pBlast: 0.0,  pTherm: 0.01, pRad: 0.0,  pInjB: 0.05, pInjT: 0.10},
-  ];
-  let deaths = 0, injuries = 0, prevA = 0;
-  for (const z of zoneProbs) {
-    if (z.r < 0.001) continue;
-    const a = Math.PI * z.r * z.r, ring = Math.max(0, a - prevA);
-    const pop = ring * density;
-    // Outdoor population: full exposure
-    const outPop = pop * (1 - indoorFrac);
-    const outDeath = 1 - (1 - z.pBlast) * (1 - z.pTherm) * (1 - z.pRad);
-    const outInj = Math.min(1 - outDeath, z.pInjB + z.pInjT);
-    // Indoor population: reduced thermal/radiation by protection factor
-    const inPop = pop * indoorFrac;
-    const inDeath = 1 - (1 - z.pBlast) * (1 - z.pTherm * indoorPF) * (1 - z.pRad * indoorPF);
-    const inInj = Math.min(1 - inDeath, z.pInjB + z.pInjT * indoorPF);
-    deaths += (outPop * outDeath + inPop * inDeath) * shieldF;
-    injuries += (outPop * outInj + inPop * inInj) * shieldF;
-    prevA = a;
-  }
-  return {deaths: Math.round(deaths), injuries: Math.round(injuries), density};
+  const result = NM.calcZoneMortality(effects, density);
+  return {deaths: result.deaths, injuries: result.injuries, density};
 };
 
 // Helpers

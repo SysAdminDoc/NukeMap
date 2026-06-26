@@ -1,4 +1,4 @@
-// NukeMap v3.4.1 - Main Application Controller
+// NukeMap v3.5.0 - Main Application Controller
 window.NM = window.NM || {};
 
 (function() {
@@ -6,6 +6,52 @@ window.NM = window.NM || {};
 
 let map, currentDets = [], windAngle = 0, multiMode = false, mirvMode = false, currentMirvPreset = null;
 NM._nightMode = false;
+
+const _panelDefs = [
+  {s:'altitude-section', c:'altitude-profile', fn:(d)=>NM.AltitudeProfile.generate(d.effects,d.yieldKt)},
+  {s:'zonecas-section', c:'zonecas-content', fn:(d)=>NM.ZoneCasualties.generate(d.effects,d.casualties.density)},
+  {s:'destruction-section', c:'destruction-content', fn:(d)=>NM.DestructionStats.generate(d.effects,d.casualties)},
+  {s:'emp-section', c:'emp-content', fn:(d)=>NM.EMPDetails.generate(d.effects.emp)},
+  {s:'survival-section', c:'survival-content', fn:(d)=>NM.SurvivalCalc.generateHTML(d.effects)},
+  {s:'ground-section', c:'ground-content', fn:(d)=>NM.GroundReport.generate(d.effects,d.yieldKt)},
+  {s:'cloudcompare-section', c:'cloudcompare-content', fn:(d)=>NM.CloudCompare.generate(d.effects)},
+  {s:'guide-section', c:'guide-content', fn:(d)=>NM.EmergencyGuide.generate(d)},
+  {s:'seismic-section', c:'seismic-content', fn:(d)=>NM.Seismic.generateHTML(d.yieldKt,d.effects.isSurface)},
+  {s:'conventional-section', c:'conventional-content', fn:(d)=>NM.ConventionalCompare.generate(d.yieldKt)},
+  {s:'bldgdmg-section', c:'bldgdmg-content', fn:(d)=>NM.BuildingDamage.generate(d.yieldKt)},
+  {s:'sizecompare-section', c:'sizecompare-content', fn:(d)=>NM.SizeCompare.generate(d.effects)},
+  {s:'escape-section', c:'escape-content', fn:(d)=>NM.EscapeTime.generate(d.effects)},
+  {s:'psi-section', c:'psi-result', fn:(d)=>NM.CustomPsi.generateHTML(d.yieldKt)},
+  {s:'yieldchart-section', c:'yield-chart', fn:(d)=>NM.YieldChart.generate(d.yieldKt)},
+  {s:'weaponinfo-section', c:'weaponinfo-content', fn:(d)=>NM.WeaponInfo.generate(d.weapon), hideIfEmpty:true},
+  {s:'raddecay-section', show:(d)=>d.effects.isSurface},
+  {s:'dosecalc-section', show:(d)=>d.effects.isSurface},
+  {s:'fallout-timelapse', show:(d)=>!!d.effects.fallout},
+  {s:'nw-section', c:'nw-result', show:(_d,all)=>all.reduce((s,x)=>s+x.yieldKt,0)>10, fn:(_d,all)=>{const ty=all.reduce((s,x)=>s+x.yieldKt,0);return NM.NuclearWinter.generateHTML(ty,all.length)}},
+  {s:'dets-section'}, {s:'cloud-section'}, {s:'timeline-section'}, {s:'crater-section'},
+  {s:'shelter-section'}, {s:'nearby-section'},
+];
+
+function _updatePanels(det, allDets) {
+  for (const p of _panelDefs) {
+    if (!p.fn && !p.show) continue;
+    const el = $(p.s); if (!el) continue;
+    if (p.show && !p.show(det, allDets)) continue;
+    if (p.fn) {
+      const html = p.fn(det, allDets);
+      if (p.hideIfEmpty && !html) { el.style.display = 'none'; continue; }
+      if (p.c) $(p.c).innerHTML = html;
+    }
+    el.style.display = '';
+  }
+}
+
+function _resetAllPanels() {
+  for (const p of _panelDefs) { const el = $(p.s); if (el) el.style.display = 'none'; }
+  $('legend-items').innerHTML = emptyState('Detonate a weapon to see modeled effect rings.');
+  $('info-bar').classList.remove('active');
+  syncActionStates();
+}
 
 // ---- MAP INIT ----
 function initMap() {
@@ -188,82 +234,9 @@ function triggerDetonation(lat, lng) {
   if ($('radoverlay-check').checked) NM.RadiationOverlay.draw(map, det.lat, det.lng, effects);
   if ($('dmgheatmap-check').checked) NM.DamageHeatmap.draw(map, currentDets);
 
-  // Show radiation decay & psi sections in Tools tab
-  if (effects.isSurface) $('raddecay-section').style.display = '';
-  $('psi-section').style.display = '';
-  $('psi-result').innerHTML = NM.CustomPsi.generateHTML(Y);
-
-  // Yield comparison chart
-  $('yieldchart-section').style.display = '';
-  $('yield-chart').innerHTML = NM.YieldChart.generate(Y);
-
-  // Nuclear winter estimate
-  const totalYield = currentDets.reduce((s, d) => s + d.yieldKt, 0);
-  if (totalYield > 10) {
-    $('nw-section').style.display = '';
-    $('nw-result').innerHTML = NM.NuclearWinter.generateHTML(totalYield, currentDets.length);
-  }
-
-  // Premium panels
-  $('altitude-section').style.display = '';
-  $('altitude-profile').innerHTML = NM.AltitudeProfile.generate(effects, Y);
-
-  $('zonecas-section').style.display = '';
-  $('zonecas-content').innerHTML = NM.ZoneCasualties.generate(effects, cas.density);
-
-  $('destruction-section').style.display = '';
-  $('destruction-content').innerHTML = NM.DestructionStats.generate(effects, cas);
-
-  $('emp-section').style.display = '';
-  $('emp-content').innerHTML = NM.EMPDetails.generate(effects.emp);
-
-  $('survival-section').style.display = '';
-  $('survival-content').innerHTML = NM.SurvivalCalc.generateHTML(effects);
-
-  const wInfo = NM.WeaponInfo.generate(det.weapon);
-  if (wInfo) { $('weaponinfo-section').style.display = ''; $('weaponinfo-content').innerHTML = wInfo; }
-  else $('weaponinfo-section').style.display = 'none';
-
-  // Nearby strategic targets
+  // Update all registered analysis panels
+  _updatePanels(det, currentDets);
   updateNearbyTargets(det);
-
-  // Ground-level experience report
-  $('ground-section').style.display = '';
-  $('ground-content').innerHTML = NM.GroundReport.generate(effects, Y);
-
-  // Cloud height comparison
-  $('cloudcompare-section').style.display = '';
-  $('cloudcompare-content').innerHTML = NM.CloudCompare.generate(effects);
-
-  // Emergency guide
-  $('guide-section').style.display = '';
-  $('guide-content').innerHTML = NM.EmergencyGuide.generate(det);
-
-  // Dose calculator visibility
-  if (effects.isSurface) $('dosecalc-section').style.display = '';
-
-  // Seismic equivalent
-  $('seismic-section').style.display = '';
-  $('seismic-content').innerHTML = NM.Seismic.generateHTML(Y, effects.isSurface);
-
-  // Conventional weapon comparison
-  $('conventional-section').style.display = '';
-  $('conventional-content').innerHTML = NM.ConventionalCompare.generate(Y);
-
-  // Building damage
-  $('bldgdmg-section').style.display = '';
-  $('bldgdmg-content').innerHTML = NM.BuildingDamage.generate(Y);
-
-  // Size comparisons
-  $('sizecompare-section').style.display = '';
-  $('sizecompare-content').innerHTML = NM.SizeCompare.generate(effects);
-
-  // Fallout time-lapse visibility
-  if (effects.fallout) $('fallout-timelapse').style.display = '';
-
-  // Escape time
-  $('escape-section').style.display = '';
-  $('escape-content').innerHTML = NM.EscapeTime.generate(effects);
 
   // Casualty counter animation
   NM.CasualtyCounter.animate(cas.deaths, cas.injuries);
@@ -1194,36 +1167,7 @@ function clearAll() {
   updateDetsList(); updateStats(); resetPanels(); updateURL();
 }
 
-function resetPanels() {
-  $('dets-section').style.display = 'none';
-  $('cloud-section').style.display = 'none';
-  $('timeline-section').style.display = 'none';
-  $('crater-section').style.display = 'none';
-  $('shelter-section').style.display = 'none';
-  $('raddecay-section').style.display = 'none';
-  $('psi-section').style.display = 'none';
-  $('yieldchart-section').style.display = 'none';
-  $('nw-section').style.display = 'none';
-  $('altitude-section').style.display = 'none';
-  $('zonecas-section').style.display = 'none';
-  $('destruction-section').style.display = 'none';
-  $('emp-section').style.display = 'none';
-  $('survival-section').style.display = 'none';
-  $('weaponinfo-section').style.display = 'none';
-  $('seismic-section').style.display = 'none';
-  $('conventional-section').style.display = 'none';
-  $('bldgdmg-section').style.display = 'none';
-  $('sizecompare-section').style.display = 'none';
-  $('escape-section').style.display = 'none';
-  $('nearby-section').style.display = 'none';
-  $('ground-section').style.display = 'none';
-  $('cloudcompare-section').style.display = 'none';
-  $('guide-section').style.display = 'none';
-  $('dosecalc-section').style.display = 'none';
-  $('legend-items').innerHTML = emptyState('Detonate a weapon to see modeled effect rings.');
-  $('info-bar').classList.remove('active');
-  syncActionStates();
-}
+function resetPanels() { _resetAllPanels(); }
 
 // ---- URL STATE ----
 function updateURL() {
@@ -1356,7 +1300,7 @@ function exportJSON() {
       casualties: d.casualties, hiroshimaEquivalent: +(d.yieldKt / 15).toFixed(2)
     };
   });
-  const blob = new Blob([JSON.stringify({version:'3.4.1', generated: new Date().toISOString(), detonations: data}, null, 2)], {type:'application/json'});
+  const blob = new Blob([JSON.stringify({version:'3.5.0', generated: new Date().toISOString(), detonations: data}, null, 2)], {type:'application/json'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nukemap-data.json';
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
 }
@@ -1442,7 +1386,7 @@ function exportReport() {
   });
 
   report += `\nPhysics: Glasstone & Dolan, "The Effects of Nuclear Weapons"\n`;
-  report += `Generated by NukeMap v3.4.1 - https://sysadmindoc.github.io/NukeMap/\n`;
+  report += `Generated by NukeMap v3.5.0 - https://sysadmindoc.github.io/NukeMap/\n`;
 
   const blob = new Blob([report], {type:'text/plain'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nukemap-report.txt';
