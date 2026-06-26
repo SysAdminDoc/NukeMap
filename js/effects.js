@@ -92,15 +92,15 @@ NM.Effects = {
     const e = det.effects, nc = NM.findNearestCity(det.lat, det.lng);
     let loc = `${det.lat.toFixed(4)}, ${det.lng.toFixed(4)}`;
     if (nc && nc.dist < 50) loc = `${nc.name}, ${nc.state}`;
-    return `<div style="min-width:250px">
-      <div style="font-weight:800;font-size:15px;color:var(--red)">${NM.fmtYield(det.yieldKt)}</div>
-      <div style="font-size:10px;color:var(--overlay1);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">${det.burstType}${det.burstType==='airburst'?' ('+Math.round(e.burstHeight)+'m)':''} \u2014 ${loc}</div>
-      <table style="width:100%;font-size:11px;border-collapse:collapse">
-      ${[['Fireball',e.fireball,'#f5e0dc'],['500 rem',e.radiation,'#a6e3a1'],['20 psi',e.psi20,'#89b4fa'],['Firestorm',e.firestormR,'#e64553'],['5 psi',e.psi5,'#cba6f7'],['3rd\u00B0 burns',e.thermal3,'#fab387'],['1 psi',e.psi1,'#f9e2af'],['Flash blind',NM._nightMode?e.flashBlindNight:e.flashBlindDay,'#b4befe']].map(([l,r,c])=>`<tr><td style="padding:2px 0"><span style="color:${c};font-size:8px">\u2B24</span> ${l}</td><td style="text-align:right;font-weight:600">${NM.fmtDist(r)}</td></tr>`).join('')}
+    return `<div class="det-popup">
+      <div class="dp-yield">${NM.fmtYield(det.yieldKt)}</div>
+      <div class="dp-meta">${det.burstType}${det.burstType==='airburst'?' ('+Math.round(e.burstHeight)+'m)':''} \u2014 ${loc}</div>
+      <table class="dp-table">
+      ${[['Fireball',e.fireball,'#f5e0dc'],['500 rem',e.radiation,'#a6e3a1'],['20 psi',e.psi20,'#89b4fa'],['Firestorm',e.firestormR,'#e64553'],['5 psi',e.psi5,'#cba6f7'],['3rd\u00B0 burns',e.thermal3,'#fab387'],['1 psi',e.psi1,'#f9e2af'],['Flash blind',NM._nightMode?e.flashBlindNight:e.flashBlindDay,'#b4befe']].map(([l,r,c])=>`<tr><td><span class="dp-dot" style="color:${c}">\u2B24</span>${l}</td><td class="dp-distance">${NM.fmtDist(r)}</td></tr>`).join('')}
       </table>
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--surface1);font-size:12px">
-        <span style="color:var(--red);font-weight:700">${NM.fmtNum(det.casualties.deaths)} killed</span> &nbsp;
-        <span style="color:var(--peach);font-weight:600">${NM.fmtNum(det.casualties.injuries)} injured</span>
+      <div class="dp-summary">
+        <span class="dp-deaths">${NM.fmtNum(det.casualties.deaths)} killed</span>
+        <span class="dp-injuries">${NM.fmtNum(det.casualties.injuries)} injured</span>
       </div></div>`;
   },
 

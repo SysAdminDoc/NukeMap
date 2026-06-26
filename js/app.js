@@ -1,4 +1,4 @@
-// NukeMap v3.4.0 - Main Application Controller
+// NukeMap v3.4.1 - Main Application Controller
 window.NM = window.NM || {};
 
 (function() {
@@ -300,6 +300,20 @@ function triggerDetonation(lat, lng) {
 
 // ---- UI HELPERS ----
 function $(id) { return document.getElementById(id); }
+function emptyState(text, tone = '') { return `<div class="empty-state${tone ? ' ' + tone : ''}">${NM.esc(text)}</div>`; }
+function compactState(text, tone = '') { return `<div class="empty-state compact${tone ? ' ' + tone : ''}">${NM.esc(text)}</div>`; }
+function setButtonDisabled(id, disabled) {
+  const el = $(id);
+  if (!el) return;
+  el.disabled = disabled;
+  el.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+}
+function syncActionStates() {
+  const hasDets = currentDets.length > 0;
+  document.body.classList.toggle('has-results', hasDets);
+  ['undo-btn','clear-btn','share-btn','save-btn','export-kml','export-json','export-csv','export-report'].forEach(id => setButtonDisabled(id, !hasDets));
+  ['flight-us','flight-ru','flight-cn','raddecay-calc','dose-calc'].forEach(id => setButtonDisabled(id, !hasDets));
+}
 function getYield() { return NM.sliderToYield(+$('yield-slider').value); }
 function getBurst() { return document.querySelector('.burst-btn.active')?.dataset.burst || 'airburst'; }
 
@@ -428,7 +442,6 @@ function initControls() {
 
   // Panel toggle
   $('panel-toggle').addEventListener('click', () => $('panel').classList.toggle('collapsed'));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') $('panel').classList.toggle('collapsed'); });
 
   // Coords click-to-copy
   $('coords').addEventListener('click', () => {
@@ -528,7 +541,6 @@ function initControls() {
   // Screenshot mode
   $('screenshot-check').addEventListener('change', () => NM.Screenshot.toggle());
   $('screenshot-hint').addEventListener('click', () => { $('screenshot-check').checked = false; NM.Screenshot.toggle(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && NM.Screenshot.active) { $('screenshot-check').checked = false; NM.Screenshot.toggle(); } });
 
   // Radiation decay calculator
   $('raddecay-calc').addEventListener('click', () => {
@@ -588,7 +600,7 @@ function initControls() {
   };
   ['us', 'ru', 'cn'].forEach(key => {
     $('flight-' + key).addEventListener('click', () => {
-      if (!currentDets.length) { $('flight-result').innerHTML = '<div style="color:var(--overlay0);font-size:11px">Detonate first to set a target</div>'; return; }
+      if (!currentDets.length) { $('flight-result').innerHTML = compactState('Detonate first to set a target.'); return; }
       const det = currentDets[currentDets.length - 1];
       const site = launchSites[key];
       const type = $('missile-type').value;
@@ -689,7 +701,7 @@ function initControls() {
   $('dose-calc').addEventListener('click', () => {
     if (!currentDets.length) return;
     const det = currentDets[currentDets.length - 1];
-    if (!det.effects.isSurface) { $('dose-result').innerHTML = '<div style="color:var(--overlay0);font-size:11px">Dose calculator requires a surface burst (fallout)</div>'; return; }
+    if (!det.effects.isSurface) { $('dose-result').innerHTML = compactState('Dose calculator requires a surface burst with fallout.', 'warn'); return; }
     const dist = +$('dose-dist').value || 5;
     const arrive = +$('dose-arrive').value || 1;
     const stay = +$('dose-stay').value || 4;
@@ -709,7 +721,9 @@ function initControls() {
   ww3Sel.addEventListener('change', () => {
     const s = NM.WW3_SCENARIOS.find(sc => sc.id === ww3Sel.value);
     $('ww3-scenario-desc').textContent = s ? s.desc : '';
+    setButtonDisabled('ww3-launch', !ww3Sel.value);
   });
+  setButtonDisabled('ww3-launch', !ww3Sel.value);
   $('ww3-launch').addEventListener('click', () => {
     if (!ww3Sel.value) return;
     clearAll();
@@ -730,15 +744,25 @@ function initControls() {
     const title = sec.querySelector('.section-title');
     if (!title) return;
     title.classList.add('collapsible');
-    title.addEventListener('click', () => {
+    title.setAttribute('role', 'button');
+    title.tabIndex = 0;
+    const toggleSection = () => {
       title.classList.toggle('collapsed');
       sec.classList.toggle('sec-collapsed');
+      title.setAttribute('aria-expanded', String(!sec.classList.contains('sec-collapsed')));
+    };
+    title.addEventListener('click', toggleSection);
+    title.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      toggleSection();
     });
     // Auto-collapse secondary sections
     if (!alwaysOpen.has(sec.id)) {
       title.classList.add('collapsed');
       sec.classList.add('sec-collapsed');
     }
+    title.setAttribute('aria-expanded', String(!sec.classList.contains('sec-collapsed')));
   });
 
   // WW3 quick-launch button
@@ -768,7 +792,7 @@ function initControls() {
     if (!currentDets.length) return;
     const name = $('save-name').value.trim() || `Scenario ${new Date().toLocaleDateString()}`;
     const saves = JSON.parse(localStorage.getItem('nukemap-saves') || '[]');
-    if (saves.length >= 50) { alert('Maximum 50 saved scenarios. Delete old ones first.'); return; }
+    if (saves.length >= 50) { $('saved-list').innerHTML = compactState('Maximum 50 saved scenarios. Delete old saves first.', 'warn'); return; }
     saves.push({
       name, date: Date.now(),
       dets: currentDets.map(d => ({lat:d.lat,lng:d.lng,yieldKt:d.yieldKt,burstType:d.burstType,weapon:d.weapon}))
@@ -777,7 +801,7 @@ function initControls() {
       localStorage.setItem('nukemap-saves', JSON.stringify(saves));
     } catch(e) {
       saves.pop();
-      alert('Storage full. Delete saved scenarios or clear browser data.');
+      $('saved-list').innerHTML = compactState('Storage is full. Delete saved scenarios or clear browser data.', 'warn');
       return;
     }
     $('save-name').value = '';
@@ -798,11 +822,21 @@ function initControls() {
   showFact();
   setInterval(showFact, 30000);
   $('fact-banner').addEventListener('click', () => { $('fact-banner').classList.remove('show'); showFact(); });
+  syncActionStates();
 }
 
 function switchTab(id) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === id));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + id));
+  document.querySelectorAll('.tab').forEach(t => {
+    const active = t.dataset.tab === id;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', active ? 'true' : 'false');
+    t.tabIndex = active ? 0 : -1;
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    const active = c.id === 'tab-' + id;
+    c.classList.toggle('active', active);
+    c.hidden = !active;
+  });
 }
 
 // ---- MIRV ----
@@ -928,11 +962,11 @@ function initSearch() {
   inp.addEventListener('input', () => {
     const items = NM.searchLocations(inp.value); si = -1;
     if (!items.length) { res.classList.remove('active'); return; }
-    res.innerHTML = items.map((it, i) => `<div class="sr-item" data-idx="${i}"><div><div class="sr-name">${it.isTarget ? '<span style="color:var(--red);font-size:8px;margin-right:3px">&#9733;</span>' : ''}${NM.esc(it.name)}</div><div class="sr-detail">${NM.esc(it.detail)}</div></div>${it.pop ? `<div class="sr-pop">${NM.fmtNum(it.pop)}</div>` : ''}</div>`).join('');
+    res.innerHTML = items.map((it, i) => `<div class="sr-item" data-idx="${i}" role="option"><div><div class="sr-name">${it.isTarget ? '<span class="sr-target-mark">&#9733;</span>' : ''}${NM.esc(it.name)}</div><div class="sr-detail">${NM.esc(it.detail)}</div></div>${it.pop ? `<div class="sr-pop">${NM.fmtNum(it.pop)}</div>` : ''}</div>`).join('');
     res.classList.add('active');
     res.querySelectorAll('.sr-item').forEach(el => el.addEventListener('click', () => { const it = items[+el.dataset.idx]; selectResult(it); }));
   });
-  inp.addEventListener('keydown', e => { const items = res.querySelectorAll('.sr-item'); if (!items.length) return; if (e.key === 'ArrowDown') { e.preventDefault(); si = Math.min(si + 1, items.length - 1); items.forEach((el, i) => el.classList.toggle('selected', i === si)); } else if (e.key === 'ArrowUp') { e.preventDefault(); si = Math.max(si - 1, 0); items.forEach((el, i) => el.classList.toggle('selected', i === si)); } else if (e.key === 'Enter') { e.preventDefault(); (si >= 0 ? items[si] : items[0])?.click(); } else if (e.key === 'Escape') { res.classList.remove('active'); inp.blur(); } });
+  inp.addEventListener('keydown', e => { const items = res.querySelectorAll('.sr-item'); if (!items.length) return; if (e.key === 'ArrowDown') { e.preventDefault(); si = Math.min(si + 1, items.length - 1); items.forEach((el, i) => el.classList.toggle('selected', i === si)); } else if (e.key === 'ArrowUp') { e.preventDefault(); si = Math.max(si - 1, 0); items.forEach((el, i) => el.classList.toggle('selected', i === si)); } else if (e.key === 'Enter') { e.preventDefault(); (si >= 0 ? items[si] : items[0])?.click(); } });
   inp.addEventListener('blur', () => setTimeout(() => res.classList.remove('active'), 200));
   inp.addEventListener('focus', () => { if (inp.value.trim()) inp.dispatchEvent(new Event('input')); });
 }
@@ -951,7 +985,7 @@ function updateDetsList() {
     const nm = nc && nc.dist < 50 ? nc.name : `${d.lat.toFixed(2)}, ${d.lng.toFixed(2)}`;
     const el = document.createElement('div'); el.className = 'det-item';
     const wShort = d.weapon ? d.weapon.split('(')[0].trim() : '';
-    el.innerHTML = `<span class="det-idx">${i + 1}</span><div class="det-info"><span class="det-name">${NM.esc(nm)}</span><span class="det-weapon">${NM.esc(wShort)}</span></div>${d.isHEMP ? '<span class="det-badge">HEMP</span>' : ''}${d.isWater ? '<span class="det-badge" style="background:var(--blue)">WATER</span>' : ''}<span class="det-yield">${NM.fmtYield(d.yieldKt)}</span><button class="det-remove" data-i="${i}">&times;</button>`;
+    el.innerHTML = `<span class="det-idx">${i + 1}</span><div class="det-info"><span class="det-name">${NM.esc(nm)}</span><span class="det-weapon">${NM.esc(wShort)}</span></div>${d.isHEMP ? '<span class="det-badge">HEMP</span>' : ''}${d.isWater ? '<span class="det-badge water">WATER</span>' : ''}<span class="det-yield">${NM.fmtYield(d.yieldKt)}</span><button class="det-remove" data-i="${i}" aria-label="Remove detonation">&times;</button>`;
     el.querySelector('.det-remove').addEventListener('click', e => { e.stopPropagation(); removeDet(i); });
     el.addEventListener('click', e => { if (!e.target.classList.contains('det-remove')) map.flyTo([d.lat, d.lng], map.getZoom(), {duration: 0.6}); });
     list.appendChild(el);
@@ -1116,9 +1150,10 @@ function updateStats() {
   const bar = $('info-bar');
   if (currentDets.length) {
     const hiroStr = hiro >= 10 ? hiro.toFixed(0) : hiro >= 0.1 ? hiro.toFixed(1) : hiro.toFixed(2);
-    bar.innerHTML = `<div class="ib-stat"><div class="ib-val" style="color:var(--red)">${NM.fmtNum(td)}</div><div class="ib-lbl">Fatalities</div></div><div class="ib-div"></div><div class="ib-stat"><div class="ib-val" style="color:var(--peach)">${NM.fmtNum(ti)}</div><div class="ib-lbl">Injuries</div></div><div class="ib-div"></div><div class="ib-stat"><div class="ib-val" style="color:var(--mauve)">${hiroStr}x</div><div class="ib-lbl">Hiroshimas</div></div><div class="ib-div"></div><div class="ib-stat"><div class="ib-val" style="color:var(--yellow)">${currentDets.length}</div><div class="ib-lbl">${currentDets.length === 1 ? 'Detonation' : 'Detonations'}</div></div>`;
+    bar.innerHTML = `<div class="ib-stat"><div class="ib-val deaths">${NM.fmtNum(td)}</div><div class="ib-lbl">Fatalities</div></div><div class="ib-div"></div><div class="ib-stat"><div class="ib-val injuries">${NM.fmtNum(ti)}</div><div class="ib-lbl">Injuries</div></div><div class="ib-div"></div><div class="ib-stat"><div class="ib-val yield">${hiroStr}x</div><div class="ib-lbl">Hiroshimas</div></div><div class="ib-div"></div><div class="ib-stat"><div class="ib-val count">${currentDets.length}</div><div class="ib-lbl">${currentDets.length === 1 ? 'Detonation' : 'Detonations'}</div></div>`;
     bar.classList.add('active');
   } else bar.classList.remove('active');
+  syncActionStates();
 }
 
 function toggleEffect(eid, vis) { currentDets.forEach(d => d.layers.forEach(l => { if (l._effectId === eid) { vis ? l.addTo(map) : map.removeLayer(l); } })); }
@@ -1185,8 +1220,9 @@ function resetPanels() {
   $('cloudcompare-section').style.display = 'none';
   $('guide-section').style.display = 'none';
   $('dosecalc-section').style.display = 'none';
-  $('legend-items').innerHTML = '<div style="color:var(--overlay0);font-size:12px;padding:10px 0">Detonate a weapon to see effects</div>';
+  $('legend-items').innerHTML = emptyState('Detonate a weapon to see modeled effect rings.');
   $('info-bar').classList.remove('active');
+  syncActionStates();
 }
 
 // ---- URL STATE ----
@@ -1241,6 +1277,7 @@ function loadFromURL() {
 }
 
 function showShareLink() {
+  if (!currentDets.length) return;
   $('share-section').style.display = ''; $('share-input').value = location.href; switchTab('results');
   // Show native share button if Web Share API available
   if (navigator.share) $('share-native').style.display = '';
@@ -1319,7 +1356,7 @@ function exportJSON() {
       casualties: d.casualties, hiroshimaEquivalent: +(d.yieldKt / 15).toFixed(2)
     };
   });
-  const blob = new Blob([JSON.stringify({version:'3.4.0', generated: new Date().toISOString(), detonations: data}, null, 2)], {type:'application/json'});
+  const blob = new Blob([JSON.stringify({version:'3.4.1', generated: new Date().toISOString(), detonations: data}, null, 2)], {type:'application/json'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nukemap-data.json';
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
 }
@@ -1405,7 +1442,7 @@ function exportReport() {
   });
 
   report += `\nPhysics: Glasstone & Dolan, "The Effects of Nuclear Weapons"\n`;
-  report += `Generated by NukeMap v3.4.0 - https://sysadmindoc.github.io/NukeMap/\n`;
+  report += `Generated by NukeMap v3.4.1 - https://sysadmindoc.github.io/NukeMap/\n`;
 
   const blob = new Blob([report], {type:'text/plain'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nukemap-report.txt';
@@ -1416,7 +1453,7 @@ function exportReport() {
 function renderSavedList() {
   const list = $('saved-list'); if (!list) return;
   const saves = JSON.parse(localStorage.getItem('nukemap-saves') || '[]');
-  if (!saves.length) { list.innerHTML = '<div style="color:var(--overlay0);font-size:10px">No saved scenarios</div>'; return; }
+  if (!saves.length) { list.innerHTML = compactState('No saved scenarios yet.'); return; }
   list.innerHTML = '';
   saves.forEach((s, i) => {
     const el = document.createElement('div'); el.className = 'saved-item';

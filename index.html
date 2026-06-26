@@ -4,8 +4,8 @@
     <meta property="og:image" content="https://raw.githubusercontent.com/SysAdminDoc/NukeMap/main/banner.png">
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' https://unpkg.com 'unsafe-inline'; img-src 'self' data: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://*.tile.openstreetmap.fr https://*.tile.opentopomap.org https://*.arcgisonline.com https://raw.githubusercontent.com blob:; connect-src 'self' https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://*.tile.openstreetmap.fr https://*.tile.opentopomap.org https://*.arcgisonline.com https://api.open-meteo.com; font-src 'self'; media-src 'none'">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>NukeMap v3.4.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NukeMap v3.4.1</title>
     <meta name="description" content="Nuclear weapon effects simulator with blast waves, WW3 simulation, MIRV strikes, shelter analysis, and educational tools. Physics from Glasstone &amp; Dolan.">
 <meta name="theme-color" content="#1e1e2e">
 <meta property="og:title" content="NukeMap - Nuclear Weapon Effects Simulator">
@@ -24,18 +24,18 @@
 <body>
 
 <div id="map"></div>
-<div id="loading-overlay"><div class="loading-spinner"></div><div class="loading-text">Loading NukeMap...</div></div>
+<div id="loading-overlay"><div class="loading-spinner"></div><div class="loading-text">Preparing simulator...</div></div>
 <div id="welcome-overlay">
   <div class="welcome-card">
     <div class="welcome-header">
       <div class="welcome-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div>
-      <div class="welcome-title">Nuke<span>Map</span> v3.4.0</div>
+      <div class="welcome-title">Nuke<span>Map</span> v3.4.1</div>
     </div>
     <div class="welcome-body">
-      <div class="welcome-step"><span class="ws-num">1</span><span class="ws-text">Search for a city or click a quick target pill</span></div>
-      <div class="welcome-step"><span class="ws-num">2</span><span class="ws-text">Select a weapon or use the quick bar at the bottom</span></div>
-      <div class="welcome-step"><span class="ws-num">3</span><span class="ws-text">Click anywhere on the map to detonate</span></div>
-      <div class="welcome-step"><span class="ws-num">4</span><span class="ws-text">Explore effects, casualties, shelter analysis, and more</span></div>
+      <div class="welcome-step"><span class="ws-num">1</span><span class="ws-text">Choose a location or target</span></div>
+      <div class="welcome-step"><span class="ws-num">2</span><span class="ws-text">Set yield, burst type, and wind conditions</span></div>
+      <div class="welcome-step"><span class="ws-num">3</span><span class="ws-text">Run the detonation model</span></div>
+      <div class="welcome-step"><span class="ws-num">4</span><span class="ws-text">Review effects, casualties, shelter, and exports</span></div>
       <div class="welcome-features">
         <span class="wf-tag">32 Weapons</span>
         <span class="wf-tag">WW3 Simulation</span>
@@ -45,14 +45,14 @@
         <span class="wf-tag">12 Map Styles</span>
       </div>
     </div>
-    <button class="welcome-dismiss" id="welcome-dismiss">Start Exploring</button>
+    <button class="welcome-dismiss" id="welcome-dismiss">Begin Simulation</button>
     <label class="welcome-remember"><input type="checkbox" id="welcome-noshow" checked/> Don't show again</label>
   </div>
 </div>
 <div id="flash"></div>
 <div id="coords">--</div>
 <div id="offline-badge"><span class="ob-dot"></span><span class="ob-lbl">Online</span></div>
-<div id="det-counter" style="display:none" role="status" aria-live="polite"><span id="det-counter-num">0</span><span class="dc-label">strikes</span></div>
+<div id="det-counter" role="status" aria-live="polite"><span id="det-counter-num">0</span><span class="dc-label">strikes</span></div>
 
 <div id="panel">
   <button id="panel-toggle" title="Toggle panel" aria-label="Toggle side panel">
@@ -65,12 +65,12 @@
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
         </div>
         <div class="brand-text">Nuke<span>Map</span></div>
-        <div class="brand-ver">v3.4.0</div>
+        <div class="brand-ver">v3.4.1</div>
       </div>
       <div class="search-wrap">
         <span class="search-icon"><svg viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg></span>
-        <input type="text" id="search" placeholder="City, ZIP code, base, or coordinates..." autocomplete="off" spellcheck="false" aria-label="Search for a location"/>
-        <div id="search-results"></div>
+        <input type="text" id="search" placeholder="City, ZIP code, base, or coordinates..." autocomplete="off" spellcheck="false" aria-label="Search for a location" aria-controls="search-results"/>
+        <div id="search-results" role="listbox" aria-label="Search results"></div>
       </div>
     </div>
 
@@ -80,19 +80,19 @@
         <div class="target-pills" id="target-pills"></div>
       </div>
 
-      <div class="tabs" id="main-tabs">
-        <button class="tab active" data-tab="weapon">Weapon</button>
-        <button class="tab" data-tab="effects">Effects</button>
-        <button class="tab" data-tab="results">Results</button>
-        <button class="tab" data-tab="tools">Tools</button>
-        <button class="tab" data-tab="encyclopedia">Info</button>
+      <div class="tabs" id="main-tabs" role="tablist" aria-label="Main panels">
+        <button class="tab active" data-tab="weapon" role="tab" aria-selected="true" aria-controls="tab-weapon">Weapon</button>
+        <button class="tab" data-tab="effects" role="tab" aria-selected="false" aria-controls="tab-effects" tabindex="-1">Effects</button>
+        <button class="tab" data-tab="results" role="tab" aria-selected="false" aria-controls="tab-results" tabindex="-1">Results</button>
+        <button class="tab" data-tab="tools" role="tab" aria-selected="false" aria-controls="tab-tools" tabindex="-1">Tools</button>
+        <button class="tab" data-tab="encyclopedia" role="tab" aria-selected="false" aria-controls="tab-encyclopedia" tabindex="-1">Info</button>
       </div>
 
       <!-- ===== WEAPON TAB ===== -->
-      <div class="tab-content active" id="tab-weapon">
+      <div class="tab-content active" id="tab-weapon" role="tabpanel">
         <div class="section">
           <div class="section-title">Warhead</div>
-          <input type="text" id="weapon-filter" class="weapon-filter" placeholder="Filter weapons..." autocomplete="off" spellcheck="false"/>
+          <input type="text" id="weapon-filter" class="weapon-filter" placeholder="Filter weapons..." autocomplete="off" spellcheck="false" aria-label="Filter weapon presets"/>
           <div class="select-wrap">
             <select class="custom-select" id="weapon-select"></select>
             <span class="select-arrow"><svg viewBox="0 0 10 6"><path d="M0 0l5 6 5-6z" fill="currentColor"/></svg></span>
@@ -103,8 +103,8 @@
           </div>
           <div class="yield-labels"><span>0.001 kT</span><span>100 MT</span></div>
           <div class="yield-input-row">
-            <input type="number" id="yield-input" value="15" min="0.001" step="any"/>
-            <select id="yield-unit-select"><option value="kt" selected>kT</option><option value="mt">MT</option><option value="t">tons</option></select>
+            <input type="number" id="yield-input" value="15" min="0.001" step="any" aria-label="Custom yield value"/>
+            <select id="yield-unit-select" aria-label="Yield unit"><option value="kt" selected>kT</option><option value="mt">MT</option><option value="t">tons</option></select>
           </div>
         </div>
 
@@ -118,34 +118,34 @@
             <button class="burst-btn" data-burst="water">Water</button>
           </div>
           <div class="hemp-info" id="hemp-info" style="display:none">
-            <div style="font-size:9px;color:var(--teal);font-weight:600;margin-bottom:3px">High-Altitude EMP (HEMP)</div>
-            <div style="font-size:9px;color:var(--overlay0);line-height:1.4">Detonation at 400 km altitude. No blast/thermal damage at ground level. Generates massive EMP covering ~2,200 km radius (~continent-scale). Gamma rays interact with upper atmosphere to produce E1/E2/E3 electromagnetic pulses.</div>
+            <div class="info-title">High-Altitude EMP (HEMP)</div>
+            <div class="info-copy">Detonation at 400 km altitude. No blast/thermal damage at ground level. Generates massive EMP covering ~2,200 km radius (~continent-scale). Gamma rays interact with upper atmosphere to produce E1/E2/E3 electromagnetic pulses.</div>
           </div>
           <div class="hemp-info" id="water-info" style="display:none">
-            <div style="font-size:9px;color:var(--blue);font-weight:600;margin-bottom:3px">Underwater / Water Surface Burst</div>
-            <div style="font-size:9px;color:var(--overlay0);line-height:1.4">Detonation at or below the water surface. Generates a radioactive base surge (mist cloud) instead of a normal mushroom cloud. Produces tsunami-like surface waves. Reduced blast/thermal effects vs air burst but massive radioactive contamination of surrounding water. Based on Baker test (Bikini Atoll, 1946).</div>
+            <div class="info-title blue">Underwater / Water Surface Burst</div>
+            <div class="info-copy">Detonation at or below the water surface. Generates a radioactive base surge instead of a normal mushroom cloud. Produces tsunami-like surface waves and heavy radioactive contamination of surrounding water. Based on Baker test (Bikini Atoll, 1946).</div>
           </div>
           <div class="compact-row" id="height-row" style="display:none">
-            <label>Height</label><input type="number" class="compact-input" id="burst-height" value="0" min="0"/><span class="unit">m</span>
+            <label>Height</label><input type="number" class="compact-input" id="burst-height" value="0" min="0" aria-label="Burst height in meters"/><span class="unit">m</span>
           </div>
           <div class="compact-row" id="fission-row">
-            <label>Fission</label><input type="number" class="compact-input" id="fission-pct" value="50" min="0" max="100"/><span class="unit">%</span>
+            <label>Fission</label><input type="number" class="compact-input" id="fission-pct" value="50" min="0" max="100" aria-label="Fission percentage"/><span class="unit">%</span>
           </div>
           <div id="wind-wrap" style="display:none">
             <div class="wind-wrap">
               <div class="wind-compass" id="wind-compass"><div class="wind-arrow" id="wind-arrow"></div></div>
               <div class="wind-info">
                 <label>Wind (fallout)</label>
-                <div class="wind-speed-row"><input type="number" id="wind-speed" value="24" min="0" max="300"/><span class="unit">km/h</span></div>
+                <div class="wind-speed-row"><input type="number" id="wind-speed" value="24" min="0" max="300" aria-label="Wind speed in kilometers per hour"/><span class="unit">km/h</span></div>
                 <div class="wind-dir-label" id="wind-dir-label">From N (0deg)</div>
               </div>
             </div>
-            <label class="toggle-row" style="margin-top:4px"><input type="checkbox" id="realwind-check"/><span class="tg-slider"></span><span class="tg-label" id="realwind-label">Use real wind (Open-Meteo)</span></label>
+            <label class="toggle-row mt-4"><input type="checkbox" id="realwind-check"/><span class="tg-slider"></span><span class="tg-label" id="realwind-label">Use real wind (Open-Meteo)</span></label>
           </div>
         </div>
 
         <div class="section">
-          <button id="detonate-btn">DETONATE</button>
+          <button id="detonate-btn">Detonate Map Center</button>
           <div class="btn-row">
             <button class="btn-secondary" id="undo-btn">Undo Last</button>
             <button class="btn-secondary" id="clear-btn">Clear All</button>
@@ -168,10 +168,10 @@
       </div>
 
       <!-- ===== EFFECTS TAB ===== -->
-      <div class="tab-content" id="tab-effects">
+      <div class="tab-content" id="tab-effects" role="tabpanel" tabindex="0">
         <div class="section" id="legend-section">
           <div class="section-title">Effect Rings</div>
-          <div id="legend-items"><div style="color:var(--overlay0);font-size:12px;padding:10px 0">Detonate a weapon to see effects</div></div>
+          <div id="legend-items"><div class="empty-state">Detonate a weapon to see modeled effect rings.</div></div>
         </div>
         <div class="section" id="cloud-section" style="display:none">
           <div class="section-title">Mushroom Cloud</div>
@@ -239,7 +239,7 @@
         </div>
         <div class="section" id="ground-section" style="display:none">
           <div class="section-title">Ground-Level Experience</div>
-          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">What you would see, hear, and feel at each distance from ground zero.</div>
+          <div class="section-hint">What you would see, hear, and feel at each distance from ground zero.</div>
           <div id="ground-content"></div>
         </div>
         <div class="section" id="cloudcompare-section" style="display:none">
@@ -253,14 +253,14 @@
       </div>
 
       <!-- ===== RESULTS TAB ===== -->
-      <div class="tab-content" id="tab-results">
+      <div class="tab-content" id="tab-results" role="tabpanel" tabindex="0">
         <div class="section">
           <div class="section-title">Estimated Casualties</div>
           <div class="stat-grid">
             <div class="stat-card"><div class="stat-label">Fatalities</div><div class="stat-value deaths" id="stat-deaths" tabindex="-1">--</div></div>
             <div class="stat-card"><div class="stat-label">Injuries</div><div class="stat-value injuries" id="stat-injuries">--</div></div>
             <div class="stat-card"><div class="stat-label">Total Affected</div><div class="stat-value total" id="stat-total">--</div></div>
-            <div class="stat-card"><div class="stat-label">Total Yield</div><div class="stat-value" id="stat-yield" style="color:var(--mauve)">--</div></div>
+            <div class="stat-card"><div class="stat-label">Total Yield</div><div class="stat-value yield-total" id="stat-yield">--</div></div>
             <div class="stat-card wide"><div class="stat-sub" id="stat-note">Detonate a weapon to see estimates</div></div>
           </div>
         </div>
@@ -271,24 +271,24 @@
         <div class="section" id="share-section" style="display:none">
           <div class="section-title">Share Results</div>
           <div class="share-row"><input type="text" id="share-input" readonly/><button class="share-copy" id="share-copy">Copy Link</button></div>
-          <div class="btn-row" style="margin-top:5px">
+          <div class="btn-row mt-5">
             <button class="btn-secondary" id="share-text">Copy Summary</button>
             <button class="btn-secondary" id="share-native" style="display:none">Share</button>
           </div>
         </div>
         <div class="section">
           <div class="section-title">Save / Load Scenario</div>
-          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">Save current detonations to browser storage for later.</div>
+          <div class="section-hint">Save current detonations to browser storage for later.</div>
           <div class="save-row">
-            <input type="text" id="save-name" class="compact-input" placeholder="Scenario name..." style="flex:1;max-width:none;text-align:left"/>
-            <button class="btn-secondary" id="save-btn" style="flex:0;white-space:nowrap">Save</button>
+            <input type="text" id="save-name" class="compact-input save-input text-left" placeholder="Scenario name..." aria-label="Scenario name"/>
+            <button class="btn-secondary flex-none nowrap" id="save-btn">Save</button>
           </div>
-          <div id="saved-list" style="margin-top:6px"></div>
+          <div id="saved-list" class="mt-6"></div>
         </div>
       </div>
 
       <!-- ===== TOOLS TAB ===== -->
-      <div class="tab-content" id="tab-tools">
+      <div class="tab-content" id="tab-tools" role="tabpanel" tabindex="0">
         <!-- MIRV -->
         <div class="section">
           <div class="section-title">MIRV Strike</div>
@@ -301,10 +301,10 @@
           <div class="section-title">Weapon Comparison</div>
           <div class="compare-selects">
             <select id="compare-a"></select>
-            <span style="color:var(--overlay0);font-size:11px;font-weight:700">vs</span>
+            <span class="compare-vs">vs</span>
             <select id="compare-b"></select>
           </div>
-          <div class="btn-row" style="margin-top:0">
+          <div class="btn-row mt-0">
             <button class="btn-secondary" id="compare-go">Compare</button>
             <button class="btn-secondary" id="compare-clear">Clear</button>
           </div>
@@ -314,14 +314,14 @@
         <!-- Experience Mode -->
         <div class="section">
           <div class="section-title">What Would I Experience?</div>
-          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">Enable, then click anywhere on the map to see a detailed report of effects at that distance from ground zero.</div>
+          <div class="section-hint">Enable, then click anywhere on the map to see a detailed report of effects at that distance from ground zero.</div>
           <label class="toggle-row"><input type="checkbox" id="experience-check"/><span class="tg-slider"></span><span class="tg-label">Experience mode</span></label>
         </div>
 
         <!-- Measurement -->
         <div class="section">
           <div class="section-title">Measure Distance</div>
-          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">Enable, then click two or more points on the map to measure distances.</div>
+          <div class="section-hint">Enable, then click two or more points on the map to measure distances.</div>
           <div class="btn-row">
             <button class="btn-secondary" id="measure-toggle">Enable Ruler</button>
             <button class="btn-secondary" id="measure-clear">Clear</button>
@@ -331,38 +331,38 @@
         <!-- WW3 Simulation -->
         <div class="section">
           <div class="section-title">WW3 Simulation</div>
-          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">Full-scale nuclear exchange with animated missile arcs, phased escalation, and live casualty tracking.</div>
+          <div class="section-hint">Full-scale nuclear exchange with animated missile arcs, phased escalation, and live casualty tracking.</div>
           <div class="select-wrap">
             <select class="custom-select" id="ww3-scenario">
               <option value="">Select scenario...</option>
             </select>
             <span class="select-arrow"><svg viewBox="0 0 10 6"><path d="M0 0l5 6 5-6z" fill="currentColor"/></svg></span>
           </div>
-          <div id="ww3-scenario-desc" style="font-size:9px;color:var(--overlay0);margin-bottom:6px"></div>
-          <div class="compact-row" style="margin-bottom:4px">
+          <div id="ww3-scenario-desc" class="section-hint mb-6"></div>
+          <div class="compact-row mb-4">
             <label>Speed</label>
-            <select class="compact-input" id="ww3-speed" style="max-width:80px;text-align:left">
+            <select class="compact-input select-sm text-left" id="ww3-speed">
               <option value="1">1x</option>
               <option value="2">2x</option>
               <option value="5" selected>5x</option>
               <option value="10">10x</option>
             </select>
           </div>
-          <div class="compact-row" style="margin-bottom:4px">
+          <div class="compact-row mb-4">
             <label>Targeting</label>
-            <select class="compact-input" id="ww3-targeting" style="max-width:130px;text-align:left">
+            <select class="compact-input select-lg text-left" id="ww3-targeting">
               <option value="all">All targets</option>
               <option value="counterforce">Counterforce only</option>
               <option value="countervalue">Countervalue only</option>
             </select>
           </div>
-          <div class="btn-row" style="margin-top:0">
+          <div class="btn-row mt-0">
             <button class="btn-ww3-launch" id="ww3-launch">LAUNCH SIMULATION</button>
             <button class="btn-secondary" id="ww3-pause" style="display:none">Pause</button>
             <button class="btn-secondary" id="ww3-stop">Stop</button>
           </div>
-          <div id="ww3-phase" style="font-size:10px;color:var(--mauve);font-weight:700;margin-top:6px">Simulation idle</div>
-          <div id="ww3-stats" style="margin-top:6px"></div>
+          <div id="ww3-phase" class="phase-status">Simulation idle</div>
+          <div id="ww3-stats" class="mt-6"></div>
         </div>
 
         <!-- Attack Scenarios -->
@@ -376,14 +376,14 @@
           <div class="section-title">Missile Flight Time</div>
           <div class="compact-row">
             <label>Type</label>
-            <select class="compact-input" id="missile-type" style="max-width:120px;text-align:left">
+            <select class="compact-input select-md text-left" id="missile-type">
               <option value="icbm">ICBM</option>
               <option value="slbm">SLBM</option>
               <option value="irbm">IRBM</option>
               <option value="srbm">SRBM</option>
             </select>
           </div>
-          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">Uses last detonation as target. Calculates from major launch sites.</div>
+          <div class="section-hint">Uses last detonation as target. Calculates from major launch sites.</div>
           <div class="btn-row">
             <button class="btn-secondary" id="flight-us">From US</button>
             <button class="btn-secondary" id="flight-ru">From Russia</button>
@@ -430,7 +430,7 @@
             <label>Distance</label>
             <input type="number" class="compact-input" id="raddecay-dist" value="10" min="0.1" step="any"/>
             <span class="unit">km</span>
-            <button class="btn-secondary" id="raddecay-calc" style="flex:0;padding:5px 10px">Calc</button>
+            <button class="btn-secondary flex-none" id="raddecay-calc">Calc</button>
           </div>
           <div id="raddecay-result"></div>
         </div>
@@ -459,7 +459,7 @@
         <!-- Dose Calculator -->
         <div class="section" id="dosecalc-section" style="display:none">
           <div class="section-title">Radiation Dose Calculator</div>
-          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">Estimate cumulative dose based on time spent at a distance from ground zero after a surface burst.</div>
+          <div class="section-hint">Estimate cumulative dose based on time spent at a distance from ground zero after a surface burst.</div>
           <div class="compact-row">
             <label>Distance</label>
             <input type="number" class="compact-input" id="dose-dist" value="5" min="0.1" step="any"/>
@@ -475,16 +475,16 @@
             <input type="number" class="compact-input" id="dose-stay" value="4" min="0.1" step="any"/>
             <span class="unit">hours</span>
           </div>
-          <button class="btn-secondary" id="dose-calc" style="width:100%;margin-top:4px">Calculate Dose</button>
-          <div id="dose-result" style="margin-top:6px"></div>
+          <button class="btn-secondary full-width mt-4" id="dose-calc">Calculate Dose</button>
+          <div id="dose-result" class="mt-6"></div>
         </div>
 
         <!-- GPS Am I Safe -->
         <div class="section">
           <div class="section-title">Am I Safe? (GPS)</div>
-          <div style="font-size:10px;color:var(--overlay0);margin-bottom:6px">Uses your browser location to check against the last detonation.</div>
-          <button class="btn-secondary" id="gps-check" style="width:100%">Check My Location</button>
-          <div id="gps-result" style="margin-top:6px"></div>
+          <div class="section-hint">Uses your browser location to check against the last detonation.</div>
+          <button class="btn-secondary full-width" id="gps-check">Check My Location</button>
+          <div id="gps-result" class="mt-6"></div>
         </div>
 
         <!-- Extra toggles -->
@@ -494,16 +494,16 @@
           <label class="toggle-row"><input type="checkbox" id="geiger-check"/><span class="tg-slider"></span><span class="tg-label">Geiger counter (hover audio)</span></label>
           <label class="toggle-row"><input type="checkbox" id="shockwave-check" checked/><span class="tg-slider"></span><span class="tg-label">Shockwave ring animation</span></label>
           <label class="toggle-row"><input type="checkbox" id="contours-check"/><span class="tg-slider"></span><span class="tg-label">Fallout dose contour lines</span></label>
-          <div id="fallout-timelapse" style="display:none;margin-top:6px">
-            <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:9px;color:var(--overlay0);font-weight:600;min-width:28px" id="ft-label">1 hr</span>
-              <input type="range" id="ft-slider" min="1" max="48" value="1" step="1" style="flex:1;accent-color:var(--yellow)"/>
-              <button class="btn-secondary" id="ft-play" style="flex:0;padding:4px 8px;font-size:9px">Play</button>
+          <div id="fallout-timelapse" class="mt-6" style="display:none">
+            <div class="timelapse-row">
+              <span class="timelapse-label" id="ft-label">1 hr</span>
+              <input class="range-fill" type="range" id="ft-slider" min="1" max="48" value="1" step="1"/>
+              <button class="btn-secondary flex-none" id="ft-play">Play</button>
             </div>
-            <div style="font-size:9px;color:var(--overlay0);margin-top:2px" id="ft-info">Fallout extent at 1 hour after detonation</div>
+            <div class="status-note" id="ft-info">Fallout extent at 1 hour after detonation</div>
           </div>
           <label class="toggle-row"><input type="checkbox" id="testdb-check"/><span class="tg-slider"></span><span class="tg-label">Show historic nuclear tests</span></label>
-          <div class="btn-row" style="margin-top:4px">
+          <div class="btn-row mt-4">
             <button class="btn-secondary" id="test-timeline-btn">Play Test Timeline</button>
             <button class="btn-secondary" id="test-timeline-stop">Stop</button>
           </div>
@@ -512,24 +512,24 @@
         <!-- Export -->
         <div class="section">
           <div class="section-title">Export</div>
-          <button class="export-btn" id="export-png" style="margin-bottom:5px">Export Map as PNG</button>
-          <button class="export-btn" id="export-png-hd" style="background:var(--lavender);color:var(--crust);margin-bottom:5px">Export High-DPI PNG (4×)</button>
-          <button class="export-btn" id="export-svg" style="background:var(--flamingo);color:var(--crust);margin-bottom:5px">Export as SVG (print quality)</button>
-          <button class="export-btn" id="export-kml" style="background:var(--mauve);margin-bottom:5px">Export to Google Earth (KML)</button>
-          <button class="export-btn" id="export-json" style="background:var(--teal);margin-bottom:5px">Export Data as JSON</button>
-          <button class="export-btn" id="export-csv" style="background:var(--yellow);color:var(--crust);margin-bottom:5px">Export Data as CSV</button>
-          <button class="export-btn" id="export-report" style="background:var(--green);margin-bottom:5px">Generate Summary Report</button>
-          <div style="margin-top:6px">
-            <label class="export-btn" id="import-csv-label" style="background:var(--surface1);cursor:pointer;display:block;text-align:center">Import CSV<input type="file" id="import-csv" accept=".csv" style="display:none"/></label>
+          <div class="export-stack">
+            <button class="export-btn primary" id="export-png">Export Map as PNG</button>
+            <button class="export-btn primary" id="export-png-hd">Export High-DPI PNG (4x)</button>
+            <button class="export-btn accent" id="export-svg">Export SVG for Print</button>
+            <button class="export-btn accent" id="export-kml">Export Google Earth KML</button>
+            <button class="export-btn" id="export-json">Export Data as JSON</button>
+            <button class="export-btn warn" id="export-csv">Export Data as CSV</button>
+            <button class="export-btn success" id="export-report">Generate Summary Report</button>
+            <label class="export-btn" id="import-csv-label">Import CSV<input type="file" id="import-csv" accept=".csv" style="display:none"/></label>
           </div>
         </div>
       </div>
 
       <!-- ===== ENCYCLOPEDIA TAB ===== -->
-      <div class="tab-content" id="tab-encyclopedia">
+      <div class="tab-content" id="tab-encyclopedia" role="tabpanel" tabindex="0">
         <div class="section">
           <div class="section-title">Weapon Arsenal</div>
-          <div style="font-size:10px;color:var(--overlay0);margin-bottom:8px">Browse all weapons by country. Click to select.</div>
+          <div class="section-hint">Browse all weapons by country. Click to select.</div>
           <div id="encyclopedia-list"></div>
         </div>
         <div class="section">
@@ -621,7 +621,7 @@
     <button class="ms-btn" data-layer="humanitarian">Humanitarian</button>
   </div>
 </div>
-<div id="screenshot-hint">Click here or press Escape to exit screenshot mode</div>
+<div id="screenshot-hint">Click to exit screenshot mode</div>
 <div id="fact-banner"><div class="fact-label">Did You Know?</div><span id="fact-text"></span></div>
 
 <!-- Libraries -->

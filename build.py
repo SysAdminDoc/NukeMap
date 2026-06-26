@@ -23,7 +23,7 @@ def download(url):
         return None
 
 def build():
-    print('NukeMap Offline Builder v3.4.0')
+    print('NukeMap Offline Builder v3.4.1')
     print('=' * 40)
 
     # Read HTML template
