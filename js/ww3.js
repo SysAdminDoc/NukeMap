@@ -709,6 +709,16 @@ NM.WW3 = {
     if (!toasts) { toasts = document.createElement('div'); toasts.id = 'ww3-toasts'; document.body.appendChild(toasts); }
     toasts.innerHTML = '';
 
+    // Pre-compute effects for all target yields during siren (avoids main-thread jank during detonation)
+    this._effectsCache = new Map();
+    for (const [, targets] of Object.entries(scenario.targetSets)) {
+      for (const t of targets) {
+        if (!this._effectsCache.has(t.yieldKt)) {
+          this._effectsCache.set(t.yieldKt, NM.calcEffects(t.yieldKt, 'airburst', 0, 50));
+        }
+      }
+    }
+
     // Air raid siren
     const sirenDur = 3 / this.speed;
     if (NM.Sound.enabled && NM.Sound.ctx) {
@@ -969,7 +979,7 @@ NM.WW3 = {
     const now = performance.now();
     this.casualties.warheadsLanded++;
 
-    const effects = NM.calcEffects(yieldKt, 'airburst', 0, 50);
+    const effects = this._effectsCache?.get(yieldKt) || NM.calcEffects(yieldKt, 'airburst', 0, 50);
 
     // Only draw full effect rings for cities (performance)
     if (isCity) {
