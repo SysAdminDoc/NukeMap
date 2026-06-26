@@ -17,7 +17,7 @@ NM.WEAPONS = [
   {name:'W88 (Trident II)',yield_kt:455,country:'US',year:'1988',desc:'Most powerful US SLBM warhead'},
   {name:'W87-1 (Sentinel)',yield_kt:475,country:'US',year:'2030',desc:'Next-gen GBSD ICBM warhead'},
   {name:'Ivy King',yield_kt:500,country:'US',year:'1952',desc:'Largest pure-fission bomb ever tested'},
-  {name:'B83-1',yield_kt:1200,country:'US',year:'1983',desc:'Largest weapon in active US arsenal'},
+  {name:'B83-1 (retired)',yield_kt:1200,country:'US',year:'1983',desc:'Formerly largest US weapon. Retired 2023, all units dismantled per NNSA.'},
   {name:'Ivy Mike',yield_kt:10400,country:'US',year:'1952',desc:'First thermonuclear device, island-sized'},
   {name:'Castle Bravo',yield_kt:15000,country:'US',year:'1954',desc:'15 MT, 2.5x expected yield'},
   {name:'RSM-56 Bulava',yield_kt:150,country:'RU',year:'2018',desc:'SLBM, 6-10 MIRV warheads'},
@@ -36,6 +36,8 @@ NM.WEAPONS = [
   {name:'Agni-V (India)',yield_kt:40,country:'IN',year:'2018',desc:'ICBM-range, road/rail mobile'},
   {name:'Shaheen-III (Pakistan)',yield_kt:40,country:'PK',year:'2015',desc:'MRBM, 2750 km range'},
   {name:'Hwasong-15 (DPRK)',yield_kt:250,country:'KP',year:'2017',desc:'ICBM-class, estimated yield'},
+  {name:'Hwasong-17 (DPRK)',yield_kt:300,country:'KP',year:'2022',desc:'Largest DPRK ICBM, 25m long, road-mobile TEL'},
+  {name:'DF-31AG (China)',yield_kt:250,country:'CN',year:'2018',desc:'Road-mobile ICBM, replaces DF-31A, improved range/accuracy'},
   {name:'Jericho III (Israel)',yield_kt:200,country:'IL',year:'2008',desc:'Estimated ICBM capability'},
 ];
 

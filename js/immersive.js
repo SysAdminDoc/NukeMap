@@ -15,11 +15,14 @@ NM.Geiger = {
   start(map) {
     if (!this.ctx) this.init();
     this.active = true;
+    let _geigerDebounce = 0;
     this._handler = (e) => {
       if (!this.active || !NM._lastDet) return;
+      const now = Date.now();
+      if (now - _geigerDebounce < 50) return;
+      _geigerDebounce = now;
       const det = NM._lastDet;
       const dist = NM.haversine(det.lat, det.lng, e.latlng.lat, e.latlng.lng);
-      // Radiation intensity falls off with distance squared
       const maxR = Math.max(det.effects.radiation, det.effects.psi1);
       const intensity = Math.max(0, 1 - dist / maxR);
       this._setRate(intensity);

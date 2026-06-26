@@ -66,7 +66,7 @@ NM.calcEffects = function(Y, burstType, heightM, fissionFrac) {
     radiation: 1.15 * Math.pow(Y, 0.19),  // NWFAQ §5.4: 500 rem
     neutronRad: Math.min(2.5, 0.7 * Math.pow(Y, 0.19)),  // NWFAQ §5.4
     gammaRad: Math.min(3.0, 1.0 * Math.pow(Y, 0.19)),  // NWFAQ §5.4
-    emp:       Math.min(2.5 * Math.pow(Y, 0.33), 500),  // G&D Ch.11
+    emp:       Math.min(2.5 * Math.pow(Y, 0.33), 40),  // G&D Ch.11 §11.33: surface/low-altitude EMP <40 km
     craterR:   isSurface ? 0.038*Math.pow(Y,1/3.4) : 0,  // G&D Ch.6
     craterDepth: isSurface ? 0.013*Math.pow(Y,1/3.4) : 0,  // G&D Ch.6
     cloudTopH: (isSurface?0.24:0.29) * Math.pow(Y, 0.42),
