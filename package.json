@@ -1,6 +1,6 @@
 {
   "private": true,
   "scripts": {
-    "test": "node test/run-physics.js"
+    "test": "node test/run-physics.js && node test/run-url-search.js"
   }
 }
