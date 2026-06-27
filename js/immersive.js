@@ -9,6 +9,7 @@ NM.Geiger = {
   ctx: null, active: false, intervalId: null,
 
   init() {
+    if (this.ctx) return;
     try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
   },
 

@@ -664,6 +664,7 @@ NM.WW3 = {
   _lastShakeTime: 0,
   _hudEl: null,
   _winterEl: null,
+  _gen: 0,
   speed: 1, // speed multiplier (1x, 2x, 5x)
 
   start(map, scenarioId) {
@@ -945,8 +946,9 @@ NM.WW3 = {
 
     let start = performance.now();
     let pausedAt = 0;
+    const gen = this._gen;
     const tick = (now2) => {
-      if (!this.active) return;
+      if (!this.active || this._gen !== gen) return;
       if (this.paused) { if (!pausedAt) pausedAt = now2; requestAnimationFrame(tick); return; }
       if (pausedAt) { start += now2 - pausedAt; pausedAt = 0; }
       const p = Math.min(1, (now2 - start) / flightMs);
@@ -959,9 +961,9 @@ NM.WW3 = {
       if (p < 1) requestAnimationFrame(tick);
       else {
         map.removeLayer(dot);
-        // Fade trail
         const fs = performance.now();
         const ft = (n) => {
+          if (this._gen !== gen) { try { map.removeLayer(trail); } catch(e) {} return; }
           const fp = Math.min(1, (n - fs) / 2500);
           trail.setStyle({opacity: 0.15 * (1 - fp)});
           if (fp < 1 && this.active) requestAnimationFrame(ft);
@@ -976,6 +978,7 @@ NM.WW3 = {
 
   _detonate(map, lat, lng, yieldKt, isCity, targetName) {
     if (!this.active) return;
+    const gen = this._gen;
     const now = performance.now();
     this.casualties.warheadsLanded++;
 
@@ -1014,6 +1017,7 @@ NM.WW3 = {
 
     const fs = performance.now();
     const ft = (n) => {
+      if (this._gen !== gen) { try { map.removeLayer(flash); } catch(e) {} return; }
       const p = Math.min(1, (n - fs) / 1800);
       flash.setRadius(flashR * (0.3 + p * 1.5));
       flash.setStyle({
@@ -1118,6 +1122,7 @@ NM.WW3 = {
 
   stop(map) {
     this.active = false;
+    this._gen++;
     this.timers.forEach(t => clearTimeout(t));
     this.timers = [];
     if (this.statsInterval) { clearInterval(this.statsInterval); this.statsInterval = null; }
