@@ -320,7 +320,7 @@ function setButtonDisabled(id, disabled) {
 function syncActionStates() {
   const hasDets = currentDets.length > 0;
   document.body.classList.toggle('has-results', hasDets);
-  ['undo-btn','clear-btn','share-btn','save-btn','export-kml','export-json','export-csv','export-report','export-print','export-png','export-png-hd','export-svg'].forEach(id => setButtonDisabled(id, !hasDets));
+  ['undo-btn','clear-btn','share-btn','save-btn','export-kml','export-json','export-geojson','export-csv','export-report','export-print','export-png','export-png-hd','export-svg'].forEach(id => setButtonDisabled(id, !hasDets));
   ['flight-us','flight-ru','flight-cn','raddecay-calc','dose-calc'].forEach(id => setButtonDisabled(id, !hasDets));
 }
 function getYield() { return NM.sliderToYield(+$('yield-slider').value); }
@@ -649,6 +649,7 @@ function initControls() {
   $('export-svg').addEventListener('click', () => NM.ExportPNG.exportSVG());
   $('export-kml').addEventListener('click', () => { if (currentDets.length) NM.KMLExport.download(currentDets); });
   $('export-json').addEventListener('click', () => { if (currentDets.length) exportJSON(); });
+  if ($('export-geojson')) $('export-geojson').addEventListener('click', () => { if (currentDets.length) exportGeoJSON(); });
   $('export-report').addEventListener('click', () => { if (currentDets.length) exportReport(); });
   $('export-csv').addEventListener('click', () => { if (currentDets.length) exportCSV(); });
   $('export-print').addEventListener('click', () => { if (currentDets.length) exportPrintReport(); });
@@ -857,6 +858,7 @@ function initControls() {
   const modelHints = {
     nwfaq: 'Mach stem enhancement at optimal burst height. Validated against HSAJ 10kT.',
     freeair: 'Free-air blast without Mach stem. ~17% smaller blast radii. G&D Ch.3.',
+    soviet: 'Soviet military coefficients (HeWu). ~7% larger blast radii than NWFAQ.',
   };
   if (modelSel) modelSel.addEventListener('change', () => {
     NM._physicsModel = modelSel.value;
@@ -1460,6 +1462,42 @@ function exportJSON() {
   });
   const blob = new Blob([JSON.stringify({version:'3.5.0', generated: new Date().toISOString(), detonations: data}, null, 2)], {type:'application/json'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nukemap-data.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+}
+
+// ---- EXPORT GEOJSON ----
+function exportGeoJSON() {
+  const features = [];
+  const ringDefs = [
+    {key:'fireball',label:'Fireball'},{key:'psi20',label:'20 psi'},{key:'psi5',label:'5 psi'},
+    {key:'psi1',label:'1 psi'},{key:'thermal3',label:'3rd° Burns'},{key:'thermal1',label:'1st° Burns'},
+    {key:'radiation',label:'500 rem'},{key:'emp',label:'EMP'},{key:'firestormR',label:'Firestorm'},
+  ];
+  currentDets.forEach((d, i) => {
+    features.push({type:'Feature',geometry:{type:'Point',coordinates:[d.lng,d.lat]},properties:{
+      detonation:i+1,weapon:d.weapon,yieldKt:d.yieldKt,burstType:d.burstType,
+      deaths:d.casualties.deaths,injuries:d.casualties.injuries,
+    }});
+    for (const rd of ringDefs) {
+      const r = d.effects[rd.key];
+      if (!r || r < 0.001) continue;
+      const pts = [];
+      for (let a = 0; a <= 360; a += 5) {
+        const rad = a * Math.PI / 180;
+        const dlat = (r / 6371) * Math.cos(rad) * (180 / Math.PI);
+        const dlng = (r / 6371) * Math.sin(rad) * (180 / Math.PI) / Math.cos(d.lat * Math.PI / 180);
+        pts.push([+(d.lng + dlng).toFixed(6), +(d.lat + dlat).toFixed(6)]);
+      }
+      pts.push(pts[0]);
+      features.push({type:'Feature',geometry:{type:'Polygon',coordinates:[pts]},properties:{
+        detonation:i+1,effect:rd.label,radius_km:+r.toFixed(3),
+      }});
+    }
+  });
+  const geojson = {type:'FeatureCollection',features};
+  const blob = new Blob([JSON.stringify(geojson, null, 2)], {type:'application/geo+json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nukemap-data.geojson';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }

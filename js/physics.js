@@ -41,6 +41,7 @@ NM._physicsModel = 'nwfaq';
 NM.BLAST_MODELS = {
   nwfaq:   {psi200: 0.13, psi20: 0.28, psi5: 0.71, psi3: 0.95, psi1: 2.2, label: 'NWFAQ Optimum Burst'},
   freeair: {psi200: 0.11, psi20: 0.24, psi5: 0.59, psi3: 0.79, psi1: 1.93, label: 'G&D Free-Air'},
+  soviet:  {psi200: 0.14, psi20: 0.30, psi5: 0.76, psi3: 1.02, psi1: 2.4, label: 'Soviet Military Manual'},
 };
 
 NM.calcEffects = function(Y, burstType, heightM, fissionFrac) {
