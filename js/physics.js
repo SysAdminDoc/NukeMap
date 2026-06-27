@@ -44,7 +44,7 @@ NM.BLAST_MODELS = {
   soviet:  {psi200: 0.14, psi20: 0.30, psi5: 0.76, psi3: 1.02, psi1: 2.4, label: 'Soviet Military Manual'},
 };
 
-NM.calcEffects = function(Y, burstType, heightM, fissionFrac) {
+NM.calcEffects = function(Y, burstType, heightM, fissionFrac, popDensity) {
   Y = Math.max(Y, 0.001);
   fissionFrac = (fissionFrac ?? 50) / 100;
   const isWater = burstType === 'water';
@@ -80,7 +80,7 @@ NM.calcEffects = function(Y, burstType, heightM, fissionFrac) {
       : null,
     flashBlindDay:  2.1 * Math.pow(Y, 0.4),   // km - temporary blindness in daylight
     flashBlindNight: 55 * Math.pow(Y, 0.25),  // km - temporary blindness at night (much larger)
-    firestormR: isWater ? 0 : 0.67 * Math.pow(Y, 0.41) * 0.85, // km - ~85% of thermal3 radius (G&D Ch.7)
+    firestormR: isWater ? 0 : 0.67 * Math.pow(Y, 0.41) * 0.85 * (popDensity == null ? 1.0 : popDensity > 5000 ? 1.0 : popDensity > 1000 ? 0.8 : popDensity > 200 ? 0.5 : 0.15), // Toon et al. 2007: firestorm probability scales with urban fuel load
     burstHeight: h, optimalHeight: optH, isSurface, yieldKt: Y,
     isWater,
     baseSurge: isWater ? 0.34 * Math.pow(Y, 0.4) : 0,  // G&D Ch.6 §6.43: base surge radius
@@ -146,7 +146,36 @@ NM.calcZoneMortality = function(effects, density) {
   return {deaths, injuries, perZone};
 };
 
-NM.estimateCasualties = function(lat, lng, effects) {
+NM.estimateLatentCancer = function(effects, density) {
+  // BEIR VII (2006) linear no-threshold: ~5.5% excess cancer mortality per Sv
+  // Approximate dose zones from Glasstone & Dolan radiation scaling
+  const zones = [
+    {r: effects.radiation, dose: 5.0},  // 500 rem = 5 Sv at radiation radius edge
+    {r: effects.psi1, dose: 0.5},       // ~50 rem at 1 psi boundary
+    {r: effects.thermal1, dose: 0.1},   // ~10 rem at 1st degree burn edge
+  ].filter(z => z.r > 0.001);
+
+  let totalExposed = 0, totalCancers10 = 0, totalCancers30 = 0;
+  let prevA = 0;
+  for (const z of zones) {
+    const a = Math.PI * z.r * z.r;
+    const ring = Math.max(0, a - prevA);
+    const pop = ring * density * 0.5; // survivors only (~50% survive outer zones)
+    const cancerRate = z.dose * 0.055; // BEIR VII: 5.5% per Sv
+    totalExposed += pop;
+    totalCancers10 += pop * cancerRate * 0.3; // ~30% manifest within 10 years
+    totalCancers30 += pop * cancerRate * 0.8; // ~80% manifest within 30 years
+    prevA = a;
+  }
+  return {
+    exposed: Math.round(totalExposed),
+    cancers10yr: Math.round(totalCancers10),
+    cancers30yr: Math.round(totalCancers30),
+    geneticEffects: Math.round(totalExposed * 0.001), // ~0.1% hereditary risk per UNSCEAR
+  };
+};
+
+NM.estimateDensity = function(lat, lng) {
   const nc = NM.findNearestCity(lat, lng);
   let density = 40;
   if (nc) {
@@ -155,6 +184,11 @@ NM.estimateCasualties = function(lat, lng, effects) {
     else if(d<15&&p>1e5)density=3000;else if(d<25&&p>1e5)density=1500;else if(d<40&&p>5e4)density=500;
     else if(d<60&&p>1e4)density=200;else if(d<100)density=80;
   }
+  return density;
+};
+
+NM.estimateCasualties = function(lat, lng, effects) {
+  const density = NM.estimateDensity(lat, lng);
   const result = NM.calcZoneMortality(effects, density);
   return {deaths: result.deaths, injuries: result.injuries, density};
 };

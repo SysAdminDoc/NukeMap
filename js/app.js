@@ -50,6 +50,7 @@ const _panelDefs = [
   {s:'bldgdmg-section', c:'bldgdmg-content', fn:(d)=>NM.BuildingDamage.generate(d.yieldKt)},
   {s:'sizecompare-section', c:'sizecompare-content', fn:(d)=>NM.SizeCompare.generate(d.effects)},
   {s:'escape-section', c:'escape-content', fn:(d)=>NM.EscapeTime.generate(d.effects)},
+  {s:'cancer-section', c:'cancer-content', fn:(d)=>{const c=NM.estimateLatentCancer(d.effects,d.casualties.density);return'<div class="zone-table"><div class="zt-row zt-head"><span>Horizon</span><span>Latent Cancer Fatalities</span></div><div class="zt-row"><span>10 years</span><span class="zt-d">'+NM.fmtNum(c.cancers10yr)+'</span></div><div class="zt-row"><span>30 years</span><span class="zt-d">'+NM.fmtNum(c.cancers30yr)+'</span></div><div class="zt-row"><span>Hereditary effects</span><span class="zt-i">'+NM.fmtNum(c.geneticEffects)+'</span></div></div><div class="emp-note">BEIR VII linear no-threshold model: ~5.5% excess cancer mortality per Sv. Exposed population: '+NM.fmtNum(c.exposed)+'. Genetic effects per UNSCEAR.</div>';}},
   {s:'psi-section', c:'psi-result', fn:(d)=>NM.CustomPsi.generateHTML(d.yieldKt)},
   {s:'yieldchart-section', c:'yield-chart', fn:(d)=>NM.YieldChart.generate(d.yieldKt)},
   {s:'weaponinfo-section', c:'weaponinfo-content', fn:(d)=>NM.WeaponInfo.generate(d.weapon), hideIfEmpty:true},
@@ -190,7 +191,8 @@ function triggerDetonation(lat, lng) {
   if (isHEMP) burst = 'airburst';
   const hM = burst === 'custom' ? (+$('burst-height').value || 0) : 0;
   const fission = +$('fission-pct').value || 50;
-  const effects = NM.calcEffects(Y, isHEMP ? 'airburst' : (isWater ? 'water' : burst), hM, fission);
+  const density = NM.estimateDensity(lat, lng);
+  const effects = NM.calcEffects(Y, isHEMP ? 'airburst' : (isWater ? 'water' : burst), hM, fission, density);
 
   // HEMP override: no blast/thermal at ground level, massive EMP
   if (isHEMP) {
