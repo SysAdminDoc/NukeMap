@@ -22,8 +22,14 @@ def download(url):
         print(f'  Warning: Could not download {url}: {e}')
         return None
 
+def get_version():
+    html = read('index.html')
+    m = re.search(r'<title>NukeMap (v[\d.]+)</title>', html)
+    return m.group(1) if m else 'unknown'
+
 def build():
-    print('NukeMap Offline Builder v3.4.1')
+    version = get_version()
+    print(f'NukeMap Offline Builder {version}')
     print('=' * 40)
 
     # Read HTML template

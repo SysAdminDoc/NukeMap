@@ -548,10 +548,25 @@ NM.EmergencyGuide = {
       {title:'Supplies to Have Ready', body:'Water (1 gal/person/day for 3 days), non-perishable food, battery radio, flashlight, first aid kit, dust masks or cloth, plastic sheeting and duct tape, medications.', color:'var(--green)', always:true},
     ];
 
+    const femaTimeline = [
+      {hr:'0–1 hr', action:'Shelter in the best available building. Go to basement or interior room. Do NOT evacuate yet — fallout radiation peaks in the first hour.', color:'var(--red)'},
+      {hr:'1–4 hr', action:'Remain sheltered. Seal gaps around doors/windows with wet cloth or tape. Monitor AM/FM radio for official instructions. Dose rates dropping rapidly.', color:'var(--peach)'},
+      {hr:'4–12 hr', action:'Continue shelter. If in a poor-quality shelter (car, mobile home), prepare to move to a better one when dose rates allow. Wait for official "all clear" or evacuation order.', color:'var(--yellow)'},
+      {hr:'12–24 hr', action:'Radiation at ~1/10th of 1-hour levels. Short outdoor trips (<30 min) for essential supplies acceptable if no better shelter is available. Cover nose and mouth.', color:'var(--teal)'},
+      {hr:'24–48 hr', action:'Radiation at ~1/40th of 1-hour levels. Evacuation from fallout zone may begin per official guidance. Follow designated routes. Decontaminate: remove outer clothing, shower.', color:'var(--blue)'},
+      {hr:'48–72 hr', action:'Most areas safe for extended outdoor movement except near ground zero. Seek medical screening for radiation exposure. Do not consume potentially contaminated food or water.', color:'var(--mauve)'},
+    ];
+
     let html = '<div class="guide-list">';
     for (const it of items) {
       if (!it.always && !hasFallout) continue;
       html += `<div class="guide-item" style="border-left-color:${it.color}"><div class="gi-title" style="color:${it.color}">${it.title}</div><div class="gi-body">${it.body}</div></div>`;
+    }
+    if (hasFallout) {
+      html += '<div class="guide-item" style="border-left-color:var(--overlay0);margin-top:12px"><div class="gi-title" style="color:var(--overlay0)">FEMA 72-Hour Response Timeline</div><div class="gi-body" style="font-size:9px;color:var(--overlay0)">Based on FEMA OET Nuclear Detonation Response Guidance</div></div>';
+      for (const f of femaTimeline) {
+        html += `<div class="guide-item" style="border-left-color:${f.color}"><div class="gi-title" style="color:${f.color}">${f.hr}</div><div class="gi-body">${f.action}</div></div>`;
+      }
     }
     html += '</div>';
     return html;
