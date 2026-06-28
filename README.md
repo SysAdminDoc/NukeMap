@@ -98,6 +98,7 @@ A premium nuclear weapon effects simulator with animated blast waves, SVG mushro
 - **Privacy-Safe Location Flows** — GPS checks stay local, live wind sends only map-center coordinates to Open-Meteo, and permission errors render as safe text
 - **Summary Report** — Formatted text report with all details
 - **Shareable URLs** — Detonation state encoded in URL parameters
+- **Native Share + PWA Shortcuts** — Mobile share sheets for links/reports with clipboard fallback, plus install shortcuts for Detonate, WW3, Saved Scenarios, and Emergency Guide
 - **Fullscreen Mode** — For presentations
 - **Click-to-Copy Coordinates** — Tap coords display to copy
 - **Auto-Geolocation** — Centers on your location on first load
@@ -125,6 +126,8 @@ python build.py    # Creates NukeMap-offline.html (fully self-contained)
 ```
 
 Or open `index.html` once online — the service worker caches everything. Installable as a PWA via browser "Add to Home Screen".
+
+The manifest includes desktop/mobile screenshots and shortcuts for Detonate, WW3, Saved Scenarios, and Emergency Guide.
 
 ## Local Verification
 

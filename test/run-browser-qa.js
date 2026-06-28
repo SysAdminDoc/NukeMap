@@ -127,6 +127,8 @@ async function runPwaChecks(browser, baseUrl) {
     swReady,
     offlineTitle,
     offlineBodyHasApp: offlineAppShellPresent === 3,
+    screenshotForms: (manifest?.screenshots || []).map(s => s.form_factor).sort(),
+    shortcutActions: (manifest?.shortcuts || []).map(s => new URL(s.url, baseUrl).searchParams.get('action')).sort(),
     consoleMessages,
   };
 }
@@ -156,6 +158,10 @@ async function runPwaChecks(browser, baseUrl) {
 
     if (!pwa.manifest || pwa.manifest.name !== 'NukeMap') failures.push('pwa: manifest missing or wrong name');
     if (!pwa.manifest?.icons?.length) failures.push('pwa: manifest icons missing');
+    if (!pwa.screenshotForms.includes('wide') || !pwa.screenshotForms.includes('narrow')) failures.push('pwa: manifest screenshots missing wide/narrow forms');
+    for (const action of ['detonate', 'guide', 'saved', 'ww3']) {
+      if (!pwa.shortcutActions.includes(action)) failures.push(`pwa: shortcut action missing ${action}`);
+    }
     if (!pwa.swReady) failures.push('pwa: service worker registration not ready');
     if (pwa.offlineTitle !== 'NukeMap v3.6.0' || !pwa.offlineBodyHasApp) failures.push('pwa: offline reload did not serve app shell');
     if (pwa.consoleMessages.length) failures.push(`pwa: console messages: ${pwa.consoleMessages.join(' | ')}`);

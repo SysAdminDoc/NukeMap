@@ -3,6 +3,7 @@ const TILE_CACHE = 'nukemap-tiles-v3';
 const MAX_TILE_ENTRIES = 2000;
 const PRECACHE = [
   './', './index.html', './css/styles.css', './manifest.json',
+  './assets/pwa-wide.png', './assets/pwa-mobile.png',
   './js/zipcodes.js', './js/data.js', './js/physics.js', './js/search.js', './js/effects.js',
   './js/animation.js', './js/sound.js', './js/mushroom3d.js', './js/mirv.js',
   './js/shelter.js', './js/compare.js', './js/heatmap.js', './js/extras.js', './js/advanced.js', './js/premium.js', './js/immersive.js', './js/ww3.js', './js/app.js'

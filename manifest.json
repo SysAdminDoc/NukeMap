@@ -7,6 +7,52 @@
   "background_color": "#11111b",
   "theme_color": "#1e1e2e",
   "orientation": "any",
+  "screenshots": [
+    {
+      "src": "assets/pwa-wide.png",
+      "sizes": "1366x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "NukeMap desktop simulation workspace"
+    },
+    {
+      "src": "assets/pwa-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "NukeMap mobile tools and safety workspace"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Detonate Map Center",
+      "short_name": "Detonate",
+      "description": "Open the primary detonation controls.",
+      "url": "./index.html?action=detonate",
+      "icons": [{"src": "icon.png", "sizes": "512x512", "type": "image/png"}]
+    },
+    {
+      "name": "WW3 Simulation",
+      "short_name": "WW3",
+      "description": "Open the WW3 scenario controls.",
+      "url": "./index.html?action=ww3",
+      "icons": [{"src": "icon.png", "sizes": "512x512", "type": "image/png"}]
+    },
+    {
+      "name": "Saved Scenarios",
+      "short_name": "Saved",
+      "description": "Open saved scenario management.",
+      "url": "./index.html?action=saved",
+      "icons": [{"src": "icon.png", "sizes": "512x512", "type": "image/png"}]
+    },
+    {
+      "name": "Emergency Guide",
+      "short_name": "Guide",
+      "description": "Open the emergency action guide panel.",
+      "url": "./index.html?action=guide",
+      "icons": [{"src": "icon.png", "sizes": "512x512", "type": "image/png"}]
+    }
+  ],
   "icons": [
     {
       "src": "icon.png",

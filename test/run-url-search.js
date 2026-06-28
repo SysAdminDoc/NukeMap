@@ -19,6 +19,7 @@ const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf
 const appJs = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf8');
 const immersiveJs = fs.readFileSync(path.join(__dirname, '..', 'js', 'immersive.js'), 'utf8');
 const swJs = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'manifest.json'), 'utf8'));
 
 let passed = 0, failed = 0;
 const failures = [];
@@ -47,6 +48,10 @@ assert('Exports: KML includes model provenance', /physicsModel/.test(immersiveJs
 assert('Privacy: GPS and live wind controls show pre-use notices', /Your GPS coordinates stay in this browser/.test(indexHtml) && /map center coordinates to Open-Meteo/.test(indexHtml));
 assert('Privacy: GPS error path does not render browser error HTML', /_setTextStatus/.test(immersiveJs) && !/Location error:\s*\$\{err\.message\}/.test(immersiveJs));
 assert('Privacy: GPS status helper uses textContent', /msg\.textContent\s*=\s*text/.test(immersiveJs) && /replaceChildren\(\)/.test(immersiveJs));
+assert('PWA: manifest includes wide and narrow screenshots', manifest.screenshots?.some(s => s.form_factor === 'wide' && s.src === 'assets/pwa-wide.png') && manifest.screenshots?.some(s => s.form_factor === 'narrow' && s.src === 'assets/pwa-mobile.png'));
+assert('PWA: manifest includes launch shortcuts', ['detonate','ww3','saved','guide'].every(action => manifest.shortcuts?.some(s => s.url.includes(`action=${action}`))));
+assert('PWA: service worker precaches screenshot assets', /assets\/pwa-wide\.png/.test(swJs) && /assets\/pwa-mobile\.png/.test(swJs));
+assert('Share: links and reports use native share with clipboard fallback', /function shareOrCopy/.test(appJs) && /navigator\.share/.test(appJs) && /navigator\.clipboard\?\.writeText/.test(appJs) && /handleLaunchAction/.test(appJs));
 
 // ---- CSV IMPORT VALIDATION TESTS ----
 const validCsv = 'lat,lng,yield_kt,burst_type,weapon\n40.7128,-74.0060,455,airburst,"W88, Trident"\n33,-118,50,water,Imported';

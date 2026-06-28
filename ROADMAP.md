@@ -6,13 +6,6 @@ Nuclear weapon effects simulator with 12 effect rings, 38 weapon presets, full W
 
 ## Research-Driven Additions
 
-- [ ] P2 - Add PWA screenshots, shortcuts, and native share support
-  Why: The app is installable but does not expose screenshots, app shortcuts, or Web Share flows that improve mobile/install surfaces.
-  Evidence: `manifest.json`, `js/app.js:443`, MDN Web Share API, MDN manifest screenshots.
-  Touches: `manifest.json`, `index.html`, `js/app.js`, `assets/`, `README.md`.
-  Acceptance: Manifest includes screenshot assets and shortcuts for Detonate, WW3, Saved Scenarios, and Emergency Guide; supported browsers use `navigator.share()` for links/exports with clipboard fallback.
-  Complexity: M
-
 - [ ] P2 - Introduce a UI string registry for localization
   Why: NUKEMAP's 2026 roadmap prioritizes translation, while NukeMap hardcodes English strings across HTML and panel generators.
   Evidence: `index.html`, `js/app.js`, `js/premium.js`, `js/advanced.js`, NUKEMAP roadmap.
