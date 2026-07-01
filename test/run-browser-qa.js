@@ -146,7 +146,7 @@ async function runPwaChecks(browser, baseUrl) {
     const pwa = await runPwaChecks(browser, baseUrl);
 
     for (const result of [desktop, mobile]) {
-      if (result.title !== 'NukeMap v3.6.0') failures.push(`${result.name}: page title mismatch`);
+      if (result.title !== 'NukeMap v3.7.0') failures.push(`${result.name}: page title mismatch`);
       if (!result.bodyHasApp) failures.push(`${result.name}: app content missing`);
       if (result.overlayVisible) failures.push(`${result.name}: framework/error overlay text visible`);
       if (result.horizontalOverflow) failures.push(`${result.name}: horizontal overflow detected`);
@@ -163,7 +163,7 @@ async function runPwaChecks(browser, baseUrl) {
       if (!pwa.shortcutActions.includes(action)) failures.push(`pwa: shortcut action missing ${action}`);
     }
     if (!pwa.swReady) failures.push('pwa: service worker registration not ready');
-    if (pwa.offlineTitle !== 'NukeMap v3.6.0' || !pwa.offlineBodyHasApp) failures.push('pwa: offline reload did not serve app shell');
+    if (pwa.offlineTitle !== 'NukeMap v3.7.0' || !pwa.offlineBodyHasApp) failures.push('pwa: offline reload did not serve app shell');
     if (pwa.consoleMessages.length) failures.push(`pwa: console messages: ${pwa.consoleMessages.join(' | ')}`);
 
     const results = { baseUrl, screenshots: ARTIFACT_DIR, desktop, mobile, pwa, failures };

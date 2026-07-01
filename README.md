@@ -1,6 +1,6 @@
-# NukeMap v3.6.0
+# NukeMap v3.7.0
 
-![Version](https://img.shields.io/badge/version-v3.6.0-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Platform](https://img.shields.io/badge/platform-Web%20%2F%20PWA-lightgrey)
+![Version](https://img.shields.io/badge/version-v3.7.0-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Platform](https://img.shields.io/badge/platform-Web%20%2F%20PWA-lightgrey)
 
 A premium nuclear weapon effects simulator with animated blast waves, SVG mushroom clouds, MIRV strikes, full WW3 simulation engine (427 verified targets, 708 warheads, 7 scenarios), HEMP continent-scale EMP, sound effects, shelter survival analysis, and comprehensive educational tools. Physics based on Glasstone & Dolan's *The Effects of Nuclear Weapons*.
 

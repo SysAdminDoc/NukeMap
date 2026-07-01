@@ -718,16 +718,17 @@ NM.WW3 = {
     }
     if (typeof Worker !== 'undefined') {
       try {
-        const w = new Worker('js/physics-worker.js');
+        this._physicsWorker = new Worker('js/physics-worker.js');
+        const w = this._physicsWorker;
         const batch = [...uniqueYields].map((y, i) => ({idx: i, yieldKt: y, burstType: 'airburst', heightM: 0, fission: 50}));
         w.postMessage({type: 'calcBatch', batch, id: 1});
         w.onmessage = (e) => {
           if (e.data.type === 'batchResult') {
             for (const r of e.data.results) this._effectsCache.set(batch[r.idx].yieldKt, r.effects);
-            w.terminate();
+            w.terminate(); this._physicsWorker = null;
           }
         };
-        w.onerror = () => { w.terminate(); for (const y of uniqueYields) { if (!this._effectsCache.has(y)) this._effectsCache.set(y, NM.calcEffects(y, 'airburst', 0, 50)); } };
+        w.onerror = () => { w.terminate(); this._physicsWorker = null; for (const y of uniqueYields) { if (!this._effectsCache.has(y)) this._effectsCache.set(y, NM.calcEffects(y, 'airburst', 0, 50)); } };
       } catch(e) {
         for (const y of uniqueYields) this._effectsCache.set(y, NM.calcEffects(y, 'airburst', 0, 50));
       }
@@ -1140,6 +1141,7 @@ NM.WW3 = {
     this._gen++;
     this.timers.forEach(t => clearTimeout(t));
     this.timers = [];
+    if (this._physicsWorker) { this._physicsWorker.terminate(); this._physicsWorker = null; }
     if (this.statsInterval) { clearInterval(this.statsInterval); this.statsInterval = null; }
     this.layers.forEach(l => { try { map.removeLayer(l); } catch(e) {} });
     this.markers.forEach(m => { try { map.removeLayer(m); } catch(e) {} });
