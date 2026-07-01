@@ -12,11 +12,11 @@ NM.Shelter = {
 
     for (const shelter of NM.SHELTER_TYPES) {
       const blastSurvival = psiAtDist <= shelter.psi ? 1 : Math.max(0, 1 - (psiAtDist - shelter.psi) / (shelter.psi * 2));
-      const thermalSurvival = shelter.thermal; // fraction of thermal blocked
-      const radSurvival = 1 - radAtDist * (1 - shelter.rad); // lower rad factor = better protection
+      const thermalSurvival = shelter.thermal;
+      const radSurvival = radAtDist ? (1 - radAtDist * shelter.rad) : 1;
 
       const overall = Math.max(0, Math.min(1,
-        blastSurvival * (thermalAtDist > 8 ? thermalSurvival : 1) * (radAtDist ? (1 - shelter.rad * 0.5) : 1)
+        blastSurvival * (thermalAtDist > 8 ? thermalSurvival : 1) * radSurvival
       ));
 
       results.push({

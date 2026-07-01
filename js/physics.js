@@ -84,8 +84,8 @@ NM.getModelProvenance = function(effects) {
 };
 
 NM.calcEffects = function(Y, burstType, heightM, fissionFrac, popDensity) {
-  Y = Math.max(Y, 0.001);
-  fissionFrac = (fissionFrac ?? 50) / 100;
+  Y = isFinite(Y) ? Math.max(Y, 0.001) : 0.001;
+  fissionFrac = (isFinite(fissionFrac) ? fissionFrac : 50) / 100;
   const isWater = burstType === 'water';
   const isSurface = burstType === 'surface' || isWater;
   const optH = 0.22 * Math.pow(Y, 1/3) * 1000;  // G&D Ch.3 §3.73
@@ -112,7 +112,7 @@ NM.calcEffects = function(Y, burstType, heightM, fissionFrac, popDensity) {
     cloudTopH: (isSurface?0.24:0.29) * Math.pow(Y, 0.42),
     cloudTopR: 0.19 * Math.pow(Y, 0.4),
     stemR:     0.05 * Math.pow(Y, 0.35),
-    cloudH:    0.29 * Math.pow(Y, 0.4),
+    cloudH:    (isSurface?0.24:0.29) * Math.pow(Y, 0.4),
     fallout:   (isSurface || (heightM !== undefined && heightM < (isSurface?0.05:0.066)*Math.pow(Y,0.4)*1000))
       ? { heavy:{length:1.3*Math.pow(Y*fissionFrac,0.45), width:0.39*Math.pow(Y*fissionFrac,0.35)},
           light:{length:4.6*Math.pow(Y*fissionFrac,0.45), width:1.1*Math.pow(Y*fissionFrac,0.35)} }

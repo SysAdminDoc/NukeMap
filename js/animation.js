@@ -5,8 +5,8 @@ NM.Animation = {
   active: [],
   _reducedMotion: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
 
-  // Animate expanding blast rings from center outward
   blastWave(map, lat, lng, effects, duration) {
+    if (this._reducedMotion) return;
     duration = duration || 3000;
     const rings = [
       {r: effects.fireball,  color: '#f5e0dc', speed: 0.15, opacity: 0.6, width: 3},
@@ -81,11 +81,15 @@ NM.Animation = {
     const container = map.getContainer();
     const start = performance.now();
     const origTransform = container.style.transform;
+    const anim = {id: Date.now(), done: false};
+    this.active.push(anim);
 
     const tick = (now) => {
+      if (anim.done) { container.style.transform = origTransform || ''; return; }
       const elapsed = now - start;
       if (elapsed > duration) {
         container.style.transform = origTransform || '';
+        anim.done = true;
         return;
       }
       const decay = 1 - elapsed / duration;
@@ -97,8 +101,8 @@ NM.Animation = {
     requestAnimationFrame(tick);
   },
 
-  // Fireball glow pulse on map
   fireballGlow(map, lat, lng, radius, duration) {
+    if (this._reducedMotion) return;
     duration = duration || 2000;
     const glow = L.circle([lat, lng], {
       radius: radius * 1000,
@@ -110,11 +114,13 @@ NM.Animation = {
     }).addTo(map);
 
     const start = performance.now();
+    const anim = {id: Date.now(), done: false};
+    this.active.push(anim);
     const tick = (now) => {
+      if (anim.done) { try { map.removeLayer(glow); } catch(e) {} return; }
       const elapsed = now - start;
       const p = elapsed / duration;
-      if (p >= 1) { map.removeLayer(glow); return; }
-      // Grow slightly then fade
+      if (p >= 1) { map.removeLayer(glow); anim.done = true; return; }
       const scale = 1 + p * 0.3;
       const opacity = p < 0.2 ? p / 0.2 * 0.8 : 0.8 * (1 - (p - 0.2) / 0.8);
       const colorShift = p < 0.3 ? '#fffaf0' : p < 0.6 ? '#ffe4b5' : '#ff8c00';

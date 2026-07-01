@@ -389,7 +389,7 @@ NM.ExportPNG = {
             URL.revokeObjectURL(url);
             resolve();
           };
-          img.onerror = resolve;
+          img.onerror = () => { URL.revokeObjectURL(url); resolve(); };
           img.src = url;
         });
       }

@@ -67,25 +67,29 @@ NM.Geiger = {
 
 // ---- CASUALTY COUNTER ANIMATION ----
 NM.CasualtyCounter = {
+  _rafId: 0,
   animate(deaths, injuries) {
     const dEl = document.getElementById('stat-deaths');
     const iEl = document.getElementById('stat-injuries');
     const tEl = document.getElementById('stat-total');
     if (!dEl) return;
+    if (this._rafId) cancelAnimationFrame(this._rafId);
 
     const duration = 2000;
     const start = performance.now();
+    const self = this;
     const tick = (now) => {
       const p = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - p, 4); // ease-out quartic
+      const eased = 1 - Math.pow(1 - p, 4);
       const curD = Math.round(deaths * eased);
       const curI = Math.round(injuries * eased);
       dEl.textContent = NM.fmtNum(curD);
       iEl.textContent = NM.fmtNum(curI);
       tEl.textContent = NM.fmtNum(curD + curI);
-      if (p < 1) requestAnimationFrame(tick);
+      if (p < 1) self._rafId = requestAnimationFrame(tick);
+      else self._rafId = 0;
     };
-    requestAnimationFrame(tick);
+    this._rafId = requestAnimationFrame(tick);
   }
 };
 
@@ -445,7 +449,7 @@ NM.KMLExport = {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 };
 
@@ -471,8 +475,7 @@ NM.TestDatabase = [
   {name:'DPRK Test 1',lat:41.281,lng:129.106,kt:0.7,country:'DPRK',year:2006,type:'Underground'},
   {name:'DPRK Test 6',lat:41.300,lng:129.078,kt:250,country:'DPRK',year:2017,type:'Underground'},
   // Major US Nevada tests
-  {name:'Sedan',lat:37.177,lng:-116.047,kt:104,country:'US',year:1962,type:'Underground (cratering)'},
-  {name:'Storax Sedan Crater',lat:37.177,lng:-116.047,kt:104,country:'US',year:1962,type:'Underground'},
+  {name:'Storax Sedan',lat:37.177,lng:-116.047,kt:104,country:'US',year:1962,type:'Underground (cratering)'},
   {name:'Upshot-Knothole Annie',lat:37.068,lng:-116.032,kt:16,country:'US',year:1953,type:'Tower'},
   {name:'Plumbbob Hood',lat:37.067,lng:-116.020,kt:74,country:'US',year:1957,type:'Balloon'},
   // Soviet notable

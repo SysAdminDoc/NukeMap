@@ -45,7 +45,8 @@ NM.Heatmap = {
         if (typeof OffscreenCanvas !== 'undefined' && this._canvas.transferControlToOffscreen) {
           try {
             const blob = new Blob([workerCode], {type: 'application/javascript'});
-            this._worker = new Worker(URL.createObjectURL(blob));
+            this._workerUrl = URL.createObjectURL(blob);
+            this._worker = new Worker(this._workerUrl);
             this._offscreen = this._canvas.transferControlToOffscreen();
             this._worker.postMessage({type: 'init', canvas: this._offscreen}, [this._offscreen]);
             this._useWorker = true;
@@ -61,6 +62,7 @@ NM.Heatmap = {
         L.DomUtil.remove(this._canvas);
         map.off('moveend zoomend resize', this._update, this);
         if (this._worker) { this._worker.terminate(); this._worker = null; }
+        if (this._workerUrl) { URL.revokeObjectURL(this._workerUrl); this._workerUrl = null; }
       },
       _pendingRender: 0,
       _update() {

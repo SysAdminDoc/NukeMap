@@ -80,12 +80,17 @@ NM.MIRV = {
     this.previewMarkers = [];
   },
 
-  // Execute MIRV strike with staggered detonations
+  _timers: [],
+  cancelPending() {
+    this._timers.forEach(id => clearTimeout(id));
+    this._timers = [];
+  },
   execute(map, lat, lng, preset, detonateFn) {
+    this.cancelPending();
     this.clearPreview(map);
     const points = this.generatePattern(lat, lng, preset);
     points.forEach(pt => {
-      setTimeout(() => detonateFn(pt.lat, pt.lng, preset.yield_kt), pt.delay);
+      this._timers.push(setTimeout(() => detonateFn(pt.lat, pt.lng, preset.yield_kt), pt.delay));
     });
   }
 };

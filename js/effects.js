@@ -70,7 +70,7 @@ NM.Effects = {
         const t = (i / 40) * 2 * Math.PI;
         const dx = l * (0.5 + 0.5 * Math.cos(t)) * Math.cos(dAngle) - (w / 2) * Math.sin(t) * Math.sin(dAngle);
         const dy = l * (0.5 + 0.5 * Math.cos(t)) * Math.sin(dAngle) + (w / 2) * Math.sin(t) * Math.cos(dAngle);
-        pts.push([lat + (dy / R) * (180 / Math.PI), lng + (dx / R) * (180 / Math.PI) / Math.cos(lat * Math.PI / 180)]);
+        pts.push([lat + (dy / R) * (180 / Math.PI), lng + (dx / R) * (180 / Math.PI) / (Math.cos(lat * Math.PI / 180) || 0.0001)]);
       }
       return pts;
     };

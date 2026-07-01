@@ -427,8 +427,8 @@ NM.NuclearWinter = {
 
     // Robock & Toon temperature model: non-linear soot\u2192cooling relationship
     // 5 Tg \u2192 ~1.5\u00B0C, 50 Tg \u2192 ~5\u00B0C, 150 Tg \u2192 ~10\u00B0C (saturates due to albedo)
-    const tempDrop = totalSoot < 1 ? totalSoot * 0.3 :
-                     totalSoot < 50 ? 1.5 + (totalSoot - 5) * 0.08 :
+    const tempDrop = totalSoot < 5 ? totalSoot * 0.3 :
+                     totalSoot < 50 ? 1.5 + (totalSoot - 5) * 0.078 :
                      totalSoot < 150 ? 5 + (totalSoot - 50) * 0.05 :
                      Math.min(15, 10 + (totalSoot - 150) * 0.02);
     const growingSeasonLoss = Math.min(90, tempDrop * 6);

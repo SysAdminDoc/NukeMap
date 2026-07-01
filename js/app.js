@@ -198,8 +198,8 @@ function triggerDetonation(lat, lng) {
   const isHEMP = burst === 'hemp';
   const isWater = burst === 'water';
   if (isHEMP) burst = 'airburst';
-  const hM = burst === 'custom' ? (+$('burst-height').value || 0) : 0;
-  const fission = +$('fission-pct').value || 50;
+  const hM = burst === 'custom' ? Math.max(0, Math.min(100000, +$('burst-height').value || 0)) : 0;
+  const fission = Math.max(0, Math.min(100, +$('fission-pct').value || 50));
   const density = NM.estimateDensity(lat, lng);
   const effects = NM.calcEffects(Y, isHEMP ? 'airburst' : (isWater ? 'water' : burst), hM, fission, density);
 
@@ -230,7 +230,7 @@ function triggerDetonation(lat, lng) {
   }
 
   const det = {
-    id: Date.now(), lat, lng, yieldKt: Y, burstType: isHEMP ? 'hemp' : (isWater ? 'water' : burst), heightM: hM, fission, effects, casualties: cas, layers: [],
+    id: Date.now() + Math.random(), lat, lng, yieldKt: Y, burstType: isHEMP ? 'hemp' : (isWater ? 'water' : burst), heightM: hM, fission, effects, casualties: cas, layers: [],
     weapon: $('weapon-select').selectedOptions[0]?.textContent || 'Custom', isHEMP, isWater
   };
 
@@ -610,18 +610,17 @@ function initControls() {
     div.addEventListener('click', () => {
       clearAll();
       multiMode = true; $('multi-check').checked = true;
-      // Zoom to first target
       map.flyTo([sc.dets[0].lat, sc.dets[0].lng], sc.dets.length > 2 ? 6 : 9, {duration: 1});
-      setTimeout(() => {
+      _loadTimers.push(setTimeout(() => {
         sc.dets.forEach((d, i) => {
-          setTimeout(() => {
+          _loadTimers.push(setTimeout(() => {
             setYield(d.yield_kt);
             document.querySelectorAll('.burst-btn').forEach(b => b.classList.toggle('active', b.dataset.burst === d.burst));
             $('wind-wrap').style.display = d.burst === 'surface' ? '' : 'none';
             triggerDetonation(d.lat, d.lng);
-          }, i * 600);
+          }, i * 600));
         });
-      }, 1200);
+      }, 1200));
     });
     scenList.appendChild(div);
   });
@@ -1202,27 +1201,7 @@ function updateNearbyTargets(det) {
 }
 
 function updateStats() {
-  let td = 0, ti = 0, ty = 0;
-  currentDets.forEach((d, i) => {
-    let overlapFrac = 0;
-    if (i > 0) {
-      const rKm = Math.max(d.effects.psi1, d.effects.thermal1);
-      for (let j = 0; j < i; j++) {
-        const dist = NM.haversine(d.lat, d.lng, currentDets[j].lat, currentDets[j].lng);
-        const rPrev = Math.max(currentDets[j].effects.psi1, currentDets[j].effects.thermal1);
-        const combined = rKm + rPrev;
-        if (dist < combined && combined > 0) {
-          const overlap = Math.max(0, 1 - dist / combined);
-          overlapFrac = Math.max(overlapFrac, overlap * 0.7);
-        }
-      }
-    }
-    const dedup = 1 - overlapFrac;
-    td += d.casualties.deaths * dedup;
-    ti += d.casualties.injuries * dedup;
-    ty += d.yieldKt;
-  });
-  td = Math.round(td); ti = Math.round(ti);
+  const {deaths: td, injuries: ti, yieldKt: ty} = _dedupCasualties(currentDets);
   const hiro = ty / 15; // Hiroshima equivalents
   $('stat-deaths').textContent = NM.fmtNum(td);
   $('stat-injuries').textContent = NM.fmtNum(ti);
@@ -1335,7 +1314,14 @@ function loadFromURL() {
   const pm = p.get('pm');
   if (pm && NM.BLAST_MODELS[pm]) { NM._physicsModel = pm; const sel = $('physics-model'); if (sel) sel.value = pm; }
   const w = p.get('w');
-  if (w && isFinite(+w)) { windAngle = +w; const compass = $('wind-compass'); if (compass) compass.value = windAngle; }
+  if (w && isFinite(+w)) {
+    windAngle = +w;
+    const arrow = $('wind-arrow');
+    if (arrow) arrow.style.transform = `rotate(${windAngle}deg)`;
+    const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+    const lbl = $('wind-dir-label');
+    if (lbl) lbl.textContent = `From ${dirs[Math.round(windAngle / 45) % 8]} (${Math.round(windAngle)}°)`;
+  }
 
   const d = p.get('d');
   if (!d) return;
@@ -1383,10 +1369,33 @@ async function shareOrCopy(data, fallbackText, statusEl, originalLabel) {
   }
   return 'unavailable';
 }
+function _dedupCasualties(dets) {
+  let td = 0, ti = 0, ty = 0;
+  dets.forEach((d, i) => {
+    let overlapFrac = 0;
+    if (i > 0) {
+      const rKm = Math.max(d.effects.psi1, d.effects.thermal1);
+      for (let j = 0; j < i; j++) {
+        const dist = NM.haversine(d.lat, d.lng, dets[j].lat, dets[j].lng);
+        const rPrev = Math.max(dets[j].effects.psi1, dets[j].effects.thermal1);
+        const combined = rKm + rPrev;
+        if (dist < combined && combined > 0) {
+          const overlap = Math.max(0, 1 - dist / combined);
+          overlapFrac = Math.max(overlapFrac, overlap * 0.7);
+        }
+      }
+    }
+    const dedup = 1 - overlapFrac;
+    td += d.casualties.deaths * dedup;
+    ti += d.casualties.injuries * dedup;
+    ty += d.yieldKt;
+  });
+  return {deaths: Math.round(td), injuries: Math.round(ti), yieldKt: ty};
+}
+
 function getShareText() {
   if (!currentDets.length) return '';
-  let td = 0, ti = 0, ty = 0;
-  currentDets.forEach(d => { td += d.casualties.deaths; ti += d.casualties.injuries; ty += d.yieldKt; });
+  const {deaths: td, injuries: ti, yieldKt: ty} = _dedupCasualties(currentDets);
   const hiro = (ty / 15);
   const nc = NM.findNearestCity(currentDets[0].lat, currentDets[0].lng);
   const loc = nc && nc.dist < 50 ? nc.name : `${currentDets[0].lat.toFixed(2)}, ${currentDets[0].lng.toFixed(2)}`;
@@ -1633,8 +1642,7 @@ function importCSV(file) {
 
 // ---- SUMMARY REPORT ----
 function exportReport() {
-  let td = 0, ti = 0, ty = 0;
-  currentDets.forEach(d => { td += d.casualties.deaths; ti += d.casualties.injuries; ty += d.yieldKt; });
+  const {deaths: td, injuries: ti, yieldKt: ty} = _dedupCasualties(currentDets);
   const hiro = ty / 15;
   const provenance = NM.getModelProvenance();
 
@@ -1721,8 +1729,7 @@ function handleLaunchAction(action) {
 }
 
 function exportPrintReport() {
-  let td = 0, ti = 0, ty = 0;
-  currentDets.forEach(d => { td += d.casualties.deaths; ti += d.casualties.injuries; ty += d.yieldKt; });
+  const {deaths: td, injuries: ti, yieldKt: ty} = _dedupCasualties(currentDets);
   const hiro = ty / 15;
   const provenance = NM.getModelProvenance();
   let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>NukeMap Report</title><style>
@@ -1839,7 +1846,7 @@ const _scenarioDB = {
   delete(id) {
     if (!this._db) {
       const saves = JSON.parse(localStorage.getItem('nukemap-saves') || '[]');
-      saves.splice(id, 1);
+      if (id >= 0 && id < saves.length) saves.splice(id, 1);
       localStorage.setItem('nukemap-saves', JSON.stringify(saves));
       return Promise.resolve();
     }
@@ -2009,9 +2016,10 @@ function renderSavedList(filter) {
         const folderTag = s.folder ? `<span class="si-folder-tag">${NM.esc(s.folder)}</span>` : '';
         const schema = s.schemaVersion ? `v${s.schemaVersion}` : 'legacy';
         const stamp = s.updatedAt ? new Date(s.updatedAt).toLocaleDateString() : (s.date ? new Date(s.date).toLocaleDateString() : '');
-        el.innerHTML = `<span class="si-name">${NM.esc(s.name)}</span>${folderTag}<span class="si-meta">${(s.dets || []).length} det${(s.dets || []).length > 1 ? 's' : ''} - ${schema}${stamp ? ` - ${NM.esc(stamp)}` : ''}</span><button class="si-del" data-i="${s.id ?? filtered.indexOf(s)}">&times;</button>`;
+        const deleteId = s.id ?? saves.indexOf(s);
+        el.innerHTML = `<span class="si-name">${NM.esc(s.name)}</span>${folderTag}<span class="si-meta">${(s.dets || []).length} det${(s.dets || []).length > 1 ? 's' : ''} - ${schema}${stamp ? ` - ${NM.esc(stamp)}` : ''}</span><button class="si-del" data-i="${deleteId}">&times;</button>`;
         el.addEventListener('click', e => { if (!e.target.classList.contains('si-del')) loadScenario(s); });
-        el.querySelector('.si-del').addEventListener('click', e => { e.stopPropagation(); deleteSave(s.id ?? filtered.indexOf(s)); });
+        el.querySelector('.si-del').addEventListener('click', e => { e.stopPropagation(); deleteSave(deleteId); });
         list.appendChild(el);
       }
     }
