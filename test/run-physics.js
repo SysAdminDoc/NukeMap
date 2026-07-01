@@ -8,7 +8,7 @@ const path = require('path');
 // Minimal DOM shim so physics.js can set window.NM
 global.window = global;
 global.NM = {};
-global.NM.APP_VERSION = '3.6.0';
+global.NM.APP_VERSION = '3.7.0';
 
 // Load physics module
 const physicsCode = fs.readFileSync(path.join(__dirname, '..', 'js', 'physics.js'), 'utf8');
@@ -113,7 +113,7 @@ NM._physicsModel = 'nwfaq';
 
 // Export provenance metadata
 const provenance = NM.getModelProvenance(NM.calcEffects(100, 'surface'));
-assertEdge('provenance app version set', provenance.appVersion === '3.6.0');
+assertEdge('provenance app version set', provenance.appVersion === '3.7.0');
 assertEdge('provenance selected model label set', provenance.physicsModelLabel === 'NWFAQ Optimum Burst');
 assertEdge('provenance includes assumptions', Array.isArray(provenance.assumptions) && provenance.assumptions.length >= 3);
 assertEdge('provenance includes citation keys', provenance.citationKeys.includes('fallout') && provenance.citationKeys.includes('mortality'));
@@ -125,6 +125,17 @@ NM._physicsModel = 'nwfaq';
 const mortResult = NM.calcZoneMortality(NM.calcEffects(100, 'airburst'), 5000);
 if (mortResult.deaths <= 0) { console.log('FAIL: calcZoneMortality returned 0 deaths for 100kT urban'); failed++; } else passed++;
 if (!mortResult.perZone || mortResult.perZone.length !== 7) { console.log('FAIL: calcZoneMortality perZone has wrong length'); failed++; } else passed++;
+
+// NaN input guards (audit regression)
+const eNaN = NM.calcEffects(NaN, 'airburst');
+assertEdge('NaN yield clamps to 0.001 (not NaN)', isFinite(eNaN.psi5) && eNaN.psi5 > 0);
+const eNaNFission = NM.calcEffects(100, 'surface', 0, NaN);
+assertEdge('NaN fission defaults to 50% (fallout not NaN)', eNaNFission.fallout !== null && isFinite(eNaNFission.fallout.heavy.length));
+
+// Surface burst cloudH uses different coefficient (audit regression)
+const eSurfCloud = NM.calcEffects(100, 'surface');
+const eAirCloud = NM.calcEffects(100, 'airburst');
+assertEdge('surface cloudH < airburst cloudH', eSurfCloud.cloudH < eAirCloud.cloudH);
 
 const total = passed + failed;
 console.log(`\nPhysics regression: ${passed}/${total} passed, ${failed} failed`);
